@@ -1,0 +1,12 @@
+#!/bin/bash
+
+: ${COMPILER:=gcc-4.8.4-default}
+: ${BOOST_VERSION:=1.62}
+: ${YAML_VERSION:=0.5.3}
+
+cmake .. \
+      -DCMAKE_MODULE_PATH=$(pwd)/../cmake \
+      -DBOOST_ROOT=$HOME/GS-CAD/boost/$BOOST_VERSION/$COMPILER \
+      -DSawyer_DIR=$HOME/xxx-sawyer/_build/installed/lib/cmake/Sawyer \
+      -DYamlCpp_ROOT=$HOME/GS-CAD/yaml/$YAML_VERSION/boost-$BOOST_VERSION/$COMPILER \
+      -DCMAKE_INSTALL_PREFIX=$(pwd)/installed
