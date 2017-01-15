@@ -7,20 +7,30 @@
 #include <Sawyer/Map.h>
 #include <Sawyer/Message.h>
 #include <Sawyer/Sawyer.h>
+#include <Sawyer/Set.h>
 #include <Sawyer/SharedPointer.h>
 #include <string>
 #include <vector>
 
 namespace Spock {
 
-extern const std::string VERSION;
+extern const char *VERSION;
 
-/** To store PATH-like environment variables. */
-typedef Sawyer::Container::Map<std::string, std::vector<std::string> > SearchPaths;
+/** Secondary package names. */
+typedef Sawyer::Container::Set<std::string> Aliases;
 
-// Pointer types for forward class declarations
+// Forward declarations
+typedef Sawyer::SharedPointer<class Package> PackagePtr;
 typedef Sawyer::SharedPointer<class InstalledPackage> InstalledPackagePtr;
+typedef Sawyer::SharedPointer<class GhostPackage> GhostPackagePtr;
+typedef Sawyer::SharedPointer<class DefinedPackage> DefinedPackagePtr;
+typedef std::vector<InstalledPackagePtr> InstalledPackages;
+typedef std::vector<PackagePtr> Packages;
+typedef std::vector<DefinedPackagePtr> DefinedPackages;
 typedef Sawyer::SharedPointer<class GlobalFlag> GlobalFlagPtr;
+class Context;
+class PackagePattern;
+class PackageLists;
 
 /** Initialize this library.
  *
@@ -37,6 +47,18 @@ std::string cEscape(const std::string&);
 
 /** Determine whether a string is a valid hash. */
 bool isHash(const std::string&);
+
+/** Return a random hash. */
+std::string randomHash();
+
+/** Return a string like "a, b, and c". If terse is true then omit the "and". */
+std::string toString(const Aliases&, bool terse = false);
+
+/** Checked conversion to installed package. */
+InstalledPackagePtr asInstalled(const PackagePtr&);
+
+/** Checkec conversion to ghost package. */
+GhostPackagePtr asGhost(const PackagePtr&);
 
 class HashParser: public Sawyer::CommandLine::ValueParser {
 protected:

@@ -1,0 +1,98 @@
+package: llvm-compilers
+versions:
+  - 3.5.0
+  - 3.5.1
+  - 3.5.2
+  - 3.6.0
+  - 3.6.1
+  - 3.6.2
+  - 3.7.0
+  - 3.7.1
+  - 3.8.0
+  - 3.8.1
+  - 3.9.0
+  - 3.9.1
+
+dependencies:
+  - version: '>=3.5.0'
+    build: []
+    install: []
+    aliases: compiler-collection
+
+download:
+  - version: '>=3.5.0'
+    shell: |
+      wget -O - http://releases.llvm.org/$PACKAGE_VERSION/llvm-$PACKAGE_VERSION.src.tar.xz |xz -d |tar xf -
+      mv llvm-$PACKAGE_VERSION.src download
+      wget -O - http://releases.llvm.org/$PACKAGE_VERSION/cfe-$PACKAGE_VERSION.src.tar.xz |xz -d |tar xf -
+      [ -d download/tools/clang ] && exit 1
+      mv cfe-$PACKAGE_VERSION.src download/tools/clang
+      tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: '>=3.5.0'
+    shell: |
+      mkdir build
+      cd build
+
+      cmake ../download \
+        -DCMAKE_C_COMPILER=cc \
+        -DCMAKE_CXX_COMPILER=c++ \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX="$PACKAGE_ROOT" \
+        -DLLVM_TARGETS_TO_BUILD=X86
+
+      make -j$PARALLELISM
+      make install
+
+      spock-export PATH "$PACKAGE_ROOT/bin"
+      spock-export LD_LIBRARY_PATH "$PACKAGE_ROOT/lib"
+      spock-export LLVM_COMPILERS_LIBDIRS "$PACKAGE_ROOT/lib"
+      spock-export LLVM_COMPILERS_INCDIRS "$PACKAGE_ROOT/include"
+
+post-install:
+  - version: ">=3.5.0"
+    parasites:
+      # PrimaryName     Specific-language Base-language Default-language
+      - llvm-c++03      c++03-compiler    c++-compiler
+      - llvm-gnu++03    gnu++03-compiler  c++-compiler
+      - llvm-c++11      c++11-compiler    c++-compiler
+      - llvm-gnu++11    gnu++11-compiler  c++-compiler
+      - llvm-c++14      c++14-compiler    c++-compiler
+      - llvm-gnu++14    gnu++14-compiler  c++-compiler
+      - llvm-c89        c89-compiler      c-compiler
+      - llvm-gnu89      gnu89-compiler    c-compiler
+      - llvm-c94        c94-compiler      c-compiler
+      - llvm-c99        c99-compiler      c-compiler
+      - llvm-gnu99      gnu99-compiler    c-compiler
+      - llvm-c11        c11-compiler      c-compiler
+      - llvm-gnu11      gnu11-compiler    c-compiler    llvm-default-c default-c
+    shell: |
+        source "$SPOCK_SCRIPTS/impl/compiler-support.sh"
+        (
+          $SPOCK_SCRIPTS/spock-compiler-install-program "$PACKAGE_SPEC" c "$PACKAGE_ROOT/bin/clang"
+          $SPOCK_SCRIPTS/spock-compiler-install-program "$PACKAGE_SPEC" c++ "$PACKAGE_ROOT/bin/clang++"
+        ) >parasites
+
+  - version: ">=3.8.0"
+    parasites:
+      # PrimaryName     Specific-language Base-language Default-language
+      - llvm-c++03      c++03-compiler    c++-compiler
+      - llvm-gnu++03    gnu++03-compiler  c++-compiler  llvm-default-c++ default-c++
+      - llvm-c++11      c++11-compiler    c++-compiler
+      - llvm-gnu++11    gnu++11-compiler  c++-compiler
+      - llvm-c++14      c++14-compiler    c++-compiler
+      - llvm-gnu++14    gnu++14-compiler  c++-compiler
+      - llvm-c89        c89-compiler      c-compiler
+      - llvm-gnu89      gnu89-compiler    c-compiler
+      - llvm-c94        c94-compiler      c-compiler
+      - llvm-c99        c99-compiler      c-compiler
+      - llvm-gnu99      gnu99-compiler    c-compiler
+      - llvm-c11        c11-compiler      c-compiler
+      - llvm-gnu11      gnu11-compiler    c-compiler    llvm-default-c default-c
+    shell: |
+        source "$SPOCK_SCRIPTS/impl/compiler-support.sh"
+        (
+          $SPOCK_SCRIPTS/spock-compiler-install-program "$PACKAGE_SPEC" c "$PACKAGE_ROOT/bin/clang"
+          $SPOCK_SCRIPTS/spock-compiler-install-program "$PACKAGE_SPEC" c++ "$PACKAGE_ROOT/bin/clang++"
+        ) >parasites

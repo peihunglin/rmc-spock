@@ -1,0 +1,36 @@
+package:  oracle-java
+versions: [7.51, 8.121]
+
+dependencies:
+  - version: ">=7"
+    install: []
+    build: []
+    aliases: [jdk, jre, javac]
+
+download:
+  - version: ">=7"
+    shell: |
+        set +x
+        echo
+        (
+            echo "Oracle requires license agreement and hoop-jumping before download."
+            echo "Visit http://www.oracle.com using a browser with privacy and safety features disabled"
+            echo "(javascript and cookies required). "Look for the Java JDK (not the JRE), and download"
+            echo "the *.tar.gz version. Move that tarball to $SPOCK_VARDIR/downloads/$PACKAGE_NAME-$PACKAGE_VERSION.tar.gz,"
+            echo "and then re-run this command."
+        ) |fmt
+        exit 1
+
+install:
+  - version: ">=7"
+    shell: |
+        # Oracle JDK tarballs untar into directories named jdk1.7.0_51 for version 7.51, jdk1.8.0_121 for version 8.121, etc.
+        cp -pdR jdk* "$PACKAGE_ROOT/jdk"
+
+        libjvm=$(find "$PACKAGE_ROOT/jdk" -name libjvm.so)
+        serverlib="${libjvm%/libjvm.so}"
+
+        spock-export PATH            $PACKAGE_ROOT/jdk/bin
+        spock-export LD_LIBRARY_PATH $serverlib
+        spock-export JAVA_VENDOR     oracle
+        spock-export JAVA_COMPILER   $PACKAGE_ROOT/jdk/bin/javac

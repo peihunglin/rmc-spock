@@ -1,0 +1,26 @@
+package: yices
+versions: [ 1.0.28, 1.0.34, 1.0.40 ]
+
+dependencies:
+  - version: ">=1"
+    install: []
+    build: []
+
+download:
+  - version: ">=1"
+    shell: |
+        set +x
+        echo "Yices downloads require licence agreement and hoop-jumping. Please download the appropriate"
+        echo "tar file manually and deposit it at $SPOCK_ROOT/var/downloads/yices-$PACKAGE_VERSION.tar.gz"
+        echo "and then re-run this spock installation command."
+        exit 1
+
+install:
+  - version: ">=1"
+    shell: |
+        cp -pdR yices-$PACKAGE_VERSION/* "$PACKAGE_ROOT"
+
+        spock-export PATH            "$PACKAGE_ROOT/bin"
+        spock-export LD_LIBRARY_PATH "$PACKAGE_ROOT/lib"
+        spock-export YICES_LIBDIRS   "$PACKAGE_ROOT/lib"
+        spock-export YICES_INCDIRS   "$PACKAGE_ROOT/include"

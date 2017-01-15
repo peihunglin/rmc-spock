@@ -1,0 +1,35 @@
+package:        yamlcpp
+versions:       [ 0.5.1, 0.5.2, 0.5.3 ]
+
+dependencies:
+  - version: ">=0.5.1"
+    install: [ boost, c++-compiler ]
+    build: [ c-compiler, cmake ]
+
+download:
+  - version: ">=0.5.1"
+    shell: |
+        git clone -b release-$PACKAGE_VERSION https://github.com/jbeder/yaml-cpp download
+        cd download
+        git archive --format=tar --prefix=download/ HEAD |gzip -9 >../download.tar.gz
+
+install:
+  - version: ">=0.5.1"
+    shell: |
+        cc --spock-triplet
+        c++ --spock-triplet
+
+        mkdir build
+        cd build
+        cmake ../download \
+            -DCMAKE_C_COMPILER=cc \
+            -DCMAKE_CXX_COMPILER=c++ \
+            -DCMAKE_INSTALL_PREFIX="$PACKAGE_ROOT" \
+            -DBUILD_SHARED_LIBS=Yes \
+            -DBOOST_ROOT=$BOOST_ROOT
+        make -j$PARALLELISM
+        make install
+
+        spock-export LD_LIBRARY_PATH "$PACKAGE_ROOT/lib"
+        spock-export YAMLCPP_LIBDIRS "$PACKAGE_ROOT/lib"
+        spock-export YAMLCPP_INCDIRS "$PACKAGE_ROOT/include"

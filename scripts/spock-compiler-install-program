@@ -1,0 +1,7 @@
+#!/bin/bash
+arg0="${0##*/}"
+dir0="${0%/*}"
+
+source "$SPOCK_SCRIPTS/impl/compiler-support.sh" || exit 1
+
+spock-compiler-install-program "$@"

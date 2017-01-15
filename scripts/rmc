@@ -1,0 +1,575 @@
+#!/bin/bash
+
+# Spock's implementation of the ROSE Meta Config (RMC).
+
+# Additional documentation, tutorial, and examples are at
+# [https://rosecompiler.atlassian.net/wiki/display/~matzke/ROSE+Meta+Config+version+2]. If that link doesn't work, got
+# to the ROSE Confluence application and search for "ROSE Meta Config version 2".
+
+arg0="${0##*/}"
+dir0="${0%/*}"
+
+# Make sure all shell variables are set that this script might want to use
+if [ -n "$SPOCK_BINDIR" ]; then
+    eval $("$SPOCK_BINDIR/spock-ls" --shellvars --export) || exit 1
+else
+    eval $(spock-ls --shellvars) || exit 1
+fi
+
+source "$SPOCK_SCRIPTS/impl/basic-support.sh" || exit 1
+source "$SPOCK_SCRIPTS/impl/spock-realpath.sh" || exit 1
+
+usage() {
+    cat <<EOF >&2
+usage: $arg0 [SWITCHES] [COMMAND...]
+    Switches:
+        --cwd=DIR, -C DIR
+            Change working directory to DIR before doing anything.
+
+        --debug
+            Prints lots of debugging information.
+
+        --help, -h
+            Show this help message.
+
+        --install=yes|no|ask
+            Install missing packages without prompting (yes), or
+            after interactive prompting (ask), or not at all (no).
+            The default is "ask" if no command is specified, and
+            "no" if a command is specified. "--install" is the same
+            as saying "--install=ask".
+
+    Commands:
+        Commands are run by first changing to the directory specified
+        with the --cwd or -C switch. Then the ROSE environment is
+        configured if it hasn't been already, then the command is
+        run.  If RMC doesn't recognize the command as its own, then it
+        tries to run it as a shell command.
+
+        (none)
+            Start an interactive subshell with the environment set
+            up for building ROSE.
+
+        config [--dry-run]
+            Run (or just show) ROSE's configure script with switches
+            appropriate for the current environment. The current
+            working directory (or the --cwd/-C switch) is used as
+            the starting point to find the top of the ROSE build
+            tree.
+
+        srcdir
+            Look for the source directory that corresponds to the
+            current build directory.
+
+        (other)
+            Any other commands are assumed to be shell commands and
+            are run in a subshell. You can easily extend RMC by
+            providing shell scripts.
+EOF
+    exit 0
+}
+
+# Parse command-line switches
+command= do_install= do_graph= do_debug='>=march'
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+	--) shift; break ;;
+
+	--help|-h)
+	    usage
+	    exit 0
+	    ;;
+
+	--cwd=*)
+	    cd "${1#--cwd=}" || exit 1
+	    shift
+	    ;;
+	-C)
+	    cd "$2" || exit 1
+	    shift 2
+	    ;;
+
+	--debug)
+	    do_debug=all
+	    shift
+	    ;;
+
+	--graph=*)
+	    do_graph="$1"
+	    shift
+	    ;;
+	--graph)
+	    do_graph="$1=$2"
+	    shift 2
+	    ;;
+
+	--install=yes|--install=no|--install=ask)
+	    do_install="$1"
+	    shift
+	    ;;
+	--install)
+	    if [ "$2" = "yes" -o "$2" = "no" -o "$2" = "ask" ]; then
+		do_install="--install=$2"
+		shift 2
+	    else
+		do_install="--install=ask"
+		shift
+	    fi
+	    ;;
+
+	--version|-V)
+	    "$SPOCK_BINDIR/spock-ls" --version
+	    exit 0
+	    ;;
+
+	-*)
+	    die "unrecognized command-line switch: $1"
+	    ;;
+
+	*)
+	    command="$1"
+	    shift
+	    break ;;
+    esac
+done
+
+if [ "$do_install" = "" ]; then
+    if [ "$command" = "" ]; then
+	do_install="--install=ask"
+    else
+	do_install="--install=no"
+    fi
+fi
+
+
+########################################################################################################################
+#		      _   _ _   _ _ _ _           _____                 _   _
+#		     | | | | |_(_) (_) |_ _   _  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___
+#		     | | | | __| | | | __| | | | | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+#		     | |_| | |_| | | | |_| |_| | |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
+#		      \___/ \__|_|_|_|\__|\__, | |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+#		                          |___/
+#
+########################################################################################################################
+
+# Validates that there is only one argument for a function.
+check_one_arg() {
+    local function="$1"; shift
+    [ "$#" -eq 1 ] || die "$function expects one argument"
+}
+
+# Checks that the argument is one of the specified values
+check_arg_in() {
+    local function="$1" arg="$2"; shift 2
+    local possible
+    for possible in "$@"; do
+	[ "$arg" = "$possible" ] && return 0
+    done
+    die "$function argument must be in the set {" "$@" "}"
+}
+
+# Get the Spock name for an RMC package
+package_spec() {
+    local function="$1" pkgvers="$2"
+
+    local pkgname= pkgspec=
+    case "$function" in
+	rmc_compiler) pkgspec="$pkgvers"; pkgvers= ;;
+	rmc_magic) pkgname="libmagic" ;;
+	rmc_yaml) pkgname="yamlcpp" ;;
+	rmc_java) pkgname="oracle-java" ;;
+	rmc_*) pkgname="${function#rmc_}" ;;
+	*) die "check_package fails for $function $1" ;;
+    esac
+
+    if [ "$pkgspec" = "" ]; then
+	case "$pkgvers" in
+	    system) pkgspec="$pkgname" ;;
+	    no|none|ambivalent) pkgspec= ;;
+	    *) pkgspec="$pkgname-$pkgvers" ;;
+	esac
+    fi
+
+    echo "$pkgspec"
+}
+
+# Find the top of the ROSE build tree by looking for .rmc-main.cfg
+find_build_tree() {
+    local dir=$(pwd)
+    while [ "$dir" != "" ]; do
+	if [ -e "$dir/.rmc-main.cfg" ]; then
+	    echo "$dir"
+	    return 0
+	fi
+	dir="${dir%/*}"
+    done
+    die "cannot find top of ROSE build tree"
+}
+
+read_config_file() {
+    local config_file="$1"
+
+    # Set defaults
+    export RMC_ROSESRC=
+    export RMC_BUILD=autoconf
+    export RMC_PARALLELISM=system
+    export RMC_LANGUAGES=ambivalent
+    export RMC_DEBUG=
+    export RMC_OPTIMIZE=
+    export RMC_WARNINGS=
+    export RMC_CODE_COVERAGE=
+    export RMC_ASSERTIONS=ambivalent
+    export RMC_BOOST=
+    export RMC_CMAKE=system
+    export RMC_DLIB=none
+    export RMC_DOXYGEN=none
+    export RMC_DWARF=none
+    export RMC_EDG=ambivalent
+    export RMC_JAVA=none
+    export RMC_MAGIC=none
+    export RMC_PYTHON=3
+    export RMC_QT=none
+    export RMC_READLINE=none
+    export RMC_SQLITE=none
+    export RMC_WT=none
+    export RMC_YAML=none
+    export RMC_YICES=none
+
+    # Read config file to override the defaults
+    source "$config_file" || exit 1
+    RMC_HASH=$(sha1sum <"$config_file" |cut -d' ' -f1)
+
+    # Make sure some basic things are set. If they're set, then they've already been validated.
+    [ ! -d "$RMC_ROSESRC" -o ! -e "$RMC_ROSESRC/config/support-rose.m4" ] &&
+	die "$config_file: missing or incorrect rmc_rosesrc (use \"rmc_rosesrc /path/to/ROSE/source/tree\")"
+    [ "$RMC_CXX_COMPILER" = "" ] &&
+	die "$config_file: missing rmc_compiler specification (try \"rmc_compiler gnu-4-default\")"
+    [ -n "$RMC_BOOST" ] ||
+	die "$config_file: missing rmc_boost specification (try \"rmc_boost 1.62\")"
+
+    # Export important variables not exported by rmc_* commands
+    export RG_SRC="$RMC_ROSESRC"
+    export ROSE_SOURCE="$RMC_ROSESRC"
+    export RG_BLD=$(spock-realpath "$config_file"); RG_BLD="${RG_BLD%/*}"
+    export ROSE_BUILD="$RG_BLD"
+    rmc_parallelism $RMC_PARALLELISM # make sure its a number
+    export PS1_STACK="rmc=${RG_BLD##*/} $PS1_STACK"
+
+    #### Resolve the operating system name ####
+
+    # Debian/Ubuntu-like systems
+    [ "$RMC_OS_NAME" = "" -a -r /etc/os-release ] && \
+        RMC_OS_NAME=$(source /etc/os-release; echo $NAME $VERSION_ID)
+
+    # Other debian-like systems
+    [ "$RMC_OS_NAME" = "" -a -r /etc/debian_version ] && \
+        RMC_OS_NAME="Debian $(cat /etc/debian_version)"
+
+    # Redhat-like systems
+    [ "$RMC_OS_NAME" = "" -a -r /etc/redhat-release ] && \
+        RMC_OS_NAME=$(cat /etc/redhat-release)
+
+    # All others, fall back to the Linux kernel version
+    [ "$RMC_OS_NAME" = "" ] && \
+        RMC_OS_NAME="Unknown $(uname -s)"
+
+    # Create a version that can be easily used as part of file names.
+    RMC_OS_NAME_FILE=$(echo -n "$RMC_OS_NAME" |tr -c '[+_.=a-zA-Z0-9-]' '_')
+
+    # Create a short OS name. E.g., instead of "Red Hat Enterprise Linux Workstation release 6.7 (Santiago)" we'll use
+    # just "RHEL 6.7".
+    RMC_OS_NAME_SHORT=$(echo "$RMC_OS_NAME" | sed \
+                        -e 's/Red Hat Enterprise Linux Workstation release \([0-9]\+\.[0-9]\+\).*/RHEL \1/' \
+                        -e 's/Red Hat Enterprise Linux Server \([0-9]\+\.[0-9]\+\).*/RHEL \1/' \
+			-e 's/Red Hat Enterprise Linux Server release \([0-9]\+\.[0-9]\+\).*/RHEL \1/' \
+                        -e 's/Debian GNU.Linux/Debian/')
+
+    export RMC_OS_NAME RMC_OS_NAME_FILE RMC_OS_NAME_SHORT
+}
+
+########################################################################################################################
+#		         ____             __ _                       _   _
+#		        / ___|___  _ __  / _(_) __ _ _   _ _ __ __ _| |_(_) ___  _ __
+#		       | |   / _ \| '_ \| |_| |/ _` | | | | '__/ _` | __| |/ _ \| '_ \
+#		       | |__| (_) | | | |  _| | (_| | |_| | | | (_| | |_| | (_) | | | |
+#		        \____\___/|_| |_|_| |_|\__, |\__,_|_|  \__,_|\__|_|\___/|_| |_|
+#		                               |___/
+#
+#
+# These rmc_* commands that appear in config files. They mostly just set variables of the same name after validating the
+# input.  The ROSE Confluence documentation describes each of these, including their defaults (IF YOU CHANGE HOW THESE
+# WORK, PLEASE UPDATE THE CONFLUENCE PAGE!)
+########################################################################################################################
+
+rmc_rosesrc() {
+    check_one_arg rmc_rosesrc "$@"
+    RMC_ROSESRC=$(spock-realpath "$1")
+    [ "$RMC_ROSESRC" = "" ] && die "ROSE source tree is required"
+    [ -d "$RMC_ROSESRC" ] || die "ROSE source tree is missing: $RMC_ROSESRC"
+    [ -e "$RMC_ROSESRC/src/frontend/BinaryFormats/ElfSection.C" ] || \
+	die "does not look like a ROSE source tree: $RMC_ROSESRC"
+}
+
+rmc_toolchain() {
+    check_one_arg rmc_toolchain "$@"
+    : ignored
+}
+
+rmc_build() {
+    check_one_arg rmc_build "$@"
+    check_arg_in rmc_build "$1" cmake autoconf
+    RMC_BUILD="$1"
+}
+
+rmc_install() {
+    check_one_arg rmc_install "$@"
+    : ignored
+}
+
+rmc_parallelism() {
+    check_one_arg rmc_parallelism "$@"
+    local nprocs=
+    case "$1" in
+	""|system)
+            local nprocs=$(sed -n '/^processor[ \t]*:/p' /proc/cpuinfo |wc -l)
+            [ -n "$nprocs" ] || nprocs=1
+            ;;
+        unlimited|[0-9]|[0-9][0-9]|[0-9][0-9][0-9])
+            nprocs="$1"
+            ;;
+        *)
+            die "invalid parallelism: '$1'"
+            ;;
+    esac
+    RMC_PARALLELISM="$nprocs"
+}
+
+rmc_languages() {
+    check_one_arg rmc_languages "$@"
+    RMC_LANGUAGES="$1"
+}
+
+rmc_compiler() {
+    check_one_arg rmc_compiler "$@"
+
+    # RMC compiler names where like VENDOR-VERS-LANG with "-LANG" defaulting to "default"
+    local cxx_vendor=$(echo "$1" |cut -d- -f1)
+    local cxx_version=$(echo "$1" |cut -d- -f2)
+    local cxx_language=$(echo "$1" |cut -d- -f3)
+    [ "$cxx_vendor" = "" -o "$cxx_version" = "" ] && die "rmc_compiler $1 is not proper format"
+    [ "$cxx_language" = "" ] && cxx_language=default
+
+    # Spock vendor names are different
+    [ "$cxx_vendor" = "gcc" ] && cxx_vendor="gnu"
+
+    # Spock includes the LANG as part of the package name, like gnu-c++11. RMC's "default" meant no language was
+    # specified and therefore the actual language varies by compiler vendor and version.  Spock installs such compilers
+    # with an alias. For instance, the "gnu-c++-4.8" is an alias for "gnu-gnu++03-4.8" since the default
+    # language for GCC-4.8.4's g++ command is gnu++03.
+    [ "$cxx_language" = "default" ] && cxx_language=default-c++
+
+    # The Spock specification for the compiler
+    RMC_CXX_COMPILER="$cxx_vendor-$cxx_language-$cxx_version"
+
+    # ROSE also needs a C compiler, but it assumes the compiler's default language, whatever that might be.
+    RMC_C_COMPILER="$cxx_vendor-default-c-$cxx_version"
+}
+
+rmc_debug() {
+    check_one_arg rmc_debug "$@"
+    check_arg_in rmc_debug "$1" yes no
+    RMC_DEBUG="$1"
+}
+
+rmc_optimize() {
+    check_one_arg rmc_optimize "$@"
+    check_arg_in rmc_optimize "$1" yes no
+    RMC_OPTIMIZE="$1"
+}
+
+rmc_warnings() {
+    check_one_arg rmc_warnings "$@"
+    check_arg_in rmc_warnings "$1" yes no
+    RMC_WARNINGS="$1"
+}
+
+rmc_code_coverage() {
+    check_one_arg rmc_code_coverage "$@"
+    check_arg_in rmc_code_coverage "$1" yes no
+    RMC_CODE_COVERAGE="$1"
+}
+
+rmc_assertions() {
+    check_one_arg rmc_assertions "$@"
+    check_arg_in rmc_assertions "$1" abort exit throw
+    RMC_ASSERTIONS="$1"
+}
+
+rmc_boost() {
+    check_one_arg rmc_boost "$@"
+    RMC_BOOST="$1"
+}
+
+rmc_cmake() {
+    check_one_arg rmc_cmake "$@"
+    RMC_CMAKE="$1"
+}
+
+rmc_dlib() {
+    check_one_arg rmc_dlib "$@"
+    RMC_DLIB="$1"
+}
+
+rmc_doxygen() {
+    check_one_arg rmc_doxygen "$@"
+    RMC_DOXYGEN="$1"
+}
+
+rmc_dwarf() {
+    check_one_arg rmc_dwarf "$@"
+    RMC_DWARF="$1"
+}
+
+rmc_edg() {
+    check_one_arg rmc_edg "$@"
+    RMC_EDG="$1"
+}
+
+rmc_java() {
+    check_one_arg rmc_java "$@"
+    RMC_JAVA="$1"
+}
+
+rmc_magic() {
+    check_one_arg rmc_magic "$@"
+    RMC_MAGIC="$1"
+}
+
+rmc_python() {
+    check_one_arg rmc_python "$@"
+    RMC_PYTHON="$1"
+
+    local exe=$(which "$RMC_PYTHON")
+    if [ -n "$exe" ]; then
+	# Python2's --version emits to to standard error instead of standard output. We keep only the major version
+	local pyver=$("$exe" --version 2>&1 |sed -n '/^Python / s/^[^0-9]*\([0-9]\+\).*/\1/p')
+	[ -n "$pyver" ] && RMC_PYTHON="$pyver"
+    fi
+
+    case "$RMC_PYTHON" in
+	2|*python2*) RMC_PYTHON=2 ;;
+	3|*python3*) RMC_PYTHON=3 ;;
+    esac
+}
+
+rmc_qt() {
+    check_one_arg rmc_qt "$@"
+    RMC_QT="$1"
+}
+
+rmc_readline() {
+    check_one_arg rmc_readline "$@"
+    RMC_READLINE="$1"
+}
+
+rmc_sqlite() {
+    check_one_arg rmc_sqlite "$@"
+    RMC_SQLITE="$1"
+}
+
+rmc_wt() {
+    check_one_arg rmc_wt "$@"
+    RMC_WT="$1"
+}
+
+rmc_yaml() {
+    check_one_arg rmc_yaml "$@"
+    RMC_YAML="$1"
+}
+
+rmc_yices() {
+    check_one_arg rmc_yices "$@"
+    RMC_YICES="$1"
+}
+
+
+########################################################################################################################
+#                        __  __       _
+#                       |  \/  | __ _(_)_ __
+#                       | |\/| |/ _` | | '_ \
+#                       | |  | | (_| | | | | |
+#                       |_|  |_|\__,_|_|_| |_|
+#
+########################################################################################################################
+
+
+blddir=$(find_build_tree)
+[ -n "$blddir" ] || die "create a .rmc-main.cfg file at the top of your ROSE build tree"
+
+
+# Figure out what environment to use
+config_sum=$(sha1sum <"$blddir/.rmc-main.cfg" |cut -d' ' -f1)
+if [ "$RMC_HASH" = "" ]; then
+    # We're not in an RMC environment, so we need to try to enter one
+    # by reading the configuration file and seeing if we can choose
+    # appropriate configurations of dependency software.
+    read_config_file "$blddir/.rmc-main.cfg"
+
+    # Convert RMC-style software dependencies to Spock-style in a temporary file
+    depfile=$(tempfile)
+    (
+	package_spec rmc_compiler "$RMC_CXX_COMPILER"
+	package_spec rmc_compiler "$RMC_C_COMPILER"
+	package_spec rmc_boost    "$RMC_BOOST"
+	package_spec rmc_cmake    "$RMC_CMAKE"
+	package_spec rmc_dlib     "$RMC_DLIB"
+	package_spec rmc_doxygen  "$RMC_DOXYGEN"
+	package_spec rmc_dwarf    "$RMC_DWARF"
+	package_spec rmc_java     "$RMC_JAVA"
+	package_spec rmc_magic    "$RMC_MAGIC"
+	package_spec rmc_python   "$RMC_PYTHON"
+	package_spec rmc_qt       "$RMC_QT"
+	package_spec rmc_readline "$RMC_READLINE"
+	package_spec rmc_sqlite   "$RMC_SQLITE"
+	package_spec rmc_wt       "$RMC_WT"
+	package_spec rmc_yaml     "$RMC_YAML"
+	package_spec rmc_yices    "$RMC_YICES"
+    ) |sed '/^$/d' >"$depfile"
+
+    # DEBUGGING
+    cat $depfile
+
+    # Attempt to resolve the dependency constraints and cache the results for later.
+    if ! "$SPOCK_BINDIR/spock-shell" --with-file "$depfile" --output "$blddir/.spock" \
+	 $do_install $do_graph --log="$do_debug" true; then
+	rm -f "$depfile" "$blddir/.spock"
+	exit 1
+    fi
+    rm -rf "$depfile"
+    
+elif [ "$RMC_HASH" != "$config_sum" ]; then
+    # We must already be in a subshell, so check that the user didn't modify the config file
+    die "$blddir/.rmc-main.cfg changed; you must exit this shell and rerun rmc"
+
+elif [ "$command" = "" ]; then
+    # We're already in an RMC subshell and nothing changed
+    echo "$arg0: warning: you don't need RMC to create a subshell (but doing it anyway)" >&2
+    exec bash
+
+elif [ -x "$SPOCK_SCRIPTS/rmc-commands/$command" ]; then
+    exec "$SPOCK_SCRIPTS/rmc-commands/$command" "$@"
+
+else
+    exec "$command" "$@"
+fi
+
+# Figure out what command to run (same as the last few "if" statements above, but use spock-shell to enter an environment
+export RMC_HASH
+if [ "$command" = "" ]; then
+    exec "$SPOCK_BINDIR/spock-shell" --log='none,>=warn' --with-file "$blddir/.spock" --welcome
+elif [ -x "$SPOCK_SCRIPTS/rmc-commands/$command" ]; then
+    exec "$SPOCK_BINDIR/spock-shell" --log='none,>=warn' --with-file "$blddir/.spock" \
+	 "$SPOCK_SCRIPTS/rmc-commands/$command" "$@"
+else
+    exec "$SPOCK_BINDIR/spock-shell" --log='none,>=warn' --with-file "$blddir/.spock" "$command" "$@"
+fi

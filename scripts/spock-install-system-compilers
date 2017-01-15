@@ -1,0 +1,77 @@
+#!/bin/bash
+arg0="${0##*/}"
+dir0="${0%/*}"
+
+# Make sure all shell variables are set that this script might want to use
+if [ -n "$SPOCK_BINDIR" ]; then
+    eval $("$SPOCK_BINDIR/spock-ls" --shellvars) || exit 1
+else
+    eval $(spock-ls --shellvars) || exit 1
+fi
+
+source "$SPOCK_SCRIPTS/impl/compiler-support.sh" || exit 1
+
+usage() {
+    local status="$1"
+    (
+	echo "usage: $arg0 [SWITCHES] [BASELANG [COMPILER_EXE_PREFIX]]"
+	echo "  + where BASELANG is the base language, like 'c' or 'c++' without"
+	echo "    any language standard (i.e., not 'c++11')."
+	echo "  + where COMPILER_EXE_PREFIX are the first letters of the compiler"
+	echo "    executable. This script uses bash command-completion to extend"
+	echo "    the COMPILER_EXE_PREFIX into full names, and then tries to run"
+	echo "    each of them as a compler to obtain characteristics of that"
+	echo "    compiler. If COMPILER_EXE_PREFIX is not specified, then this"
+	echo "    script searches for certain well-known compiler names."
+    ) >&2
+    exit $status
+}
+
+# Given the prefix of a compiler executable, use bash command completion to get a list of potential compiler commands
+# and then install each one.  Not all of these potential commands are actually compilers, and we only install those
+# which are recognized as compilers when we try to determine the compiler characteristics.
+scan() {
+    local compiler_baselang="$1" cmd_prefix="$2"
+
+    local cmd
+    for cmd in $(compgen -c "$cmd_prefix"); do
+	# Avoid trying to run C++ compilers on C inputs. E.g., the "clang" command completion will also find "clang++",
+	# but we don't want to detect the clang++ as a C compiler.
+	[ "$compiler_baselang" = "c" -a "$cmd" != "${cmd#*++}" ] && continue
+
+	spock-compiler-install-program "system-compilers" "$compiler_baselang" "$cmd"
+    done
+    return 0
+}
+
+########################################################################################################################
+
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+	--) shift; break ;;
+	-*) die "unknown command-line switch: $1" ;;
+	*) break ;;
+    esac
+done
+
+[ "$SPOCK_EMPLOYED" = "" ] || die "this command must be run outside Spock environments"
+
+if [ "$#" -gt 1 ]; then
+    # Install a specific compiler
+    scan "$1" "$2"
+elif [ "$#" -eq 0 ]; then
+    # Look for compilers with certain name prefixes
+   scan c++ g++
+   scan c++ clang++
+   scan c++ icpc
+
+   scan c gcc
+   scan c clang
+   scan c icc
+
+   scan fortran gfortran
+   scan fortran ifort
+else
+    usage
+fi
+exit 0

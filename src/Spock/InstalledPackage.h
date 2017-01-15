@@ -2,6 +2,9 @@
 #define Spock_InstalledPackage_H
 
 #include <Spock/Context.h>
+#include <Spock/Environment.h>
+#include <Spock/Package.h>
+#include <Spock/PackagePattern.h>
 #include <Spock/VersionNumber.h>
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
@@ -9,14 +12,12 @@
 namespace Spock {
 
 /** Represents a package that has been installed. */
-class InstalledPackage: public Sawyer::SharedObject {
-    std::string hash_;                                  // unique identification for this installation of this package
-    std::string name_;                                  // name of package, such as "boost"
+class InstalledPackage: public Package {
     VersionNumber version_;
-    std::vector<InstalledPackagePtr> dependencies_;
+    std::vector<PackagePattern> dependencyPatterns_;
     std::vector<GlobalFlagPtr> flags_;
     boost::posix_time::ptime timestamp_;
-    SearchPaths environmentSearchPaths_;
+    Environment environmentSearchPaths_;
 
 protected:
     InstalledPackage();
@@ -27,11 +28,11 @@ public:
     /** Reference-counting pointer. */
     typedef Sawyer::SharedPointer<InstalledPackage> Ptr;
 
-    /** Create by reading a configuration file. */
-    static Ptr instance(const boost::filesystem::path&);
+    /** Create object from a hash or package specification that includes a hash. */
+    static Ptr instance(const Context&, const std::string &spec);
 
-    /** Create object from a configuration file hash. */
-    static Ptr instance(const Context &ctx, const std::string &hash);
+    /** Create object from a hash but override the configuration file. */
+    static Ptr instance(const Context&, const std::string &hash, const boost::filesystem::path&);
 
     /** Create default-constructed object.
      *
@@ -39,38 +40,11 @@ public:
      *  about the installation, and then written to a YAML configuration file. */
     static Ptr instance();
 
-    /** Unique identification for this package.
-     *
-     *  @{ */
-    std::string hash() const { return hash_; }
-    void hash(const std::string&);
-    /** @} */
+    virtual bool isInstalled() const { return true; }
+    virtual VersionNumber version() const;
+    virtual void version(const VersionNumber&);
 
-    /** Name of the package without version.
-     *
-     *  Name of the installed package without a version number, such as "boost" or "yaml-cpp".
-     *
-     * @{ */
-    const std::string& name() const { return name_; }
-    void name(const std::string&);
-    /** @} */
-
-    /** Version number that is installed.
-     *
-     * @{ */
-    const VersionNumber& version() const { return version_; }
-    void version(const VersionNumber&);
-    /** @} */
-
-    /** Name, version, and hash. */
-    std::string fullName() const;
-
-    /** Direct runtime dependencies.
-     *
-     * @{ */
-    const std::vector<InstalledPackage::Ptr>& dependencies() const { return dependencies_; }
-    void dependencies(const std::vector<InstalledPackage::Ptr>&);
-    /** @} */
+    virtual std::vector<PackagePattern> dependencyPatterns() const { return dependencyPatterns_; }
 
     /** Global flags.
      *
@@ -95,9 +69,18 @@ public:
      *  These are the values for variables like $PATH and $LD_LIBRARY_PATH.
      *
      * @{ */
-    const SearchPaths& environmentSearchPaths() const { return environmentSearchPaths_; }
-    void environmentSearchPaths(const SearchPaths&);
+    const Environment& environmentSearchPaths() const { return environmentSearchPaths_; }
+    void environmentSearchPaths(const Environment&);
     /** @} */
+
+    /** Remove the specified package from the operating system.
+     *
+     *  This function is low-level--it does not attempt to remove packages that may have depended on this package, nor does it
+     *  update the context in order to de-register the removed package. It removes the YAML config file first, then the
+     *  installed package, so that if the removal fails or is interrupted we're not left with a partially installed package.
+     *
+     *  The package object itself will still exist while there are references to it. */
+    void remove(Context&);
 };
 
 } // namespace

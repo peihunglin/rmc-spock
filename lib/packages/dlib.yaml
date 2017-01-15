@@ -1,0 +1,22 @@
+package:        dlib
+versions:       [ 18.16, 18.17, 18.18 ]
+
+dependencies:
+  - version: ">=18"
+    build: []
+    install: []
+
+download:
+  - version: ">=18"
+    shell: |
+        wget -O - http://dlib.net/files/dlib-$PACKAGE_VERSION.tar.bz2 |tar xjf -
+        mv dlib* download
+        tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=18"
+    shell: |
+        mkdir -p "$PACKAGE_ROOT/include"
+        cp -pdR download/dlib "$PACKAGE_ROOT/include/dlib"
+
+        spock-export DLIB_INCDIRS "$PACKAGE_ROOT/include"

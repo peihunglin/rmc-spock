@@ -1,10 +1,12 @@
 #!/bin/bash
+# Runs cmake on Robb's machine for testing Spock without installing it
 
 : ${COMPILER:=gcc-4.8.4-default}
 : ${BOOST_VERSION:=1.62}
 : ${YAML_VERSION:=0.5.3}
 
 cmake .. \
+      -DCMAKE_BUILD_TYPE=Debug \
       -DCMAKE_MODULE_PATH=$(pwd)/../cmake \
       -DBOOST_ROOT=$HOME/GS-CAD/boost/$BOOST_VERSION/$COMPILER \
       -DSawyer_DIR=$HOME/xxx-sawyer/_build/installed/lib/cmake/Sawyer \

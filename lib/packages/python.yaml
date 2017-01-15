@@ -1,0 +1,47 @@
+#####################################################################################################
+# NOTICE: Python uses version-numbered names such as "python2" and "python3" etc, for the programs
+#         it installs. Therfore, if python is already installed in system directories, employed
+#         a different version with Spock does not hide those other versions.  In particular, the
+#         executable "python" is not installed by version 3.x packages.
+#####################################################################################################
+
+package: python
+versions: [ 2.7.13, 3.6.0 ]
+
+dependencies:
+  - version: ">=2"
+    # FIXME: we aught to add libreadline
+    install: [ c++-compiler, c-compiler ]
+    build: []
+
+variables:
+  - version: ">=2"
+    download_url: https://www.python.org/ftp/python/$PACKAGE_VERSION/Python-$PACKAGE_VERSION.tgz
+
+download:
+  - version: ">=2"
+    shell: |
+        wget -O - "$download_url" |tar xzf -
+        mv Python-$PACKAGE_VERSION download
+        tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=2"
+    shell: |
+        cc --spock-triplet
+        c++ --spock-triplet
+
+        cd download
+        CC=cc CXX=c++ ./configure --prefix="$PACKAGE_ROOT"
+        make -j$PARALLELISM
+        make install
+
+        # "python" should be the version we're using
+        vers_major=$(echo $PACKAGE_VERSION |cut -d. -f1)
+        if [ ! -e "$PACKAGE_ROOT/bin/python" -a -e "$PACKAGE_ROOT/bin/python${vers_major}" ]; then
+            (cd "$PACKAGE_ROOT/bin" && ln -s python${vers_major} python)
+        fi
+
+        spock-export PATH           "$PACKAGE_ROOT/bin"
+        spock-export PYTHON_LIBDIRS "$PACKAGE_ROOT/lib"
+        spock-export PYTHON_INCDIRS "$PACKAGE_ROOT/include"

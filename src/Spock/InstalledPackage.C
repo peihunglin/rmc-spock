@@ -6,7 +6,11 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/regex.hpp>
 #include <yaml-cpp/yaml.h>
+
+namespace bfs = boost::filesystem;
 
 namespace Spock {
 
@@ -20,14 +24,24 @@ InstalledPackage::instance() {
 }
 
 InstalledPackage::Ptr
-InstalledPackage::instance(const Context &ctx, const std::string &hash) {
-    if (!isHash(hash))
-        throw Exception::SyntaxError("invalid package hash \"" + hash + "\"");
+InstalledPackage::instance(const Context &ctx, const std::string &s) {
+    boost::regex re1(".*@([0-9a-f]{8})"), re2("([0-9a-f]{8})");
+    boost::smatch results;
+    std::string hash;
+    if (boost::regex_match(s, results, re1)) {
+        hash = results.str(1);
+    } else if (boost::regex_match(s, results, re2)) {
+        hash = results.str(1);
+    } else {
+        throw Exception::SyntaxError("hash required in \"" + s + "\"");
+    }
+    
     boost::filesystem::path configFile = ctx.installedConfig(hash);
-#if 1 // DEBUGGING [Robb P Matzke 2017-01-13]
-    std::cerr <<"ROBB: configFile = " <<configFile <<"\n";
-#endif
+    return instance(ctx, hash, configFile);
+}
 
+InstalledPackage::Ptr
+InstalledPackage::instance(const Context &ctx, const std::string &hash, const boost::filesystem::path &configFile) {
     // File must be a YAML file
     if (!boost::filesystem::exists(configFile))
         throw Exception::NotFound("package " + hash + " does not seem to be installed");
@@ -47,28 +61,61 @@ InstalledPackage::instance(const Context &ctx, const std::string &hash) {
     if (self->version().isEmpty())
         throw Exception::SyntaxError("no package version in file " + configFile.string());
 
-    if (config["dependencies"]) {
-        if (config["dependencies"].Type() != YAML::NodeType::Sequence)
-            throw Exception::SyntaxError("malformed package dependency list in file " + configFile.string());
-        std::vector<InstalledPackage::Ptr> dependencies;
-        YAML::Node depList = config["dependencies"];
-        for (size_t i=0; i<depList.size(); ++i) {
-            std::string depHash = depList[i]["hash"].as<std::string>();
-            dependencies.push_back(instance(ctx, depHash));
+    if (config["aliases"]) {
+        Aliases aliases;
+        if (config["aliases"].Type() == YAML::NodeType::Scalar) {
+            std::string alias = config["aliases"].as<std::string>();
+            if (!alias.empty())
+                aliases.insert(alias);
+        } else if (config["aliases"].Type() == YAML::NodeType::Sequence) {
+            for (YAML::const_iterator item=config["aliases"].begin(); item!=config["aliases"].end(); ++item) {
+                if (item->Type() != YAML::NodeType::Scalar)
+                    throw Exception::SyntaxError("\"aliases\" sequence item is not scalar in file " + configFile.string());
+                std::string alias = item->as<std::string>();
+                if (!alias.empty())
+                    aliases.insert(alias);
+            }
+        } else {
+            throw Exception::SyntaxError("\"aliases\" should be a list or scalar in file " + configFile.string());
         }
-        self->dependencies(dependencies);
+        self->aliases(aliases);
     }
+    
+    if (config["dependencies"]) {
+        std::vector<std::string> depNames;
+        if (config["dependencies"].Type() == YAML::NodeType::Scalar) {
+            depNames.push_back(config["dependencies"].as<std::string>());
+        } else if (config["dependencies"].Type() == YAML::NodeType::Sequence) {
+            for (YAML::const_iterator dep=config["dependencies"].begin(); dep!=config["dependencies"].end(); ++dep) {
+                if (dep->Type() != YAML::NodeType::Scalar)
+                    throw Exception::SyntaxError("dependency sequence item is not scalar in file " + configFile.string());
+                depNames.push_back(dep->as<std::string>());
+            }
+        } else {
+            throw Exception::SyntaxError("\"dependencies\" should be a list or scalar in file " + configFile.string());
+        }
 
+        BOOST_FOREACH (const std::string &depName, depNames) {
+            PackagePattern pattern(depName);
+            ASSERT_require(!pattern.name().empty());
+            ASSERT_require(pattern.versionComparison() == PackagePattern::VERS_EQ);
+            ASSERT_require(!pattern.version().isEmpty());
+            ASSERT_require(isHash(pattern.hash()));
+            self->dependencyPatterns_.push_back(pattern);
+        }
+
+    } else if (config["depends"]) {
+        throw Exception::SyntaxError("use \"dependencies\" instead of \"depends\" in file " + configFile.string());
+    }
+    
     if (config["environment"]) {
         if (config["environment"].Type() != YAML::NodeType::Map)
             throw Exception::SyntaxError("malformed environment map in file " + configFile.string());
-        SearchPaths searchPaths;
+        Environment searchPaths;
         for (YAML::const_iterator evar=config["environment"].begin(); evar!=config["environment"].end(); ++evar) {
             std::string varName = evar->first.as<std::string>();
             std::string varVal = evar->second.as<std::string>();
-            std::vector<std::string> varParts;
-            boost::split(varParts, varVal, boost::is_any_of(":"));
-            searchPaths.insert(varName, varParts);
+            searchPaths.set(varName, varVal);
         }
         self->environmentSearchPaths(searchPaths);
     }
@@ -81,39 +128,14 @@ InstalledPackage::instance(const Context &ctx, const std::string &hash) {
     return Ptr(self);
 }
 
-void
-InstalledPackage::hash(const std::string &s) {
-    ASSERT_require(isHash(s));
-    hash_ = s;
-}
-
-void
-InstalledPackage::name(const std::string &s) {
-    ASSERT_forbid(s.empty());
-    name_ = s;
+VersionNumber
+InstalledPackage::version() const {
+    return version_;
 }
 
 void
 InstalledPackage::version(const VersionNumber &v) {
-    ASSERT_forbid(v.isEmpty());
     version_ = v;
-}
-
-std::string
-InstalledPackage::fullName() const {
-    ASSERT_forbid(name().empty());
-    ASSERT_forbid(version_.isEmpty());
-    ASSERT_forbid(hash().empty());
-    return name() + "=" + version_.toString() + "@" + hash();
-}
-
-void
-InstalledPackage::dependencies(const std::vector<InstalledPackage::Ptr> &deps) {
-#ifndef NDEBUG
-    BOOST_FOREACH (const InstalledPackage::Ptr &dep, deps)
-        ASSERT_not_null(dep);
-#endif
-    dependencies_ = deps;
 }
 
 void
@@ -131,8 +153,18 @@ InstalledPackage::timestamp(const boost::posix_time::ptime &ts) {
 }
 
 void
-InstalledPackage::environmentSearchPaths(const SearchPaths &sps) {
+InstalledPackage::environmentSearchPaths(const Environment &sps) {
     environmentSearchPaths_ = sps;
+}
+
+void
+InstalledPackage::remove(Context &ctx) {
+    bfs::path yamlFile = ctx.installedConfig(hash());
+    if (bfs::exists(yamlFile)) {                        // might have been removed already
+        bfs::remove(yamlFile);
+        bfs::path prefix = ctx.optDirectory() / hash();
+        bfs::remove_all(prefix);
+    }
 }
 
 } // namespace

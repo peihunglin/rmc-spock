@@ -1,0 +1,67 @@
+package:        wt
+versions:       [ 3.3.3, 3.3.4, 3.3.5 ]
+
+dependencies:
+  - version: "=3.3.3"
+    # The boost requirement was tried only with gcc-4.9.2
+    install: [ "boost<=1.55", libgraphicsmagick, c++-compiler ]
+    build:   [ c-compiler ]
+
+  - version: "=3.3.4"
+    # gcc-4.9.2 boost-1.63 works
+    # gcc-4.9.2 boost-1.60 works
+    # gcc-4.9.2 boost-1.55 works
+    install: [ boost, libgraphicsmagick, c++-compiler ]
+    build:   [ c-compiler ]
+
+  - version: "=3.3.5"
+    # gcc-4.9.2 boost-1.63 fails
+    # gcc-4.9.2 boost-1.60 fails
+    # gcc-4.9.2 boost-1.55 fails
+    # gcc-5.1.0 boost-1.63 fails
+    # gcc-5.1.0 boost-1.60 fails
+    # gcc-5.4.0 boost-1.60 fails
+    # gcc-6.2.0 boost-1.60 works
+    install: [ boost, libgraphicsmagick, c++-compiler ]
+    build:   [ c-compiler ]
+
+
+
+
+variables:
+  - version: ">=3.3.3"
+    download_url: "http://prdownloads.sourceforge.net/witty/wt-$PACKAGE_VERSION.tar.gz?download"
+
+  - version: ">=3.3.4"
+    download_url: "https://github.com/kdeforche/wt/archive/$PACKAGE_VERSION.tar.gz"
+
+download:
+  - version: ">=3.3.3"
+    shell: |
+        wget -O - "$download_url" |tar xzf -
+        mv wt* download
+        tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=3.3.3"
+    shell: |
+        cc --spock-triplet
+        c++ --spock-triplet
+
+        mkdir build
+        cd build
+        cmake ../download \
+            -DCMAKE_C_COMPILER=cc \
+            -DCMAKE_CXX_COMPILER=c++ \
+            -DCMAKE_INSTALL_PREFIX="$PACKAGE_ROOT" \
+            -DCONFIGDIR="$PACKAGE_ROOT/etc/wt" \
+            -DBOOST_ROOT="$BOOST_ROOT" \
+            -DWT_WRASTERIMAGE_IMPLEMENTATION=GraphicsMagick \
+            -DGM_INCLUDE_DIR:PATH="$LIBGRAPHICSMAGICK_ROOT/include/GraphicsMagick" \
+            -DGM_LIB:FILEPATH="$LIBGRAPHICSMAGICK_ROOT/lib/libGraphicsMagick.so"
+        make -j$PARALLELISM
+        make install
+
+        spock-export LD_LIBRARY_PATH "$PACKAGE_ROOT/lib"
+        spock-export WT_LIBDIRS      "$PACKAGE_ROOT/lib"
+        spock-export WT_INCDIRS      "$PACKAGE_ROOT/include"

@@ -1,0 +1,32 @@
+package:        cmake
+versions:       [ 3.1.0, 3.2.0, 3.3.0, 3.4.0, 3.5.0, 3.6.0, 3.7.0 ]
+
+dependencies:
+  - version: ">=3"
+
+    # The cmake installation depends on a number of shared libraries that need to be compiled with the same compiler
+    # as cmake, such as libstdc++.so.
+    install: [c++-compiler, c-compiler]
+    build:   []
+
+download:
+  - version: ">=3"
+    shell: |
+        version2=$(echo $PACKAGE_VERSION |cut -d. -f1-2)
+        cmake_download_url=https://cmake.org/files/v${version2}/cmake-$PACKAGE_VERSION.tar.gz
+        wget -O - $cmake_download_url |tar xzf -
+        mv cmake* download
+        tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=3"
+    shell: |
+        cc --spock-triplet
+        c++ --spock-triplet
+
+        cd download
+        ./bootstrap --parallel=$PARALLELISM --prefix="$PACKAGE_ROOT"
+        make -j$PARALLELISM
+        make install
+
+        spock-export PATH "$PACKAGE_ROOT/bin"

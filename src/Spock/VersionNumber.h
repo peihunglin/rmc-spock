@@ -2,7 +2,7 @@
 #define Spock_VersionNumber_H
 
 #include <Spock/Spock.h>
-
+#include <Sawyer/Set.h>
 
 namespace Spock {
 
@@ -18,7 +18,7 @@ public:
     VersionNumber() {}
 
     /** Construct from string. */
-    /*implicit*/ VersionNumber(const std::string &s);
+    /*implicit*/ VersionNumber(std::string s);
 
     /** Predicate for emptiness.
      *
@@ -57,19 +57,28 @@ public:
      *  Returns true if @p this version is less than the @p other version. The comparison is made by comparing each
      *  corresponding pair of parts and returnnig true or false for the first unequal pair. If all corresponding pairs are
      *  equal but one version has fewer parts than the other, then the version with fewer parts is less than the version with
-     *  more parts. */
+     *  more parts.  When both parts appear to be whole numbers, they're compared numerically. */
     bool operator<(const VersionNumber &other) const;
+
+    /** Version comparison.
+     *
+     *  Similar to the '==' operator, but allows the lhs operand to have more parts. */
+    bool operator-(const VersionNumber &other) const;
 
     /** Does a version satisfy some requirement.
      *
      *  Returns true if @p this version requirement is satisfied by @p other version.  For instance, a requirement of 1.2 is
-     *  satisfied by 1.2, 1.2.0, 1.3, etc. but not by 1.1 or 1 or an empty version. In essence, this method is just another
-     *  name for the less-than operator. */
+     *  satisfied by 1.2, 1.2.0, 1.3, etc. but not by 1.1 or 1 or an empty version. */
     bool isSatisfiedBy(const VersionNumber &other) const;
 
     /** Convert a version number to a string. */
     std::string toString() const;
+
+    /** Returns the individual parts of a version number. */
+    const std::vector<std::string>& parts() const { return parts_; }
 };
+
+typedef Sawyer::Container::Set<VersionNumber> VersionNumbers;
 
 } // namespace
 

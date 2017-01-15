@@ -1,0 +1,78 @@
+#!/bin/bash
+
+########################################################################################################################
+# Initialization
+########################################################################################################################
+
+arg0="${0##*/}"
+dir0="${0%/*}"
+
+# Make sure all shell variables are set that this script might want to use
+if [ -n "$SPOCK_BINDIR" ]; then
+    eval $("$SPOCK_BINDIR/spock-ls" --shellvars) || exit 1
+else
+    eval $(spock-ls --shellvars) || exit 1
+fi
+
+source "$SPOCK_SCRIPTS/impl/compiler-support.sh" || exit 1
+
+########################################################################################################################
+# Parse command-line
+########################################################################################################################
+
+compiler_baselang=
+dependency=
+while [ "$#" -gt 1 ]; do
+    case "$1" in
+	--)
+	    shift
+	    break
+	    ;;
+
+	--baselang=*)
+	    compiler_baselang="${1#--baselang=}"
+	    shift
+	    ;;
+
+	--baselang)
+	    compiler_baselang="$2"
+	    shift 2
+	    ;;
+
+	--dependency=*)
+	    [ -n "$dependency" ] && die "only one --dependency allowed"
+	    dependency="${1#--dependency=}"
+	    shift
+	    ;;
+
+	--dependency)
+	    [ -n "$dependency" ] && die "only one --dependency allowed"
+	    dependency="$2"
+	    shift 2
+	    ;;
+	    
+	-*)
+	    die "unknown switch: $1"
+	    ;;
+
+	*)
+	    break
+	    ;;
+    esac
+done
+
+# The first positional arg is the executable for the compiler. The rest are compiler's command-line switches
+executable=$(which "$1")
+[ "$executable" = "" ] && die "not a compiler executable: $1"
+shift
+
+########################################################################################################################
+
+# Basic compiler characteristics
+quad=$("$SPOCK_SCRIPTS/impl/detect-compiler-characteristics" --quad --baselang="$compiler_baselang" "$executable" "$@")
+[ "$quad" = "" ] && die "unable to detect compiler characteristics for $executable"
+
+spock-compiler-install "$quad" "$dependency" "$executable" "$@"
+
+# Print the package spec we just created. This should be the only standard output.
+echo "$package_spec"

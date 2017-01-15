@@ -1,0 +1,128 @@
+#!/bin/bash
+# This runs ROSE's auto-tools configuration based on software dependencies that are in use.
+# It must be invoked inside an RMC environment (it checks for that)
+arg0="rmc ${0##*/}"
+
+source "$SPOCK_SCRIPTS/impl/basic-support.sh" || exit 1
+
+# Flags for compiler optimization
+optimize_flags() {
+    local switch="$1"
+    case "$RMC_OPTIMIZE" in
+	yes) echo -n " $switch='-O3 -DNDEBUG'" ;;
+	no)  echo -n " $switch='-O0'" ;;
+    esac
+}
+
+# Flags for controlling warnings
+warning_flags() {
+    local switch="$1"
+    case "$RMC_WARNINGS" in
+	yes) echo -n " $switch='-Wall -Wno-unused-local-typedefs -Wno-attributes'" ;;
+    esac
+}
+
+# Generates "--with-XXX=VALUE", "--without-XXX", or nothing.
+# If if_true is non-empty, then use it as the value in the "--with-XXX=VALUE" form.
+optional_with() {
+    local name="$1" value="$2" if_true="$3"
+    case "$value" in
+	no|none)
+	    echo -n " --without-$name"
+	    ;;
+	""|ambivalent)
+	    : nothing
+	    ;;
+	*)
+	    [ -n "$if_true" ] && value="$if_true"
+	    echo -n " --with-$name='$value'"
+	    ;;
+    esac
+}
+
+# Generates "--enable-XXX=VALUE", "--disable-XXX", or nothing
+# If if_true is non-empty, then use it as the value in the "--enable-XXX=VALUE" form.
+optional_enable() {
+    local name="$1" value="$2" if_true="$3"
+    case "$value" in
+	no|none)
+	    echo -n " --disable-$name"
+	    ;;
+	""|ambivalent)
+	    : nothing
+	    ;;
+	*)
+	    [ -n "$if_true" ] && value="$if_true"
+	    echo -n " --enable-$name='$value'"
+	    ;;
+    esac
+}
+
+########################################################################################################################
+
+# Check a few things that should have been configured by RMC-2. Some of these are invariants in the RMC environment
+# setup, so we're mainly checking things that a misunderstanding user might get the hankering to change by hand.
+[ "$RMC_HASH" = "" ] && die "this command needs to run in an RMC build environment"
+[ "$RG_SRC" = "" -o "$RG_BLD" = "" ] && die "RMC environment problem (RG_SRC, RG_BLD)"
+[ "$C_COMPILER" = "" ] && die "no C compiler selected";
+[ "$CXX_COMPILER" = "" ] && die "no C++ compiler selected";
+[ "$C_VENDOR" != "$CXX_VENDOR" ] && die "mismatched C and C++ compiler vendors";
+[ "$C_VERSION" != "$CXX_VERSION" ] && die "mismatched C and C++ compiler versions";
+[ "$BOOST_ROOT" = "" ] && die "no boost library selected";
+[ "$RMC_BUILD" = "autoconf" ] || die "build type '$RMC_BUILD' is not supported yet"
+[ "$RMC_CODE_COVERAGE" = "yes" ] && die "code coverage not supported yet"
+
+export ROSE_INSTALLED="$RG_BLD/installed"
+
+# Command-line args
+dry_run=
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+	--) shift; break ;;
+	--dry-run) dry_run=yes; shift ;;
+	*) echo "$0: unknown switch: $1" >&2; exit 1 ;;
+    esac
+done
+
+# Write the configure command to a temporary file before running it. This seems to be the best way to get the quoting
+# correct at the same time as providing a way to handle the --dry-run switch.
+script=$(tempfile)
+trap "rm -f $script" EXIT
+(
+    echo -n "env CC='$C_COMPILER' CXX='$CXX_COMPILER' FC='$FORTRAN_COMPILER'"
+    echo -n " $RG_SRC/configure"
+    echo -n " --with-CXXFLAGS='-fPIC -rdynamic -g'"
+    echo -n " --with-CFLAGS='-fPIC -rdynamic -g'"
+    optimize_flags --with-C_OPTIMIZE
+    optimize_flags --with-CXX_OPTIMIZE
+    warning_flags --with-C_WARNINGS
+    warning_flags --with-CXX_WARNINGS
+    echo -n " --disable-boost-version-check"
+    echo -n " --disable-gcc-version-check"
+    optional_enable assertion-behavior "$RMC_ASSERTIONS"
+    optional_enable edg_version "$RMC_EDG"
+    optional_enable languages "$RMC_LANGUAGES"
+    echo -n " --prefix='$ROSE_INSTALLED'"
+    echo -n " --with-ROSE_LONG_MAKE_CHECK_RULE=yes"
+    echo -n " --with-boost='$BOOST_ROOT'"
+    optional_with dlib "$RMC_DLIB" "$DLIB_INCDIRS"
+    optional_with doxygen "$RMC_DOXYGEN" "$DOXYGEN"
+    optional_with dwarf "$RMC_DWARF" "$DWARF_ROOT"
+    optional_with gfortran "$FORTRAN_COMPILER"
+    optional_with java "$RMC_JAVA" "$JAVA_COMPILER"
+    optional_with libreadline "$RMC_READLINE" "$LIBREADLINE_ROOT"
+    optional_with magic "$RMC_MAGIC" "$LIBMAGIC_ROOT"
+    echo -n " --with-pch=no"
+    optional_with python "$RMC_PYTHON" "$(which python)"
+    optional_with sqlite3 "$RMC_SQLITE" "$SQLITE_ROOT"
+    optional_with wt "$RMC_WT" "$WT_ROOT"
+    optional_with yaml "$RMC_YAML" "$YAMLCPP_ROOT"
+    optional_with yices "$RMC_YICES" "$YICES_ROOT"
+    echo
+) >"$script"
+
+if [ -n "$dry_run" ]; then
+    cat "$script"
+else
+    (cd "$RG_BLD" && source "$script")
+fi

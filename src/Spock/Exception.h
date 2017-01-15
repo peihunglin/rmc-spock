@@ -45,6 +45,13 @@ public:
         : SpockError(what) {}
 };
 
+class CommandError: public SpockError {
+public:
+    explicit CommandError(const std::string &what)
+        : SpockError(what) {}
+};
+
+
 } // namespace
 } // namespace
 

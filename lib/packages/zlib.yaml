@@ -1,0 +1,29 @@
+package: zlib
+versions: [ 1.2.11 ]
+
+dependencies:
+  - version: '>=1.2.11'
+    install: [ c-compiler ]
+    build:   []
+    
+download:
+  - version: ">=1.2.11"
+    shell: |
+      wget -O - http://zlib.net/zlib-$PACKAGE_VERSION.tar.gz | tar xzf -
+      mv zlib-$PACKAGE_VERSION download
+      tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=1.2.11"
+    shell: |
+      cc --spock-triplet
+
+      cd download
+      ./configure --prefix=$PACKAGE_ROOT
+      make -j$PARALLELISM
+      make test
+      make install
+
+      spock-export LD_LIBRARY_PATH "$PACKAGE_ROOT/lib"
+      spock-export ZLIB_LIBDIRS    "$PACKAGE_ROOT/lib"
+      spock-export ZLIB_INCDIRS    "$PACKAGE_ROOT/include"

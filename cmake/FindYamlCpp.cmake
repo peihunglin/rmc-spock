@@ -29,6 +29,7 @@ endif()
 find_path(YamlCpp_INCLUDE_DIR
   NAMES yaml-cpp/yaml.h
   PATH_SUFFIXES include
+  NO_DEFAULT_PATH
   PATHS
     ${YamlCpp_ROOT}/include
     ${PROJECT_SOURCE_DIR}/dependencies/yaml-cpp-0.5.1/include
@@ -45,6 +46,7 @@ find_path(YamlCpp_INCLUDE_DIR
 find_library(YamlCpp_LIBRARY_RELEASE
   NAMES ${YamlCpp_STATIC} yaml-cpp libyaml-cppmd.lib libyaml-cppmt.lib
   PATH_SUFFIXES lib64 lib Release RelWithDebInfo
+  NO_DEFAULT_PATH
   PATHS
     ${YamlCpp_ROOT}
     ${PROJECT_SOURCE_DIR}/dependencies/yaml-cpp-0.5.1/
@@ -62,6 +64,7 @@ find_library(YamlCpp_LIBRARY_RELEASE
 find_library(YamlCpp_LIBRARY_DEBUG
   NAMES ${YamlCpp_STATIC_DEBUG} yaml-cpp-dbg libyaml-cppmdd.lib libyaml-cppmtd.lib
   PATH_SUFFIXES lib64 lib Debug
+  NO_DEFAULT_PATH
   PATHS
     ${YamlCpp_ROOT}
     ${PROJECT_SOURCE_DIR}/dependencies/yaml-cpp-0.5.1/
@@ -84,6 +87,10 @@ endif()
 get_filename_component(YamlCpp_LIBRARY_RELEASE_DIR ${YamlCpp_LIBRARY_RELEASE} PATH)
 get_filename_component(YamlCpp_LIBRARY_DEBUG_DIR ${YamlCpp_LIBRARY_DEBUG} PATH)
 set(YamlCpp_LIBRARY_DIR ${YamlCpp_LIBRARY_RELEASE_DIR} ${YamlCpp_LIBRARY_DEBUG_DIR})
+
+message(STATUS "YamlCpp_INCLUDE_DIR   ${YamlCpp_INCLUDE_DIR}")
+message(STATUS "YamlCpp_LIBRARY_DIR   ${YamlCpp_LIBRARY_DIR}")
+
 
 # handle the QUIETLY and REQUIRED arguments and set YamlCpp_FOUND to TRUE if all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
