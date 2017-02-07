@@ -102,7 +102,6 @@ elif [ "$RMC_PARALLELISM" = "unlimited" ]; then
 else
     parallelism="-j$RMC_PARALLELISM"
 fi
-echo "ROBB: parallelism='$parallelism'" >&2
 
 # Run "make" for each target.
 for target in "${targets[@]}"; do
