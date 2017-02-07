@@ -70,7 +70,7 @@ fail(const DefinedPackage *pkg, std::string mesg, const bfs::path &output = bfs:
 
 template<class Exception>
 static void
-fail(const DefinedPackage *pkg, std::string mesg, const bfs::path &output = bfs::path()) {
+fail(const DefinedPackage *pkg, std::string mesg, const bfs::path &output) {
     mesg += " for " + pkg->name();
     if (!output.empty())
         mesg += "; see " + output.string() + " for details";
