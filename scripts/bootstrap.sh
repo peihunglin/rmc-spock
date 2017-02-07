@@ -126,7 +126,7 @@ if [ ! -d "$prefix/dependencies/boost" ]; then
 	esac
 	       
         echo "using $boost_cxx_vendor : $cxx_version : $cxx_exe ;" >tools/build/src/user-config.jam
-        ./bootstrap.sh --prefix="$prefix/dependencies/boost" --with-libraries="$boost_libs" --toolset="$boost_cxx_vendor"
+        ./bootstrap.sh --prefix="$prefix/dependencies/boost" --with-libraries="$boost_libs" --with-toolset="$boost_cxx_vendor"
         ./b2 --prefix="$prefix/dependencies/boost" -sNO_BZIP2=1 toolset="$boost_cxx_vendor"
         ./b2 --prefix="$prefix/dependencies/boost" -sNO_BZIP2=1 toolset="$boost_cxx_vendor" install
     )
