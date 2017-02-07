@@ -132,6 +132,13 @@ install(
   DESTINATION scripts/impl
 )
 
+install(
+  FILES
+    scripts/rmc-commands/config
+    scripts/rmc-commands/make
+  DESTINATION scripts/rmc-commands
+)
+
 file(GLOB package_files "${CMAKE_CURRENT_SOURCE_DIR}/lib/packages/*.yaml")
 
 install(
