@@ -26,9 +26,10 @@ PackagePattern::parse(const std::string &s) {
         std::string versionPart = "(?:[[:alnum:]]+(?:[-_]+[[:alnum:]]+)*)";
 
         // A version number is either two or more parts separated by single "." characters, or a natural number <= 999999
-        std::string dottedVersion = "(?:" + versionPart + "(?:\\." + versionPart + ")+)";
-        std::string singleVersion = "(?:[1-9][0-9]{0,5})";
-        std::string dottedOrSingle = "(?:" + dottedVersion + "|" + singleVersion + ")";
+        std::string dottedVersion  = "(?:" + versionPart + "(?:\\." + versionPart + ")+)";
+        std::string relaxedVersion = "(?:" + versionPart + "(?:\\." + versionPart + ")*)";
+        std::string singleNumber   = "(?:[1-9][0-9]{0,5})";
+        std::string dottedOrNumber = "(?:" + dottedVersion + "|" + singleNumber + ")";
 
         // A comparison operator for version numbers is =, !=, <, <=, >, >= ("-" is intentionally excluded)
         std::string versionOp = "(?:!?=|<=?|>=?)";
@@ -50,15 +51,18 @@ PackagePattern::parse(const std::string &s) {
         // Only a hash: @12345678
         p.push_back("()()()(" + hash + ")");
 
-        // Vers and optional hash: >=1.2, -1.2, -12, -alpha (any of these followed by a hash)
-        p.push_back("()(" + versionOp + "|-)(" + dottedOrSingle + ")(" + hash + "?)");
+        // Vers and optional hash: >=1.2, -1.2, -12, -alpha (any of these followed by a hash).  There's no ambiguity here about
+        // whether "alpha" in the pattern "-alpha" is a package or version--it's always a version because package names cannot
+        // start with a hyphen.
+        p.push_back("()(" + versionOp + "|-)(" + relaxedVersion + ")(" + hash + "?)");
 
-        // Pkg followed by non-ambiguous version and optional hash. "yaml-cpp=1.2"
-        p.push_back("(" + pkgName + ")(" + versionOp + ")(" + dottedOrSingle + ")(" + hash + "?)");
+        // Pkg followed by non-ambiguous version and optional hash. "yaml-cpp=alpha"
+        p.push_back("(" + pkgName + ")(" + versionOp + ")(" + relaxedVersion + ")(" + hash + "?)");
 
-        // Pkg followed by ambiguous version introduced with a hyphen: foo-alpha-1 ("-1" is the version), foo-alpha-1.2 ("-1.2")
-        // hdf-5-1.2 ("-1.2")
-        p.push_back("(" + pkgName + ")(-)(" + dottedOrSingle +")(" + hash + "?)");
+        // Pkg followed by ambiguous version introduced with a hyphen. In this case, the version pattern is slightly tighter so
+        // that a string like "foo-alpha" is a package name without a version, but foo-alpha.beta" has a version of
+        // "alpha.beta" because of the dot.  Numbers are still versions, as in "foo-1".
+        p.push_back("(" + pkgName + ")(-)(" + dottedOrNumber +")(" + hash + "?)");
 
         // No version
         p.push_back("(" + pkgName + ")()()(" + hash + "?)");

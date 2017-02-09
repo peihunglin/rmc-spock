@@ -63,10 +63,6 @@ main(int argc, char *argv[]) {
         // Find all matching packages
         std::vector<Package::Ptr> packages;
         if (patterns.empty()) {
-            if (!useForce) {
-                mlog[FATAL] <<"refusing to remove all installed packages; use --force to override\n";
-                exit(1);
-            }
             packages = ctx.findInstalled(PackagePattern());
         } else {
             BOOST_FOREACH (const std::string &pattern, patterns) {
@@ -99,8 +95,18 @@ main(int argc, char *argv[]) {
             }
         }
 
-        // Remove packages in the reverse order they were found so that if the user interrupts this processes the system is
-        // still in a valid state.
+        // Use care when removing more than one package
+        if (toRemove.size() > 1 && !useForce && !dryRun) {
+            std::sort(toRemove.begin(), toRemove.end(), sortByName);
+            toRemove.erase(std::unique(toRemove.begin(), toRemove.end(), sameName), toRemove.end());
+            mlog[FATAL] <<"refusing to remove multiple packages (" <<toRemove.size() <<" total)\n";
+            mlog[FATAL] <<"use --dry-run to get a list; use --force to override\n";
+            exit(1);
+        }
+
+        // Remove (or show, if dry-run) packages in the reverse order they were found so that if the user interrupts this
+        // processes the system is still in a valid state. If the user wants an alphabetical list, that's easy enough to get by
+        // using the "sort" command.
         std::set<std::string> removed;
         BOOST_REVERSE_FOREACH (const Package::Ptr &pkg, toRemove) {
             if (removed.insert(pkg->toString()).second) {

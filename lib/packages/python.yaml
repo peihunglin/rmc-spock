@@ -21,27 +21,30 @@ variables:
 download:
   - version: ">=2"
     shell: |
-        wget -O - "$download_url" |tar xzf -
-        mv Python-$PACKAGE_VERSION download
-        tar cf - download |gzip -9 >download.tar.gz
+      wget -O - "$download_url" |tar xzf -
+      mv Python-$PACKAGE_VERSION download
+      tar cf - download |gzip -9 >download.tar.gz
 
 install:
   - version: ">=2"
     shell: |
-        cc --spock-triplet
-        c++ --spock-triplet
+      cc --spock-triplet
+      c++ --spock-triplet
 
-        cd download
-        CC=cc CXX=c++ ./configure --prefix="$PACKAGE_ROOT"
-        make -j$PARALLELISM
-        make install
+      cd download
 
-        # "python" should be the version we're using
-        vers_major=$(echo $PACKAGE_VERSION |cut -d. -f1)
-        if [ ! -e "$PACKAGE_ROOT/bin/python" -a -e "$PACKAGE_ROOT/bin/python${vers_major}" ]; then
-            (cd "$PACKAGE_ROOT/bin" && ln -s python${vers_major} python)
-        fi
+      env \
+        CC=cc CXX=c++ \
+        LDFLAGS="$(spock-compiler-libdirs)" \
+        CPPFLAGS="$(spock-compiler-incdirs)" \
+        ./configure \
+        --prefix="$PACKAGE_ROOT"
 
-        spock-export PATH           "$PACKAGE_ROOT/bin"
-        spock-export PYTHON_LIBDIRS "$PACKAGE_ROOT/lib"
-        spock-export PYTHON_INCDIRS "$PACKAGE_ROOT/include"
+      make -j$PARALLELISM
+      make install
+
+      # "python" should be the version we're using
+      vers_major=$(echo $PACKAGE_VERSION |cut -d. -f1)
+      if [ ! -e "$PACKAGE_ROOT/bin/python" -a -e "$PACKAGE_ROOT/bin/python${vers_major}" ]; then
+          (cd "$PACKAGE_ROOT/bin" && ln -s python${vers_major} python)
+      fi

@@ -1,0 +1,36 @@
+package: libpng
+versions: [ 1.2.57, 1.4.20, 1.5.28, 1.6.28]
+
+dependencies:
+  - version: '>=1.2'
+    install: [ c-compiler, zlib ]
+    build:   []
+    
+download:
+  - version: ">=1.2"
+    shell: |
+      major_version=$(echo "$PACKAGE_VERSION" |cut -d. -f1)
+      minor_version=$(echo "$PACKAGE_VERSION" |cut -d. -f2)
+      majmin="${major_version}${minor_version}"
+
+      wget -O - ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng${majmin}/libpng-$PACKAGE_VERSION.tar.xz |xz -d |tar xf -
+      mv libpng-$PACKAGE_VERSION download
+      tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=1.2"
+    shell: |
+      cc --spock-triplet
+
+      cd download
+
+      env \
+        CC=cc \
+        LDFLAGS="$(spock-compiler-libdirs)" \
+        CPPFLAGS="$(spock-compiler-incdirs)" \
+        ./configure \
+        --prefix=$PACKAGE_ROOT
+
+      make -j$PARALLELISM
+      make -j$PARALLELISM check
+      make install

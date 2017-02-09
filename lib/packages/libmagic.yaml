@@ -21,14 +21,15 @@ download:
 install:
   - version: ">=5"
     shell: |
-        cd download
-        cc --spock-query
+      cd download
+      cc --spock-query
 
-        CC=cc ./configure --prefix="$PACKAGE_ROOT"
-        make -j$PARALLELISM
-        make install
+      env \
+        CC=cc \
+        LDFLAGS="$(spock-compiler-libdirs)" \
+        CPPFLAGS="$(spock-compiler-incdirs)" \
+        ./configure \
+        --prefix="$PACKAGE_ROOT"
 
-        spock-export PATH             "$PACKAGE_ROOT/bin"
-        spock-export LD_LIBRARY_PATH  "$PACKAGE_ROOT/lib"
-        spock-export LIBMAGIC_LIBDIRS "$PACKAGE_ROOT/lib"
-        spock-export LIBMAGIC_INCDIRS "$PACKAGE_ROOT/include"
+      make -j$PARALLELISM
+      make install

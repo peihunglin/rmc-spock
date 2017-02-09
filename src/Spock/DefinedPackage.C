@@ -412,7 +412,10 @@ DefinedPackage::createShellScript(const Settings &settings, const bfs::path &cwd
        <<"# --- Package script ---\n"
        <<"echo \"cwd is $(pwd)\"\n"
        <<"set -ex\n"
-       <<commands;
+       <<commands
+       <<"\n"
+       <<"# --- Spock finalization ---\n"
+       <<"spock-finalize\n";
 
     // Debugging
     if (mlog[DEBUG]) {

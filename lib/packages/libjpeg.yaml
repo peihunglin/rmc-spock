@@ -1,0 +1,37 @@
+package: libjpeg
+
+# Note, upstream names their versions without the dot, but we use a dot here because
+# it makes it possible to treat the number and letter as separate version parts using
+# the usual Spock machinery.
+versions: [9, 9.a, 9.b]
+
+dependencies:
+  - version: ">=9"
+    install: c-compiler
+    build: []
+
+download:
+  - version: ">=9"
+    shell: |
+        upstream_version=$(echo "$PACKAGE_VERSION" |tr -d .)
+        wget -O - http://ijg.org/files/jpegsrc.v${upstream_version}.tar.gz |tar xzf -
+        mv jpeg-$upstream_version download
+        tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=9"
+    shell: |
+        cc --spock-triplet
+
+        cd download
+
+        env \
+            CC=cc CXX=c++ \
+            LDFLAGS="$(spock-compiler-libdirs)" \
+            CPPFLAGS="$(spock-compiler-incdirs)" \
+            ./configure \
+            --prefix="$PACKAGE_ROOT"
+
+        make -j$PARALLELISM
+        make test
+        make install

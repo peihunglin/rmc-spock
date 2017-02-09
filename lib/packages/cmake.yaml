@@ -28,5 +28,3 @@ install:
         ./bootstrap --parallel=$PARALLELISM --prefix="$PACKAGE_ROOT"
         make -j$PARALLELISM
         make install
-
-        spock-export PATH "$PACKAGE_ROOT/bin"

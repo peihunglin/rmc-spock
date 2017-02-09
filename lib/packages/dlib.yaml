@@ -18,5 +18,3 @@ install:
     shell: |
         mkdir -p "$PACKAGE_ROOT/include"
         cp -pdR download/dlib "$PACKAGE_ROOT/include/dlib"
-
-        spock-export DLIB_INCDIRS "$PACKAGE_ROOT/include"

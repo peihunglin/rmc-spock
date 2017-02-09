@@ -1,0 +1,34 @@
+package: liblcms
+versions: [ 2.8 ]
+
+dependencies:
+  - version: ">=2.8"
+    # FIXME: also libGL and libglut
+    install: [ c-compiler, libjpeg, libtiff ]
+    build:   []
+    
+download:
+  - version: ">=2.8"
+    shell: |
+      v="$PACKAGE_VERSION"
+      wget -O - https://sourceforge.net/projects/lcms/files/lcms/$v/lcms2-$v.tar.gz/download |tar xzf -
+      mv lcms2-$PACKAGE_VERSION download
+      tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=2.8"
+    shell: |
+      cc --spock-triplet
+
+      cd download
+      env \
+        CC=cc \
+        LDFLAGS="$(spock-compiler-libdirs)" \
+        CPPFLAGS="$(spock-compiler-incdirs)" \
+        ./configure --prefix="$PACKAGE_ROOT" \
+        --with-jpeg="$LIBJPEG_ROOT" \
+        --with-tiff="$LIBTIFF_ROOT"
+
+      make -j$PARALLELISM
+      make check
+      make install

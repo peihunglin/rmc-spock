@@ -1,0 +1,39 @@
+package: libjbig
+
+versions: 2.1
+
+dependencies:
+  - version: ">=2"
+    install: c-compiler
+    build: []
+
+download:
+  - version: ">=2"
+    shell: |
+      wget -O - https://www.cl.cam.ac.uk/~mgk25/jbigkit/download/jbigkit-$PACKAGE_VERSION.tar.gz |tar xzf -
+      mv jbigkit-$PACKAGE_VERSION download
+      tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=2"
+    shell: |
+        cc --spock-triplet
+
+        cd download
+
+        # These makefiles are so basic that I have my doubts that parallel make will work
+        make CC=cc 
+
+        # There is no "make install"
+
+        mkdir -p "$PACKAGE_ROOT/lib"
+        chmod 644 libjbig/lib*.a
+        cp -p libjbig/lib{jbig,jbig85}.a "$PACKAGE_ROOT/lib"
+
+        mkdir -p "$PACKAGE_ROOT/include"
+        chmod 644 libjbig/*.h
+        cp -p libjbig/*.h "$PACKAGE_ROOT/include"
+
+        mkdir -p "$PACKAGE_ROOT/bin"
+        cp pbmtools/{jbgfuzz.pl,jbgtopbm,jbgtopbm85,pbmtojbg,pbmtojbg85} "$PACKAGE_ROOT/bin"
+        chmod 755 "$PACKAGE_ROOT/bin"/*

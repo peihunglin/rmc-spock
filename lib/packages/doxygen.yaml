@@ -29,11 +29,10 @@ install:
         c++ --spock-query
 
         cd download
-        CC=cc CXX=c++ ./configure --prefix="$PACKAGE_ROOT" --with-doxysearch
+        CC=cc CXX=c++ LDFLAGS="$(spock-compiler-libdirs)" CPPFLAGS="$(spock-compiler-incdirs)" \
+            ./configure --prefix="$PACKAGE_ROOT" --with-doxysearch
         make -j$PARALLELISM
         make install
-
-        spock-export PATH "$PACKAGE_ROOT/bin"
 
   # Newer versions of doxygen use cmake
   - version: ">=1.8.10"

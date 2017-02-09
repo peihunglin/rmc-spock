@@ -1,20 +1,21 @@
-package: zlib
-versions: [ 1.2.11 ]
+package: liblzma
+versions: [5.0.1, 5.0.2, 5.0.3, 5.0.4, 5.0.5, 5.0.6, 5.0.7, 5.0.8,
+           5.0.0, 5.2.1, 5.2.3]
 
 dependencies:
-  - version: '>=1.2.11'
-    install: [ c-compiler ]
+  - version: '>=5'
+    install: c-compiler
     build:   []
     
 download:
-  - version: ">=1.2.11"
+  - version: ">=5"
     shell: |
-      wget -O - http://zlib.net/zlib-$PACKAGE_VERSION.tar.gz | tar xzf -
-      mv zlib-$PACKAGE_VERSION download
+      wget -O - http://tukaani.org/xz/xz-$PACKAGE_VERSION.tar.gz |tar xzf -
+      mv xz-$PACKAGE_VERSION download
       tar cf - download |gzip -9 >download.tar.gz
 
 install:
-  - version: ">=1.2.11"
+  - version: ">=5"
     shell: |
       cc --spock-triplet
 
@@ -28,5 +29,5 @@ install:
         --prefix=$PACKAGE_ROOT
 
       make -j$PARALLELISM
-      make test
+      make -j$PARALLELISM check
       make install

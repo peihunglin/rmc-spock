@@ -45,11 +45,6 @@ install:
       make -j$PARALLELISM
       make install
 
-      spock-export PATH "$PACKAGE_ROOT/bin"
-      spock-export LD_LIBRARY_PATH "$PACKAGE_ROOT/lib"
-      spock-export LLVM_COMPILERS_LIBDIRS "$PACKAGE_ROOT/lib"
-      spock-export LLVM_COMPILERS_INCDIRS "$PACKAGE_ROOT/include"
-
 post-install:
   - version: ">=3.5.0"
     parasites:

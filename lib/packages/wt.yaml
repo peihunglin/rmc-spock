@@ -61,7 +61,3 @@ install:
             -DGM_LIB:FILEPATH="$LIBGRAPHICSMAGICK_ROOT/lib/libGraphicsMagick.so"
         make -j$PARALLELISM
         make install
-
-        spock-export LD_LIBRARY_PATH "$PACKAGE_ROOT/lib"
-        spock-export WT_LIBDIRS      "$PACKAGE_ROOT/lib"
-        spock-export WT_INCDIRS      "$PACKAGE_ROOT/include"

@@ -9,21 +9,25 @@ dependencies:
 download:
   - version: ">=4"
     shell: |
-        # wget seems to get stuck, but curl works fine
-        curl "ftp://ftp.cwru.edu/pub/bash/readline-$PACKAGE_VERSION.tar.gz" |tar xzf -
-        mv readline* download
-        tar cf - download |gzip -9 >download.tar.gz
+      # wget seems to get stuck, but curl works fine
+      curl "ftp://ftp.cwru.edu/pub/bash/readline-$PACKAGE_VERSION.tar.gz" |tar xzf -
+      mv readline* download
+      tar cf - download |gzip -9 >download.tar.gz
 
 install:
   - version: ">=4"
     shell: |
-        cc --spock-triplet
+      cc --spock-triplet
 
-        cd download
-        CC=cc ./configure --prefix="$PACKAGE_ROOT" --enable-shared
-        make -j$PARALLELISM
-        make install
+      cd download
 
-        spock-export LD_LIBRARY_PATH  "$PACKAGE_ROOT/lib"
-        spock-export READLINE_LIBDIRS "$PACKAGE_ROOT/lib"
-        spock-export READLINE_INCDIRS "$PACKAGE_ROOT/include"
+      env \
+        CC=cc \
+        LDFLAGS="$(spock-compiler-libdirs)" \
+        CPPFLAGS="$(spock-compiler-incdirs)" \
+        ./configure \
+        --prefix="$PACKAGE_ROOT" \
+        --enable-shared
+
+      make -j$PARALLELISM
+      make install

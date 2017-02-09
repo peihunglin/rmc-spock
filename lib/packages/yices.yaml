@@ -19,8 +19,3 @@ install:
   - version: ">=1"
     shell: |
         cp -pdR yices-$PACKAGE_VERSION/* "$PACKAGE_ROOT"
-
-        spock-export PATH            "$PACKAGE_ROOT/bin"
-        spock-export LD_LIBRARY_PATH "$PACKAGE_ROOT/lib"
-        spock-export YICES_LIBDIRS   "$PACKAGE_ROOT/lib"
-        spock-export YICES_INCDIRS   "$PACKAGE_ROOT/include"

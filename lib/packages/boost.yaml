@@ -160,7 +160,11 @@ install:
             llvm) boost_toolset=clang ;;
             *) echo "what boost toolset for $cxx_vendor?" >&2; exit 1 ;;
         esac
-        echo "using $boost_toolset : $cxx_version : c++ ;" >"$user_jam"
+        (
+            echo "using $boost_toolset : $cxx_version : c++ ;"
+            echo "using zlib : $ZLIB_VERSION : <include>$ZLIB_INCDIRS <search>$ZLIB_LIBDIRS ;"
+        ) >"$user_jam"
+        
         ./bootstrap.sh --prefix="$PACKAGE_ROOT" --with-libraries=$libraries_commas --with-toolset=$boost_toolset
 
         # Our scripts customarily build, then install as two separate
@@ -176,12 +180,14 @@ install:
         # created when this package is employed by a user.  These
         # variables are set automatically (but they're not available
         # to use within this script itself):
-        #   BOOST_ROOT    - the same value as $PACKAGE_ROOT
-        #   BOOST_VERSION - the same as $PACKAGE_VERSION
-
-        spock-export LD_LIBRARY_PATH "$PACKAGE_ROOT/lib"
-        spock-export BOOST_LIBDIRS   "$PACKAGE_ROOT/lib"
-        spock-export BOOST_INCDIRS   "$PACKAGE_ROOT/include"
+        #   BOOST_ROOT      - the same value as $PACKAGE_ROOT
+        #   BOOST_VERSION   - the same as $PACKAGE_VERSION
+        #   BOOST_LIBDIRS   - directories containing libraries
+        #   ALL_LIBDIRS     - ditto, but for all packages
+        #   BOOST_INCDIRS   - directories containing include files
+        #   ALL_INCDIRS     - ditto, but for all packages
+        #   LD_LIBRARY_PATH - directories containing shared libs
+        #   PATH            - directories containing executables
 
 # The "post-install" script is available to run after Spock installs
 # the package.  Most packages don't need this, but you could use it to

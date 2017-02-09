@@ -14,7 +14,7 @@ using namespace Sawyer::Message::Common;
 
 namespace Spock {
 
-const char *VERSION = "2.1.0";
+const char *VERSION = "2.1.1";
 
 Sawyer::Message::PrefixPtr mprefix;
 Sawyer::Message::DestinationPtr mdestination;

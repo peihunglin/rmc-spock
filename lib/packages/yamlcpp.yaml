@@ -29,7 +29,3 @@ install:
             -DBOOST_ROOT=$BOOST_ROOT
         make -j$PARALLELISM
         make install
-
-        spock-export LD_LIBRARY_PATH "$PACKAGE_ROOT/lib"
-        spock-export YAMLCPP_LIBDIRS "$PACKAGE_ROOT/lib"
-        spock-export YAMLCPP_INCDIRS "$PACKAGE_ROOT/include"

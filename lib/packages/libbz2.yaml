@@ -1,0 +1,35 @@
+package: libbz2
+versions: 1.0.6
+
+dependencies:
+  - version: ">=1"
+    install: c-compiler
+    build: []
+
+download:
+  - version: ">=1"
+    shell: |
+      wget -O - http://bzip.org/$PACKAGE_VERSION/bzip2-$PACKAGE_VERSION.tar.gz |tar xzf -
+      mv bzip2-$PACKAGE_VERSION download
+      tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=1"
+    shell: |
+      cc --spock-triplet
+
+      cp -pr download download-shared
+
+      # Static library
+      (
+        cd download
+        make -j$PARALLELISM CC=cc
+        make PREFIX="$PACKAGE_ROOT" install
+      )
+
+      # Shared library
+      (
+        cd download-shared
+        make -j$PARALLELISM -f Makefile-libbz2_so CC=cc
+        mv libbz2.so* $PACKAGE_ROOT/lib
+      )

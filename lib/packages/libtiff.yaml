@@ -1,0 +1,33 @@
+package: libtiff
+versions: [ 3.9.4, 3.9.5, 3.9.6, 3.9.7, 4.0.1, 4.0.2, 4.0.3, 4.0.4, 4.0.5, 4.0.6, 4.0.7 ]
+
+dependencies:
+  - version: '>=3'
+    # FIXME: also libGL and libglut
+    install: [ c-compiler, cmake, zlib, libjpeg, liblzma ]
+    build:   []
+    
+download:
+  - version: ">=3"
+    shell: |
+      wget -O - ftp://download.osgeo.org/libtiff/tiff-$PACKAGE_VERSION.tar.gz |tar xzf -
+      mv tiff-$PACKAGE_VERSION download
+      tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=3"
+    shell: |
+      cc --spock-triplet
+
+      # Disable OpenGL support even if system-installed libraries are found
+      sed -i~ 's/set(HAVE_OPENGL TRUE)/set(HAVE_OPENGL FALSE)/' download/CMakeLists.txt
+
+      mkdir build
+      cd build
+      cmake ../download \
+        -DCMAKE_C_COMPILER=cc \
+        -DCMAKE_INSTALL_PREFIX="$PACKAGE_ROOT"
+        
+      make -j$PARALLELISM
+      make test
+      make install
