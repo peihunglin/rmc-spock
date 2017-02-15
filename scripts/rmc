@@ -254,6 +254,7 @@ read_config_file() {
     export ROSE_BUILD="$RG_BLD"
     rmc_parallelism $RMC_PARALLELISM # make sure its a number
     export PS1_STACK="rmc=${RG_BLD##*/} $PS1_STACK"
+    export ROSE_INSTALLED="$RG_BLD/installed"
 
     #### Resolve the operating system name ####
 

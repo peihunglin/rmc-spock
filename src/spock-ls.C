@@ -135,8 +135,21 @@ main(int argc, char *argv[]) {
 
         BOOST_FOREACH (const Package::Ptr &pkg, packages) {
             std::cout <<pkg->toString();
-            if (showComments && !pkg->aliases().isEmpty())
-                std::cout <<"(" <<toString(pkg->aliases(), true /*terse*/) <<")";
+            if (showComments) {
+                if (pkg->isInstalled()) {
+                    if (!pkg->aliases().isEmpty())
+                        std::cout <<"(" <<toString(pkg->aliases(), true /*terse*/) <<")";
+                } else {
+                    std::cout <<"(";
+                    VersionNumbers vnums = pkg->versions();
+                    BOOST_FOREACH (const VersionNumber &v, vnums.values()) {
+                        if (v != *vnums.values().begin())
+                            std::cout <<", ";
+                        std::cout <<v.toString();
+                    }
+                    std::cout <<")";
+                }
+            }
             
             if (showDeps) {
                 BOOST_FOREACH (const PackagePattern &deppat, pkg->dependencyPatterns())

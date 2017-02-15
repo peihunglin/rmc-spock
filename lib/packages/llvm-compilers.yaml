@@ -15,7 +15,12 @@ versions:
 
 dependencies:
   - version: '>=3.5.0'
-    build: []
+    build: [cmake]
+    install: []
+    aliases: compiler-collection
+
+  - version: '>=3.9.0'
+    build: ['cmake>=3.4.3']
     install: []
     aliases: compiler-collection
 
@@ -50,7 +55,7 @@ post-install:
     parasites:
       # PrimaryName     Specific-language Base-language Default-language
       - llvm-c++03      c++03-compiler    c++-compiler
-      - llvm-gnu++03    gnu++03-compiler  c++-compiler
+      - llvm-gnu++03    gnu++03-compiler  c++-compiler  llvm-default-c++ default-c++
       - llvm-c++11      c++11-compiler    c++-compiler
       - llvm-gnu++11    gnu++11-compiler  c++-compiler
       - llvm-c++14      c++14-compiler    c++-compiler
@@ -59,9 +64,9 @@ post-install:
       - llvm-gnu89      gnu89-compiler    c-compiler
       - llvm-c94        c94-compiler      c-compiler
       - llvm-c99        c99-compiler      c-compiler
-      - llvm-gnu99      gnu99-compiler    c-compiler
+      - llvm-gnu99      gnu99-compiler    c-compiler    llvm-default-c default-c
       - llvm-c11        c11-compiler      c-compiler
-      - llvm-gnu11      gnu11-compiler    c-compiler    llvm-default-c default-c
+      - llvm-gnu11      gnu11-compiler    c-compiler
     shell: |
         source "$SPOCK_SCRIPTS/impl/compiler-support.sh"
         (
@@ -69,7 +74,7 @@ post-install:
           $SPOCK_SCRIPTS/spock-compiler-install-program "$PACKAGE_SPEC" c++ "$PACKAGE_ROOT/bin/clang++"
         ) >parasites
 
-  - version: ">=3.8.0"
+  - version: ">=3.6.0"
     parasites:
       # PrimaryName     Specific-language Base-language Default-language
       - llvm-c++03      c++03-compiler    c++-compiler

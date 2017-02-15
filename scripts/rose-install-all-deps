@@ -1,0 +1,330 @@
+#!/bin/bash
+
+# Pre-install all ROSE software dependencies using Spock.  By default, this script installs lots of stuff, but only
+# those things that aren't installed yet. If you don't want to install all this, override the variables defined below,
+# such as COMPILER_COLLECTIONS, CXX_LANGUAGES, BOOST_VERSIONS, etc.
+#
+# Eventually this script could be simplified somewhat when Spock has better support for build vs. install dependencies.
+# But for now, there are a few places where we have to specify build dependencies explicitly by lumping them in with
+# the install dependencies.
+
+
+arg0="${0##*/}"
+dir0="${0%/*}"
+
+umask 022
+
+eval "$(spock-ls --shellvars)" || exit 1
+
+
+########################################################################################################################
+# These variables are defaults that the user can override on the command-line
+########################################################################################################################
+
+# List of compiler collections to be installed (if not already), or compilers that will be used as dependencies of other
+# packages.  If "installed" then don't install anything, but use the list of all installed compilers when building other
+# dependencies like Boost.
+#
+# Compiler collections. These are not Spock specifications; use VENDOR-VERSION as in "gnu-6", "llvm-3.8", "intel-14".
+: ${COMPILER_COLLECTIONS:="gnu-4.8 gnu-4.9 gnu-5 gnu-6 llvm-3.5 llvm-3.6 llvm-3.7 llvm-3.8 llvm-3.9"}
+
+# C++ languages
+: ${CXX_LANGUAGES:="gnu++03 c++11"}
+
+# CMake versions (needed by LLVM)
+: ${CMAKE_VERSIONS:=3}
+
+# List of boost versions to install.  Each version of boost is compiled with every compiler collection / language.
+# Note: 1.54 is intentionally omitted due to buggy thread implementation
+: ${BOOST_VERSIONS:="1.51 1.52 1.53 1.55 1.56 1.57 1.58 1.59 1.60 1.61 1.62 1.63"}
+
+# List of dlib versions to install.
+: ${DLIB_VERSIONS:="18.16 18.17 18.18"}
+
+# List of java versions.
+: ${JAVA_VERSIONS:="7 8"}
+
+# List of python versions
+: ${PYTHON_VERSIONS:="2 3"}
+
+# Yices SMT solver versions
+: ${YICES_VERSIONS:="1.0.28, 1.0.34, 1.0.40"}
+
+# List of YAML-CPP versions
+: ${YAMLCPP_VERSIONS:="0.5.1 0.5.2 0.5.3"}
+
+# Ignore failures if "yes"
+: ${IGNORE_FAILURES:=yes}
+
+
+########################################################################################################################
+# Support functions
+########################################################################################################################
+
+===() {
+    echo
+    echo
+    echo
+    echo "================================================================================"
+    (figlet "$@" || banner "$@" || echo "===" "$@" "===") 2>/dev/null
+    echo
+    echo
+    return 0
+}
+
+nfailures=0
+cannot_install() {
+    if [ "$IGNORE_FAILURES" != "yes" ]; then
+	echo "$arg0: installation failed" >&2
+	exit 1
+    fi
+    nfailures=$[nfailures + 1]
+    return 0
+}
+
+# Install $pkg_ghost with $dependencies if not installed already, and echo its spec regardless.
+install-package() {
+    local dependencies="$1" pkg_ghost="$2"
+
+    local with="$dependencies,$pkg_ghost"
+    with="${with#,}"
+
+    echo >&2
+    (
+	set -ex
+	$SPOCK_BINDIR/spock-shell --install=yes --with "$with" --log '>=info' true
+    )>&2 || return 1
+    local hash=$($SPOCK_BINDIR/spock-shell --with "$with" bash -c 'echo $SPOCK_EMPLOYED' 2>/dev/null |sed 's/.*://')
+
+    [ "$hash" != "" ] && $SPOCK_BINDIR/spock-ls -1 "@$hash"
+}
+
+using-these() {
+    local title="$1"; shift
+    echo
+    echo "using these $title installations:"
+    if [ "$#" -gt 0 ]; then
+	for spec in "$@"; do
+	    echo "    $spec"
+	done
+    else
+	echo "    none"
+    fi
+}
+
+
+########################################################################################################################
+=== Sys compilers
+########################################################################################################################
+
+if ($SPOCK_BINDIR/spock-ls compiler-collection |grep system >/dev/null 2>&1); then
+    echo "system compilers are apparently installed already"
+    echo "if you want to make sure, run $SPOCK_SCRIPTS/spock-install-system-compilers"
+else
+    (
+	set -ex
+	$SPOCK_SCRIPTS/spock-install-system-compilers
+    ) || exit 1
+fi
+
+
+########################################################################################################################
+=== Compilers
+########################################################################################################################
+
+# LLVM's build depends on cmake, so we build one using the same compiler that we use to compile llvm. We'll install
+# other user-requested versions of cmake later.
+if (echo "COMPILER_COLLECTIONS" |grep llvm >/dev/null 2>&1); then
+    install-package "gnu-default-c,gnu-default-c++" cmake-3
+fi
+
+# Install missing compiler collections and accumulate names of all in using_collections
+using_collections=()
+if [ "$COMPILER_COLLECTIONS" = "installed" ]; then
+    using_collections=($($SPOCK_BINDIR/spock-ls -1 compiler-collection))
+elif [ "$COMPILER_COLLECTIONS" != "installed" ]; then
+    echo "installing compiler collections: $COMPILER_COLLECTIONS"
+    for vendor_version in $COMPILER_COLLECTIONS; do
+	vendor=$(echo "$vendor_version" |cut -d- -f1)
+	version=$(echo "$vendor_version" |cut -d- -f2)
+	collection_name="${vendor}-compilers"
+	collection_version=
+	[ "$version" != "" ] && collection_version="-$version"
+	collection_spec="${collection_name}${collection_version}"
+	collection_spec=$(install-package "" $collection_spec)
+	[ "$collection_spec" != "" ] &&
+	    using_collections=("${use_collections[@]}" "$collection_spec")
+    done
+fi
+
+# Figure out which actual C++ compilers we want to use based on the compiler collections installed (or found) above and
+# the languages requested by the user. Compilers don't always support all languages, so we must be careful.
+CXX_COMPILER_SPECS=()
+for collection in "${using_collections[@]}"; do
+    echo "ROBB: collection=$collection" >&2
+    for lang in $CXX_LANGUAGES; do
+	cxx_spec="$($SPOCK_BINDIR/spock-ls "${lang}-compiler" |grep "$collection" |cut -d' ' -f1)"
+	if [ "$cxx_spec" = "" ]; then
+	    echo "warning: $collection has no $lang compiler (skipping)" >&2
+	else
+	    CXX_COMPILER_SPECS=("${CXX_COMPILER_SPECS[@]}" "$cxx_spec")
+	fi
+    done
+done
+
+using-these C++ "${CXX_COMPILER_SPECS[@]}"
+
+if [ "${#CXX_COMPILER_SPECS[*]}" -eq 0 ]; then
+    echo >&2
+    echo "$arg0: no point in continuing without a compiler" >&2
+    exit 1
+fi
+
+
+########################################################################################################################
+=== CMake
+########################################################################################################################
+
+# CMake creates C++ shared libraries upon which it depends when installed, and thus must be compiled with each compiler.
+echo "installing CMake versions (per compiler): $CMAKE_VERSIONS"
+CMAKE_SPECS=()
+for cmake_version in $CMAKE_VERSIONS; do
+    for cxx_spec in "${CXX_COMPILER_SPECS[@]}"; do
+	spec=$(install-package "$cxx_spec,default-c" "cmake-$cmake_version")
+	if [ "$spec" = "" ]; then
+	    cannot_install
+	else
+	    CMAKE_SPECS=("${CMAKE_SPECS[@]}" "$spec")
+	fi
+    done
+done
+
+using-these CMake "${CMAKE_SPECS[@]}"
+
+
+########################################################################################################################
+=== Boost
+########################################################################################################################
+
+# Boost has C++ libraries and thus must be compiled with each C++ compiler.
+echo "installing Boost versions (per compiler): $BOOST_VERSIONS"
+BOOST_SPECS=()
+for boost_version in $BOOST_VERSIONS; do
+    for cxx_spec in "${CXX_COMPILER_SPECS[@]}"; do
+	spec=$(install-package "$cxx_spec,default-c" "boost-$boost_version")
+	if [ "$spec" = "" ]; then
+	    cannot_install
+	else
+	    BOOST_SPECS=("${BOOST_SPECS[@]}" "$spec")
+	fi
+    done
+done
+
+using-these Boost "${BOOST_SPECS[@]}"
+
+
+########################################################################################################################
+=== DLib
+########################################################################################################################
+
+# Dlib is a header-only library, so there's no install dependency on the C++ compiler.
+echo "installing DLib versions: $DLIB_VERSIONS"
+DLIB_SPECS=()
+for dlib_version in $DLIB_VERSIONS; do
+    spec=$(install-package "" "dlib-$dlib_version")
+    if [ "$spec" = "" ]; then
+	cannot_install
+    else
+	DLIB_SPECS=("${DLIB_SPECS[@]}" "$spec")
+    fi
+done
+
+using-these DLib "${DLIB_SPECS[@]}"
+
+
+########################################################################################################################
+=== Java
+########################################################################################################################
+
+# Java has no C++ compiler dependencies.
+echo "installing Java versions: $JAVA_VERSIONS"
+JAVA_SPECS=()
+for java_version in $JAVA_VERSIONS; do
+    spec=$(install-package "" "oracle-java-$java_version")
+    if [ "$spec" = "" ]; then
+	cannot_install
+    else
+	JAVA_SPECS=("${JAVA_SPECS[@]}" "$spec")
+    fi
+done
+
+using-these Java "${JAVA_SPECS[@]}"
+
+
+########################################################################################################################
+=== Python
+########################################################################################################################
+
+# Python creates C++ libraries and thus has a C++ compiler dependency
+echo "installing Python versions: $PYTHON_VERSIONS"
+PYTHON_SPECS=()
+for python_version in $PYTHON_VERSIONS; do
+    for cxx_spec in "${CXX_COMPILER_SPECS[@]}"; do
+	spec=$(install-package "$cxx_spec,default-c" "python-$python_version")
+	if [ "$spec" = "" ]; then
+	    cannot_install
+	else
+	    PYTHON_SPECS=("${PYTHON_SPECS[@]}" "$spec")
+	fi
+    done
+done
+
+using-these Python "${PYTHON_SPECS[@]}"
+
+
+########################################################################################################################
+=== Yices
+########################################################################################################################
+
+# Yices version 1 is a closed-source library. It apparently doesn't depend on a compiler since the website has only
+# one downloadable Linux configuration per version.
+echo "installing Yices versions: $YICES_VERSIONS"
+YICES_SPECS=()
+for yices_version in $YICES_VERSIONS; do
+    spec=$(install-package "" "yices-$yices_version")
+    if [ "$spec" = "" ]; then
+	cannot_install
+    else
+	YICES_SPECS=("${YICES_SPECS[@]}" "$spec")
+    fi
+done
+
+using-these Yices "${YICES_SPECS[@]}"
+
+
+########################################################################################################################
+=== Yaml-cpp
+########################################################################################################################
+
+# YAML-cpp is a C++ library that depends on Boost C++ libraries. Therefore YAML-cpp has depends on the C++ compiler.
+# However, we don't need to iterate over the compilers here because they're already implied by $BOOST_SPECS. YAML-cpp
+# uses CMake during its build process, which we've installed above.
+echo "installing YAML-cpp versions (per boost): $YAMLCPP_VERSIONS"
+YAMLCPP_SPECS=()
+for yamlcpp_version in $YAMLCPP_VERSIONS; do
+    for boost_spec in "${BOOST_SPECS[@]}"; do
+	spec=$(install-package "$boost_spec" "yamlcpp-$yamlcpp_version")
+	if [ "$spec" = "" ]; then
+	    cannot_install
+	else
+	    YAMLCPP_SPECS=("${YAMLCPP_SPECS[@]}" "$spec")
+	fi
+    done
+done
+
+using-these YAML-cpp "${YAMLCPP_SPECS[@]}"
+
+if [ "$nfailures" -gt 0 ]; then
+    echo "$arg0: warning: number of installation failures: $nfailures" >&2
+fi
+exit 0

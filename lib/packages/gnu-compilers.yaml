@@ -59,47 +59,20 @@ install:
         esac
 
 post-install:
-  - version: ">=4"
+  - version: ">=4.8"
     parasites:
       # PrimaryName    Specific-language Base-language Default-language
       - gnu-gnu++03    gnu++03-compiler  c++-compiler  gnu-default-c++ default-c++
       - gnu-c++03      c++03-compiler    c++-compiler
       - gnu-gnu++11    gnu++11-compiler  c++-compiler
       - gnu-c++11      c++11-compiler    c++-compiler
-      - gnu-gnu++14    gnu++14-compiler  c++-compiler
-      - gnu-c++14      c++14-compiler    c++-compiler
       - gnu-gnu89      gnu89-compiler    c-compiler    gnu-default-c default-c
       - gnu-c89        c89-compiler      c-compiler
-      - gnu-gnu94      gnu94-compiler    c-compiler
+      - gnu-c94        c94-compiler      c-compiler
       - gnu-gnu99      gnu99-compiler    c-compiler
       - gnu-c99        c99-compiler      c-compiler
       - gnu-gnu11      gnu11-compiler    c-compiler
       - gnu-c11        c11-compiler      c-compiler
-      - gnu-fortran                      fortran-compiler gnu-fortran default-fortran
-    shell: |
-        (
-          $SPOCK_SCRIPTS/spock-compiler-install-program "$PACKAGE_SPEC" c "$PACKAGE_ROOT/bin/gcc"
-          $SPOCK_SCRIPTS/spock-compiler-install-program "$PACKAGE_SPEC" c++ "$PACKAGE_ROOT/bin/g++"
-          $SPOCK_SCRIPTS/spock-compiler-install-program "$PACKAGE_SPEC" fortran "$PACKAGE_ROOT/bin/gfortran"
-        ) >parasites
-
-  - version: ">=5"
-    parasites:
-      # PrimaryName    Specific-language Base-language    Default-language
-      - gnu-c++03      c++03-compiler    c++-compiler
-      - gnu-gnu++03    gnu++03-compiler  c++-compiler     gnu-default-c++ default-c++
-      - gnu-c++11      c++11-compiler    c++-compiler
-      - gnu-gnu++11    gnu++11-compiler  c++-compiler
-      - gnu-c++14      c++14-compiler    c++-compiler
-      - gnu-gnu++14    gnu++14-compiler  c++-compiler
-      - gnu-c89        c89-compiler      c-compiler
-      - gnu-gnu89      gnu89-compiler    c-compiler
-      #- gnu-c94        c94-compiler      c-compiler
-      #- gnu-gnu94      gnu94-compiler    c-compiler
-      - gnu-c99        c99-compiler      c-compiler
-      - gnu-gnu99      gnu99-compiler    c-compiler
-      - gnu-c11        c11-compiler      c-compiler
-      - gnu-gnu11      gnu11-compiler    c-compiler       gnu-default-c default-c
       - gnu-fortran                      fortran-compiler gnu-default-fortran default-fortran
     shell: |
         (
@@ -108,7 +81,30 @@ post-install:
           $SPOCK_SCRIPTS/spock-compiler-install-program "$PACKAGE_SPEC" fortran "$PACKAGE_ROOT/bin/gfortran"
         ) >parasites
 
-  - version: ">=5.4"
+  - version: ">=4.9"
+    parasites:
+      # PrimaryName    Specific-language Base-language Default-language
+      - gnu-gnu++03    gnu++03-compiler  c++-compiler  gnu-default-c++ default-c++
+      - gnu-c++03      c++03-compiler    c++-compiler
+      - gnu-gnu++11    gnu++11-compiler  c++-compiler
+      - gnu-c++11      c++11-compiler    c++-compiler
+      - gnu-c++201300  c++201300-compiler c++-compiler
+      - gnu-gnu89      gnu89-compiler    c-compiler    gnu-default-c default-c
+      - gnu-c89        c89-compiler      c-compiler
+      - gnu-c94        c94-compiler      c-compiler
+      - gnu-gnu99      gnu99-compiler    c-compiler
+      - gnu-c99        c99-compiler      c-compiler
+      - gnu-gnu11      gnu11-compiler    c-compiler
+      - gnu-c11        c11-compiler      c-compiler
+      - gnu-fortran                      fortran-compiler gnu-default-fortran default-fortran
+    shell: |
+        (
+          $SPOCK_SCRIPTS/spock-compiler-install-program "$PACKAGE_SPEC" c "$PACKAGE_ROOT/bin/gcc"
+          $SPOCK_SCRIPTS/spock-compiler-install-program "$PACKAGE_SPEC" c++ "$PACKAGE_ROOT/bin/g++"
+          $SPOCK_SCRIPTS/spock-compiler-install-program "$PACKAGE_SPEC" fortran "$PACKAGE_ROOT/bin/gfortran"
+        ) >parasites
+
+  - version: ">=5.0"
     parasites:
       # PrimaryName    Specific-language Base-language    Default-language
       - gnu-c++03      c++03-compiler    c++-compiler

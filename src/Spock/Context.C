@@ -422,7 +422,30 @@ Context::findInstalled(const PackagePattern &pattern) const {
 Packages
 Context::findGhosts(const PackagePattern &pattern) const {
     ASSERT_require2(pattern.hash().empty(), pattern.toString());
-    return allPackages_.find(pattern, Directory::notInstalledP);
+    Packages found = allPackages_.find(pattern, Directory::notInstalledP);
+    Packages retval;
+
+    if (!pattern.version().isEmpty()) {
+        // Each ghost package can span multiple versions, and allPackages_.find() has returned those packages directly. Since
+        // the user specified particular versions, we'll intersect the user-specified versions with the ghost versions and if
+        // that's different than the ghost versions we create a new ghost with a subset of the original's versions.
+        BOOST_FOREACH (const Package::Ptr &pkg, found) {
+            VersionNumbers availableVersions = pkg->versions();
+            VersionNumbers selectedVersions;
+            BOOST_FOREACH (const VersionNumber &v, availableVersions.values()) {
+                if (pattern.matches(v))
+                    selectedVersions.insert(v);
+            }
+            if (selectedVersions.size() != availableVersions.size()) {
+                retval.push_back(GhostPackage::instance(asGhost(pkg)->definition(), selectedVersions));
+            } else {
+                retval.push_back(pkg);
+            }
+        }
+    } else {
+        retval = found;
+    }
+    return retval;
 }
 
 Packages
@@ -469,6 +492,12 @@ Context::dependencyLattice(const Packages &packages) {
             }
         }
     }
+#if 1 // [Robb P Matzke 2017-02-11]
+    if (Sawyer::Container::Algorithm::graphContainsCycle(lattice)) {
+        std::cout <<toGraphViz(lattice);
+        ASSERT_not_reachable("graph contains cycle");
+    }
+#endif
     ASSERT_forbid(Sawyer::Container::Algorithm::graphContainsCycle(lattice));
     Sawyer::Container::Algorithm::graphEraseParallelEdges(lattice);
     return lattice;

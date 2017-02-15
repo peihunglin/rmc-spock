@@ -158,12 +158,12 @@ spock-compiler-conditional-install() {
     # See if we've already installed this compiler. We do that by looking to see if there's a compiler with the
     # same spec and whose real executable is the same.
     local compiler_spec="${compiler_vendor}-${compiler_lang}=${compiler_version}"
-    local other_specs=($("$SPOCK_BINDIR/spock-shell" --with "$collection_spec" \
-			 "$SPOCK_BINDIR/spock-ls" -1 "$compiler_spec" 2>/dev/null))
+    local other_specs=($("$SPOCK_BINDIR/spock-ls" -1 "$compiler_spec" 2>/dev/null))
     local real_exe=$(spock-realpath "$exe")
     local other_spec
     for other_spec in "${other_specs[@]}"; do
-	local other_exe=$("$SPOCK_BINDIR/spock-shell" --with "$other_spec" spock-compiler --spock-exe)
+	local other_hash="${other_spec#*@}"
+	local other_exe=$("$SPOCK_OPTDIR/$other_hash/$compiler_lang/bin/spock-compiler" --spock-exe 2>/dev/null)
 	local other_real_exe=$(spock-realpath "$other_exe")
 	[ "$other_real_exe" = "$real_exe" ] && return 0
     done
@@ -288,4 +288,5 @@ spock-compiler-install-program() {
 	    spock-compiler-conditional-install-language "$collection_spec" fortran "$exe"
 	    ;;
     esac
+    return 0
 }
