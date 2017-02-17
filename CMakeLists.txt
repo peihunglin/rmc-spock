@@ -113,6 +113,7 @@ install(
   PROGRAMS
     scripts/spock-install-system-compilers
     scripts/spock-compiler-install-program
+    scripts/rose-install-all-deps
   DESTINATION scripts
 )
 
@@ -120,6 +121,7 @@ install(
   PROGRAMS  
     scripts/impl/detect-compiler-characteristics
     scripts/impl/install-compiler-executable
+    scripts/impl/operating-system-name
   DESTINATION scripts/impl
 )
 

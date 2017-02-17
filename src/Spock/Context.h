@@ -180,6 +180,10 @@ public:
 private:
     // Add ghost packages to the mix
     void scanGhostPackages();
+
+    std::string osCharacteristics();
+    PackagePtr findOrCreateSelf();
+    
 };
 
 } // namespace

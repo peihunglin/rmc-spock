@@ -1,0 +1,42 @@
+#!/bin/bash
+# Get information about the operating system that's not always readily available from uname (the command or the system call).
+arg0="${0##*/}"
+dir0="${0%/*}"
+
+os_name=
+
+# Debian/Ubuntu-like systems
+[ "$os_name" = "" -a -r /etc/os-release ] &&
+    os_name=$(source /etc/os-release; echo $NAME $VERSION_ID)
+
+# Other debian-like systems
+[ "$os_name" = "" -a -r /etc/debian_version ] &&
+    os_name="Debian $(cat /etc/debian_version)"
+
+# Redhat-like systems
+[ "$os_name" = "" -a -r /etc/redhat-release ] &&
+    os_name=$(cat /etc/redhat-release)
+
+# All others, fall back to the Linux kernel version
+[ "$os_name" = "" ] && \
+    os_name="Unknown $(uname -s)"
+
+case "$1" in
+    ""|--long)
+	echo "$os_name"
+	;;
+    --short)
+	echo "$os_name" |\
+	    sed \
+		-e 's/^Red Hat Enterprise Linux .*\([0-9]\)/RHEL \1/' \
+		-e 's/^Debian .*\([0-9]\)/Debian \1/'
+	;;
+    --file)
+	echo -n "$os_name" |tr -c '[+_.=a-zA-Z0-9-]' '_'; echo
+	;;
+    *)
+	echo "usage: $arg0 [--long|--short|--file]" >&2
+	exit 1
+	;;
+esac
+exit 0

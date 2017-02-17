@@ -20,6 +20,11 @@ public:
     /** Set an environment variable. */
     void set(const std::string &variable, const std::string &value);
 
+    /** Get an environment variable.
+     *
+     *  If the variable is not defined, then return the default value without assigning it to the variable. */
+    std::string get(const std::string &variable, const std::string &dflt = "") const;
+
     /** Append a value to an existing variable. */
     void append(const std::string &variable, const std::string &value, const std::string &separator = ":");
 

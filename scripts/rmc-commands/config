@@ -11,6 +11,7 @@ optimize_flags() {
     case "$RMC_OPTIMIZE" in
 	yes) echo -n " $switch='-O3 -DNDEBUG'" ;;
 	no)  echo -n " $switch='-O0'" ;;
+	ambivalent) : nothing ;;
     esac
 }
 
@@ -19,6 +20,7 @@ warning_flags() {
     local switch="$1"
     case "$RMC_WARNINGS" in
 	yes) echo -n " $switch='-Wall -Wno-unused-local-typedefs -Wno-attributes'" ;;
+	no|ambivalent) : nothing ;;
     esac
 }
 

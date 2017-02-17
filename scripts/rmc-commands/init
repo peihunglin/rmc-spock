@@ -1,0 +1,93 @@
+#!/bin/bash
+# Initialize a build tree. The argument should be the ROSE source tree.
+arg0="rmc ${0##*/}"
+dir0="${0%/*}"
+
+source "$SPOCK_SCRIPTS/impl/basic-support.sh" || exit 1
+source "$SPOCK_SCRIPTS/impl/spock-realpath.sh" || exit 1
+
+# Check command-line arguments
+if [ "$#" -ne 1 ]; then
+    echo "usage: $arg0 \$PATH_TO_ROSE_SOURCE_TREE" >&2
+    exit 1
+fi
+
+if [ "$1" = "help" -o "$1" = "--help" -o "$1" = "-h" ]; then
+    echo "usage: $arg0 PATH_TO_ROSE_SOURCE_TREE"
+    echo "   initializes the CWD to be a ROSE build tree by creating a default .rmc-main.cfg file"
+    exit 0
+fi
+
+
+# Sanity checks
+rose_srcdir=$(spock-realpath "$1")
+[ -d "$rose_srcdir/." ] ||
+    die "not a directory: $rose_srcdir"
+[ -e "$rose_srcdir/src/frontend/BinaryFormats/ElfSection.C" ] ||
+    die "not a ROSE source tree: $rose_srcdir"
+[ -e "src/frontend/BinaryFormats/ElfSection.C" ] &&
+    die "you must run this from the top of your (new) build tree"
+[ -e ".rmc-main.cfg" ] &&
+    die "this build tree is already initialized"
+[ "$(ls)" = "" ] ||
+    die "the CWD must be a new (empty) build tree"
+
+# What C++ compiler are we using right now?
+cxx_quad=$($SPOCK_SCRIPTS/impl/detect-compiler-characteristics --quad --baselang=c++ c++)
+cxx_vendor=$(echo $cxx_quad |cut -d: -f1)
+cxx_lang=$(echo $cxx_quad |cut -d: -f3)
+cxx_version=$(echo $cxx_quad |cut -d: -f4)
+
+# Create a default .rmc-main.cfg
+(
+    echo "# RMC configuration file -*- shell-script -*-"
+    echo
+    echo "# Edit this file to change how your build environment will"
+    echo "# be configured.  Each time you change this file you should"
+    echo "# exit and re-enter the build environment, and possibly rerun"
+    echo "# ROSE's configure script (\"rmc config\"), and clean your"
+    echo "# build tree (\"make clean\"). Failure to do this may result"
+    echo "# in build artifacts compiled in incompatible ways leading to"
+    echo "# failures such as segmentation faults."
+    echo "#"
+    echo "# Note that as of Feb 2017, the new RMC-2 does not yet"
+    echo "# support every possible configuration.  For the time being,"
+    echo "# you may need to add some software dependencies manually in"
+    echo "# order to use them."
+    echo
+    echo "# Basic settings"
+    echo "rmc_rosesrc          	  $(spock-realpath "$rose_srcdir")"
+    echo "rmc_build            	  autoconf"
+    echo "rmc_parallelism      	  system"
+    echo
+    echo "# Compiler settings"
+    echo "rmc_compiler         	  $cxx_vendor-$cxx_version-$cxx_lang"
+    echo "rmc_debug            	  yes # turns on -g"
+    echo "rmc_optimize         	  ambivalent # use ROSE default level"
+    echo "rmc_warnings         	  yes # show compiler warnings"
+    echo "rmc_code_coverage    	  no # generate code coverage stats"
+    echo
+    echo "# Configuration options"
+    echo "rmc_assertions       	  ambivalent # use ROSE default handling"
+    echo "rmc_languages        	  all # ROSE frontend languages, comma-separated"
+    echo
+    echo "# Software dependencies"
+    echo "rmc_boost            	  1.55"
+    echo "rmc_cmake            	  3"
+    echo "rmc_dlib             	  none"
+    echo "rmc_doxygen          	  none"
+    echo "rmc_dwarf            	  none"
+    echo "rmc_edg              	  ambivalent # use ROSE default"
+    echo "rmc_java             	  none # requires manual download"
+    echo "rmc_magic            	  none"
+    echo "rmc_python           	  3"
+    echo "rmc_qt               	  none"
+    echo "rmc_readline         	  none"
+    echo "rmc_sqlite           	  none"
+    echo "rmc_wt               	  none"
+    echo "rmc_yaml             	  none"
+    echo "rmc_yices            	  none"
+) >.rmc-main.cfg
+
+"${EDITOR:-vi}" .rmc-main.cfg
+echo "Now run $SPOCK_BINDIR/rmc to enter the build subshell"

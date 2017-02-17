@@ -11,6 +11,7 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/thread/thread.hpp>
@@ -20,6 +21,7 @@
 #include <sys/wait.h>
 
 using namespace Sawyer::Message::Common;
+namespace bfs = boost::filesystem;
 
 namespace Spock {
 
@@ -50,7 +52,7 @@ Context::Context() {
     if (const char *s = getenv("SPOCK_ROOT")) {
         rootdir_ = s;
     } else if (char *s = getenv("HOME")) {
-        rootdir_ = boost::filesystem::path(s) / ".spock";
+        rootdir_ = bfs::path(s) / ".spock";
         setEnvVar("SPOCK_ROOT", rootdir_.string());
     } else {
         rootdir_ = "/opt/spock";
@@ -107,41 +109,14 @@ Context::Context() {
     if (const char *s = getenv("SPOCK_BLDDIR")) {
         builddir_ = s;
     } else {
-        builddir_ = boost::filesystem::temp_directory_path();
+        builddir_ = bfs::temp_directory_path();
         setEnvVar("SPOCK_BLDDIR", builddir_.string());
     }
     
     // All packages installed by this version of Spock depend on this version of Spock. In order to
     // achieve that, we must first create a pseudo-package to represent spock.
     scanInstalledPackages();
-    Packages foundSelf = findInstalled("spock=" + std::string(VERSION));
-    if (foundSelf.size() == 0) {
-        std::string spockHash = randomHash();
-        std::string spockSpec = "spock=" + std::string(VERSION) + "@" + spockHash;
-        boost::filesystem::create_directories(optDirectory() / spockHash);
-        boost::filesystem::path yamlFile = optDirectory() / (spockHash + ".yaml");
-        std::ofstream yaml(yamlFile.string().c_str());
-        yaml <<"package: spock\n"
-             <<"version: " <<VERSION <<"\n"
-             <<"timestamp: \"" <<boost::posix_time::to_simple_string(boost::posix_time::second_clock::universal_time()) <<"\"\n";
-        yaml.close();
-        Package::Ptr pkg = scanInstalledPackage(spockSpec);
-        if (!pkg) {
-            mlog[FATAL] <<"unable to create then read Spock bootstrap package\n";
-            mlog[FATAL] <<"  creation attempted at " <<yamlFile <<"\n";
-            mlog[FATAL] <<"  specification " <<spockSpec <<"\n";
-            exit(1);
-        }
-        foundSelf = findInstalled("spock=" + std::string(VERSION));
-        ASSERT_require(1 == foundSelf.size());
-    } else if (foundSelf.size() > 1) {
-        mlog[FATAL] <<"multiple installations of spock=" <<VERSION <<":";
-        BOOST_FOREACH (const Package::Ptr &self, foundSelf)
-            mlog[FATAL] <<" " <<self->toString();
-        mlog[FATAL] <<"\n";
-        exit(1);
-    }
-    spockItself_ = foundSelf[0];
+    spockItself_ = findOrCreateSelf();
     ASSERT_not_null(spockItself());
 
     // Now that we're self-aware, if there's a SPOCK_SPEC variable we can verify it's correct!
@@ -177,47 +152,131 @@ Context::Context() {
 
 Context::~Context() {}
 
-boost::filesystem::path
+std::string
+Context::osCharacteristics() {
+    std::string retval;
+    if (FILE *f = popen((scriptDirectory()/"impl"/"operating-system-name").c_str(), "r")) {
+        char buf[1024];
+        if (fgets(buf, sizeof buf, f)) {
+            retval = buf;
+            boost::trim(retval);
+        }
+        if (pclose(f)!=0)
+            retval = "";
+    }
+    if (retval.empty())
+        throw Exception::CommandError("cannot obtain operating system info");
+    return retval;
+}
+
+Package::Ptr
+Context::findOrCreateSelf() {
+    std::string currentOs = osCharacteristics();
+
+    // Find spock packages for all versions and the current version.
+    Packages allSpock = findInstalled("spock");
+    Packages currentSpock = findInstalled("spock=" + std::string(VERSION));
+
+    // Error if there's more than one spock installation for a single version
+    if (currentSpock.size() > 1) {
+        mlog[FATAL] <<"multiple installations of spock=" <<VERSION <<":\n";
+        BOOST_FOREACH (const Package::Ptr &pkg, currentSpock)
+            mlog[FATAL] <<"    " <<pkg->toString() <<"\n";
+        exit(1);
+    }
+
+    // Error if there's one installation of this version, but the OS is wrong.
+    if (currentSpock.size() == 1) {
+        std::string installedOs = asInstalled(currentSpock[0])->environmentSearchPaths().get("SPOCK_OS");
+        if (installedOs != currentOs) {
+            mlog[FATAL] <<"your operating system seems to have changed\n";
+            mlog[FATAL] <<currentSpock[0]->toString() <<" was originally installed in " <<installedOs <<"\n";
+            mlog[FATAL] <<"but now the operating system is " <<currentOs <<"\n";
+            mlog[FATAL] <<"different operating systems must use different $SPOCK_OPTDIR directories\n";
+            exit(1);
+        }
+    }
+
+    // Warning if the spock version number changed
+    if (currentSpock.empty() && !allSpock.empty()) {
+        if (mlog[WARN]) {
+            mlog[WARN] <<"spock version changed to " <<VERSION <<"; previous installations:\n";
+            BOOST_FOREACH (const Package::Ptr &pkg, allSpock)
+                mlog[WARN] <<"    " <<pkg->toString() <<"\n";
+            mlog[WARN] <<"you may want to remove packages installed with previous spock versions\n";
+        }
+    }
+
+    // Create spock installation if it doesn't exist
+    if (currentSpock.empty()) {
+        std::string spockHash = randomHash();
+        std::string spockSpec = "spock=" + std::string(VERSION) + "@" + spockHash;
+        bfs::create_directories(optDirectory() / spockHash);
+        bfs::path yamlFile = optDirectory() / (spockHash + ".yaml");
+        std::ofstream yaml(yamlFile.string().c_str());
+        yaml <<"package: spock\n"
+             <<"version: " <<VERSION <<"\n"
+             <<"timestamp: \"" <<boost::posix_time::to_simple_string(boost::posix_time::second_clock::universal_time()) <<"\"\n"
+             <<"\n"
+             <<"environment:\n"
+             <<"  SPOCK_OS: '" <<currentOs <<"'\n";
+        yaml.close();
+        Package::Ptr pkg = scanInstalledPackage(spockSpec);
+        if (!pkg) {
+            mlog[FATAL] <<"unable to create then read Spock bootstrap package\n";
+            mlog[FATAL] <<"  creation attempted at " <<yamlFile <<"\n";
+            mlog[FATAL] <<"  specification " <<spockSpec <<"\n";
+            exit(1);
+        }
+        allSpock.push_back(pkg);
+        currentSpock.push_back(pkg);
+    }
+
+    ASSERT_require(currentSpock.size() == 1);
+    return currentSpock[0];
+}
+
+bfs::path
 Context::rootDirectory() const {
     return rootdir_;
 }
 
-boost::filesystem::path
+bfs::path
 Context::binDirectory() const {
     return bindir_;
 }
 
-boost::filesystem::path
+bfs::path
 Context::varDirectory() const {
     return vardir_;
 }
 
-boost::filesystem::path
+bfs::path
 Context::optDirectory() const {
     return optdir_;
 }
 
-boost::filesystem::path
+bfs::path
 Context::packageDirectory() const {
     return pkgdir_;
 }
 
-boost::filesystem::path
+bfs::path
 Context::downloadDirectory() const {
     return vardir_ / "downloads";
 }
 
-boost::filesystem::path
+bfs::path
 Context::scriptDirectory() const {
     return scriptdir_;
 }
 
-boost::filesystem::path
+bfs::path
 Context::buildDirectory() const {
     return builddir_;
 }
 
-boost::filesystem::path
+bfs::path
 Context::installedConfig(const std::string &hash) const {
     return optDirectory() / (hash + ".yaml");
 }
@@ -351,7 +410,7 @@ Context::subshell(const std::vector<std::string> &command, const SubshellSetting
 }
 
 Context::CommandStatus
-Context::subshell(const boost::filesystem::path &exe, const SubshellSettings &settings) const {
+Context::subshell(const bfs::path &exe, const SubshellSettings &settings) const {
     return subshell(std::vector<std::string>(1, exe.string()), settings);
 }
 
@@ -370,9 +429,9 @@ Context::scanInstalledPackage(const PackagePattern &spec) {
 
 void
 Context::scanInstalledPackages() {
-    boost::filesystem::path dir = optDirectory();
+    bfs::path dir = optDirectory();
     if (is_directory(dir)) {
-        BOOST_FOREACH (boost::filesystem::directory_entry &dirent, boost::filesystem::directory_iterator(dir)) {
+        BOOST_FOREACH (bfs::directory_entry &dirent, bfs::directory_iterator(dir)) {
             if (is_regular_file(dirent.status()) && boost::ends_with(dirent.path().filename().string(), ".yaml")) {
                 std::string hash = dirent.path().stem().string();
                 if (isHash(hash)) {
@@ -387,9 +446,9 @@ Context::scanInstalledPackages() {
 
 void
 Context::scanGhostPackages() {
-    boost::filesystem::path dir = packageDirectory();
+    bfs::path dir = packageDirectory();
     if (is_directory(dir)) {
-        BOOST_FOREACH (boost::filesystem::directory_entry &dirent, boost::filesystem::directory_iterator(dir)) {
+        BOOST_FOREACH (bfs::directory_entry &dirent, bfs::directory_iterator(dir)) {
             if (is_regular_file(dirent.status()) && boost::ends_with(dirent.path().filename().string(), ".yaml")) {
                 std::string pkgName;
                 try {

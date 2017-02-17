@@ -88,6 +88,30 @@ fi
 cxx_vendor=$(echo "$cxx_quad" |cut -d: -f1)
 cxx_version=$(echo "$cxx_quad" |cut -d: -f4)
 
+# Check version number
+too_old=
+if [ "$cxx_vendor" = "gnu" ]; then
+    cxx_version_major=$(echo "$cxx_version" |cut -d. -f1)
+    cxx_version_minor=$(echo "$cxx_version" |cut -d. -f2)
+    if [ "$cxx_version_major" -lt 4 ]; then
+	too_old=yes
+    elif [ "$cxx_version_major" = "4" -a "$cxx_version_minor" -lt 8 ]; then
+	too_old=yes
+    fi
+fi
+if [ -n "$too_old" ]; then
+    echo "$arg0: your compiler is too old: $cxx_vendor=$cxx_version" >&2
+
+    # If this is an LC machine, try upgrading to a reasonably recent GCC compiler
+    if [ -e "/usr/local/tools/dotkit/init.sh" ]; then
+	best_gcc_49=$(source /usr/local/tools/dotkit/init.sh >/dev/null; \
+		      use -l |sed -n 's/^ *\(gcc-4.9.[0-9]p\) \+.*/\1/p' |sort -r |head -1)
+	if [ "$best_gcc_49" != "" ]; then
+	    echo "$arg0: try uprading by running 'use $best_gcc_49'" >&2
+	fi
+    fi
+    exit 1
+fi
 
 # How many threads can we use for compiling?
 ncpus=$(sed -n '/^processor[ \t]\+:/p' </proc/cpuinfo |wc -l)

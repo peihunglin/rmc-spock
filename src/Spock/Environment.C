@@ -16,6 +16,11 @@ Environment::set(const std::string &name, const std::string &value) {
     variables_.insert(name, value);
 }
 
+std::string
+Environment::get(const std::string &name, const std::string &dflt) const {
+    return variables_.getOrElse(name, dflt);
+}
+
 void
 Environment::append(const std::string &name, const std::string &value, const std::string &sep) {
     const std::string &oldval = variables_.getOrDefault(name);

@@ -12,6 +12,10 @@ PackagePattern::PackagePattern(const std::string &s) {
     parse(s);
 }
 
+PackagePattern::PackagePattern(const char *s) {
+    parse(s);
+}
+
 void
 PackagePattern::parse(const std::string &s) {
     static bool initialized = false;
