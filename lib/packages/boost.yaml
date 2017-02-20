@@ -141,8 +141,9 @@ install:
         cc --spock-triplet
         c++ --spock-triplet
 
-        # Initialization
-
+        # Initialization. Boost's bjam gives an error if parallelism is
+        # larger than 64.
+        [ "$PARALLELISM" -gt 64 ] && PARALLELISM=64
         libraries_commas=$(echo "$libraries" |sed 's/  */,/g')
 
         # All compiling is done in the downloaded source directory,
@@ -173,7 +174,7 @@ install:
         # on debugging output during the build, which is saved along
         # with the installation.
 
-        ./b2 --prefix="$PACKAGE_ROOT" $iosflags toolset=$boost_toolset -d+2
+        ./b2 --prefix="$PACKAGE_ROOT" $iosflags toolset=$boost_toolset -d+2 -j$PARALLELISM
         ./b2 --prefix="$PACKAGE_ROOT" $iosflags toolset=$boost_toolset -d+2 install
 
         # Finally, describe the variables that should be adjusted or

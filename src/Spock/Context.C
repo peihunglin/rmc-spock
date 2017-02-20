@@ -19,6 +19,7 @@
 #include <Sawyer/ProgressBar.h>
 #include <fcntl.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 using namespace Sawyer::Message::Common;
 namespace bfs = boost::filesystem;
@@ -101,6 +102,9 @@ Context::Context() {
         optdir_ = s;
     } else {
         optdir_ = vardir_ / "installed";
+        char buf[256];
+        if (gethostname(buf, sizeof buf) == 0)
+            optdir_ /= buf;
         setEnvVar("SPOCK_OPTDIR", optdir_.string());
     }
     SAWYER_MESG(mlog[DEBUG]) <<"installed packages (SPOCK_OPTDIR): " <<optdir_ <<"\n";

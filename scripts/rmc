@@ -13,7 +13,7 @@ dir0="${0%/*}"
 if [ -n "$SPOCK_BINDIR" ]; then
     eval $("$SPOCK_BINDIR/spock-ls" --shellvars --export) || exit 1
 else
-    eval $(spock-ls --shellvars) || exit 1
+    eval $(spock-ls --shellvars --export) || exit 1
 fi
 
 source "$SPOCK_SCRIPTS/impl/basic-support.sh" || exit 1
@@ -70,7 +70,7 @@ EOF
 }
 
 # Parse command-line switches
-command= do_install= do_graph= do_debug='>=march'
+command= do_install= do_graph= do_debug=
 while [ "$#" -gt 0 ]; do
     case "$1" in
 	--) shift; break ;;
@@ -133,12 +133,12 @@ while [ "$#" -gt 0 ]; do
     esac
 done
 
-if [ "$do_install" = "" ]; then
-    if [ "$command" = "" ]; then
-	do_install="--install=ask"
-    else
-	do_install="--install=no"
-    fi
+if [ "$command" = "" ]; then
+    : ${do_install:=--install=ask}
+    : ${do_debug:=">=march"}
+else
+    : ${do_install:=--install=no}
+    : ${do_debug:=">=warn"}
 fi
 
 
@@ -291,9 +291,15 @@ read_config_file() {
 # Runs the rose-install-all-deps. Needed because Spock's --install is not fully implemented yet. Once it's implemented
 # we can remove this function and its call.
 preinstall() {
+    # RMC_CXX_COMPILER is the Spock specification for the compiler, such as gnu-default-c++-5.4, or gnu-c++11-5.4.  We
+    # need to break this into a compiler collection and a language, as in "gnu-5.4" and "default" or "c++11".
+    local cxx_vendor="${RMC_CXX_COMPILER%%-*}"
+    local cxx_version="${RMC_CXX_COMPILER##*-}"
+    local cxx_lang="${RMC_CXX_COMPILER#$cxx_vendor-}"; cxx_lang="${cxx_lang%-$cxx_version}"
+
     env \
-	COMPILER_COLLECTIONS="$RMC_CXX_COMPILER" \
-	CXX_LANGUAGES=ignored \
+	COMPILER_COLLECTIONS="$cxx_vendor-$cxx_version" \
+	CXX_LANGUAGES="$cxx_lang" \
 	CMAKE_VERSIONS=$(echo "$RMC_CMAKE" |sed 's/system/installed/') \
 	BOOST_VERSIONS="$RMC_BOOST" \
 	DLIB_VERSIONS=$(echo "$RMC_DLIB" |sed 's/system/installed/') \
@@ -467,7 +473,7 @@ rmc_python() {
     check_one_arg rmc_python "$@"
     RMC_PYTHON="$1"
 
-    local exe=$(which "$RMC_PYTHON")
+    local exe=$(which "$RMC_PYTHON" 2>/dev/null)
     if [ -n "$exe" ]; then
 	# Python2's --version emits to to standard error instead of standard output. We keep only the major version
 	local pyver=$("$exe" --version 2>&1 |sed -n '/^Python / s/^[^0-9]*\([0-9]\+\).*/\1/p')
@@ -565,7 +571,9 @@ if [ "$RMC_HASH" = "" ]; then
     # implemented. Therefore, if installation is requested and packages are missing, run the rose-install-all-deps script
     # to install them before continuing.
     if [ -n "$do_install" -a "$do_install" != "--install=no" ]; then
-	preinstall || exit 1
+	if ! "$SPOCK_BINDIR/spock-shell" --with-file "$depfile" --log none true; then
+	    preinstall || exit 1
+	fi
     fi
     
     # Attempt to resolve the dependency constraints and cache the results for later.

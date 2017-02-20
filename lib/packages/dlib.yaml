@@ -1,5 +1,5 @@
 package:        dlib
-versions:       [ 18.16, 18.17, 18.18 ]
+versions:       [ 18.11, 18.12, 18.13, 18.14, 18.15, 18.16, 18.17, 18.18 ]
 
 dependencies:
   - version: ">=18"

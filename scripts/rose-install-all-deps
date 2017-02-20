@@ -35,9 +35,8 @@ source "$SPOCK_SCRIPTS/impl/basic-support.sh" || exit 1
 #        Do not install any versions, but when installing software that depends on this package, use all previously
 #        installed versions of this software.
 
-# Compiler collections. Give only the vendor and version as in "gnu-4.8" rather than "gnu-compilers-4.8". If this
-# string matches "<vendor>-<lang>-<version>" then consider it to already be a (partial) compiler specification and
-# ignore the CXX_LANGUAGES variable.
+# Compiler collections. Give only the vendor and version as in "gnu-4.8" rather than "gnu-compilers-4.8". However,
+# if COMPILER_SPECS is set then ignore COMPILER_COLLECTIONS and CXX_LANGUAGES.
 : ${COMPILER_COLLECTIONS:="gnu-4.8 gnu-4.9 gnu-5 gnu-6 llvm-3.5 llvm-3.6 llvm-3.7 llvm-3.8 llvm-3.9"}
 
 # C++ languages. These are languages accepted by Spock, but see COMPILER_COLLECTIONS
@@ -93,21 +92,38 @@ cannot_install() {
     return 0
 }
 
-# Install $pkg_ghost with $dependencies if not installed already, and echo its spec regardless.
+# Install $pkg_ghost with $dependencies if not installed already, and echo its spec regardless.  The $extra_deps are
+# extra dependencies used during build that would conflict with using $pkg_ghost itself (e.g., llvm depends on a system
+# compiler collection during the build, but cannot be used with that system compiler collection.
 install-package() {
-    local dependencies="$1" pkg_ghost="$2"
+    local dependencies="$1" pkg_ghost="$2" extra_deps="$3"
 
-    local with="$dependencies,$pkg_ghost"
-    with="${with#,}"
+    # First, see if this package exists (without depending on $extra_deps)
+    local with="$pkg_ghost"
+    [ "$dependencies" = "" ] || with="$dependencies,$with"
+    local hash=$($SPOCK_BINDIR/spock-shell --with "$with" bash -c 'echo $SPOCK_EMPLOYED' 2>/dev/null |sed 's/.*://')
+    if [ "$hash" != "" ]; then
+	$SPOCK_BINDIR/spock-ls -1 "@$hash"
+	return 0
+    fi
 
+    # Doesn't exist, so try to build it
+    local with_extra="$with"
+    [ "$extra_deps" = "" ] || with_extra="$extra_deps,$with_extra"
     echo >&2
     (
 	set -ex
-	$SPOCK_BINDIR/spock-shell --install=yes --with "$with" --log '>=info' true
+	$SPOCK_BINDIR/spock-shell --install=yes --with "$with_extra" --log '>=info' true
     )>&2 || return 1
-    local hash=$($SPOCK_BINDIR/spock-shell --with "$with" bash -c 'echo $SPOCK_EMPLOYED' 2>/dev/null |sed 's/.*://')
 
-    [ "$hash" != "" ] && $SPOCK_BINDIR/spock-ls -1 "@$hash"
+    # Now we should be able to find it (without depending on $extra_deps)
+    local hash=$($SPOCK_BINDIR/spock-shell --with "$with" bash -c 'echo $SPOCK_EMPLOYED' 2>/dev/null |sed 's/.*://')
+    if [ "$hash" != "" ]; then
+	$SPOCK_BINDIR/spock-ls -1 "@$hash"
+	return 0
+    fi
+
+    return 1
 }
 
 using-these() {
@@ -143,20 +159,16 @@ fi
 === Compilers
 ########################################################################################################################
 
-# LLVM's build depends on cmake, so we build one using the same compiler that we use to compile llvm. We'll install
-# other user-requested versions of cmake later.
-if (echo "COMPILER_COLLECTIONS" |grep llvm >/dev/null 2>&1); then
-    install-package "gnu-default-c,gnu-default-c++" cmake-3
-fi
 
 # If the user already supplied a particular compiler specification, then try to install it directly. Otherwise assume
 # its a list of one or more compiler collections and install the collections and use CXX_LANGUAGES to restrict the
-# chosen compilers.  Compiler specs will always have at least two hyphens and be a single word, but compiler collections
-# will have only one.
-hyphens="$(echo "$COMPILER_COLLECTIONS" |tr -cd -)"
-spaces="$(echo "$COMPILER_COLLECTIONS" |tr -cd ' ')"
-if [ "${#hyphens}" -ge 2 -a "${#spaces}" -eq 0 ]; then
-    CXX_COMPILER_SPECS=($($SPOCK_BINDIR/spock-ls -1 "$COMPILER_COLLECTIONS"))
+# chosen compilers.
+if [ "${#CXX_COMPILER_SPECS[*]}" -gt 0 ]; then
+    specs=()
+    for pattern in "${CXX_COMPILER_SPECS[@]}"; do
+	specs=("${specs[@]}" $($SPOCK_BINDIR/spock-ls -1 "$pattern"))
+    done
+    CXX_COMPILER_SPECS=("${specs[@]}")
 else
     # Install missing compiler collections and accumulate names of all in using_collections
     using_collections=()
@@ -172,7 +184,22 @@ else
 	    collection_version=
 	    [ "$version" != "" ] && collection_version="-$version"
 	    collection_spec="${collection_name}${collection_version}"
-	    collection_spec=$(install-package "" $collection_spec)
+
+	    build_deps=
+	    case "$vendor" in
+		llvm)
+		    # LLVM's build depends on cmake, so we build one using the same compiler that we use to compile
+		    # llvm. We'll install other user-requested versions of cmake later.
+		    if (echo "COMPILER_COLLECTIONS" |grep llvm >/dev/null 2>&1); then
+			install-package "gnu-default-c,gnu-default-c++" cmake-3
+		    fi
+		    build_deps="gnu-system-compilers"
+		    ;;
+		gnu)
+		    ;;
+	    esac
+
+	    collection_spec=$(install-package "" $collection_spec "$build_deps")
 	    [ "$collection_spec" != "" ] &&
 		using_collections=("${use_collections[@]}" "$collection_spec")
 	done
@@ -183,8 +210,13 @@ else
     CXX_COMPILER_SPECS=()
     for collection in "${using_collections[@]}"; do
 	for lang in $CXX_LANGUAGES; do
-	    [ "$lang" = "none" ] && continue
-	    cxx_spec="$($SPOCK_BINDIR/spock-ls "${lang}-compiler" |grep "$collection" |cut -d' ' -f1)"
+	    lang_spec=
+	    case "$lang" in
+		none) continue ;;
+		default-*) lang_spec="$lang" ;;
+		*) lang_spec="${lang}-compiler" ;;
+	    esac
+	    cxx_spec="$($SPOCK_BINDIR/spock-ls "$lang_spec" |grep "$collection" |cut -d' ' -f1)"
 	    if [ "$cxx_spec" = "" ]; then
 		echo "warning: $collection has no $lang compiler (skipping)" >&2
 	    else
@@ -235,7 +267,7 @@ using-these CMake "${CMAKE_SPECS[@]}"
 # Boost has C++ libraries and thus must be compiled with each C++ compiler.
 echo "installing Boost versions (per compiler): $BOOST_VERSIONS"
 BOOST_SPECS=()
-if [ "$CMAKE_VERSIONS" = "installed" ]; then
+if [ "$BOOST_VERSIONS" = "installed" ]; then
     die "boost \"installed\" setting is not implemented yet"
 else
     for boost_version in $BOOST_VERSIONS; do
@@ -381,7 +413,12 @@ fi
 using-these YAML-cpp "${YAMLCPP_SPECS[@]}"
 
 ########################################################################################################################
+
 if [ "$nfailures" -gt 0 ]; then
+    echo
     echo "$arg0: warning: number of installation failures: $nfailures" >&2
 fi
+
+echo
+echo
 exit 0

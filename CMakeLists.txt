@@ -135,9 +135,10 @@ install(
 )
 
 install(
-  FILES
+  PROGRAMS
     scripts/rmc-commands/config
     scripts/rmc-commands/make
+    scripts/rmc-commands/init
   DESTINATION scripts/rmc-commands
 )
 
