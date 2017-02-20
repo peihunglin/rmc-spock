@@ -151,7 +151,7 @@ if [ ! -d "$prefix/dependencies/boost" ]; then
 	       
         echo "using $boost_cxx_vendor : $cxx_version : $cxx_exe ;" >tools/build/src/user-config.jam
         ./bootstrap.sh --prefix="$prefix/dependencies/boost" --with-libraries="$boost_libs" --with-toolset="$boost_cxx_vendor"
-        ./b2 --prefix="$prefix/dependencies/boost" -sNO_BZIP2=1 toolset="$boost_cxx_vendor"
+        ./b2 --prefix="$prefix/dependencies/boost" -sNO_BZIP2=1 toolset="$boost_cxx_vendor" -j$ncpus
         ./b2 --prefix="$prefix/dependencies/boost" -sNO_BZIP2=1 toolset="$boost_cxx_vendor" install
     )
     rm -rf _build/boost_1_62_0
