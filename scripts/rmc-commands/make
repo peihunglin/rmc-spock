@@ -23,12 +23,12 @@ source "$SPOCK_SCRIPTS/impl/basic-support.sh" || exit 1
 
 # Command-line switches. Parse "make" switches, keeping track of a couple special ones.
 make_switches=()
-have_C= have_j= have_silent=--silent do_make_help=
+have_C= have_j= have_silent=--silent do_make_help= dry_run=
 while [ "$#" -gt 0 ]; do
     case "$1" in
-	--help|-h)
-	    do_make_help
-	    exit 0
+	-n|--dry-run)
+	    dry_run=yes
+	    shift
 	    ;;
 	-C|--directory)
 	    make_switches=("${make_swithces[@]}" "$1" "$2")
@@ -109,7 +109,9 @@ for target in "${targets[@]}"; do
     # anyway. Otherwise "make" is so noisy that warning messages tend to get overlooked
     export RMC_MAKE=running
     echo "+" make $parallelism $have_silent "${make_switches[@]}" "$target" >&2
-    make $parallelism $have_silent "${make_switches[@]}" "$target" \
-        || exit 1
+    if [ "$dry_run" != "yes" ]; then
+	make $parallelism $have_silent "${make_switches[@]}" "$target" \
+            || exit 1
+    fi
 done
 exit 0
