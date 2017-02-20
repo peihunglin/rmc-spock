@@ -174,8 +174,8 @@ install:
         # on debugging output during the build, which is saved along
         # with the installation.
 
-        ./b2 --prefix="$PACKAGE_ROOT" $iosflags toolset=$boost_toolset -d+2 -j$PARALLELISM
-        ./b2 --prefix="$PACKAGE_ROOT" $iosflags toolset=$boost_toolset -d+2 install
+        ./b2 --prefix="$PACKAGE_ROOT" $iostream_flags toolset=$boost_toolset -d+2 -j$PARALLELISM
+        ./b2 --prefix="$PACKAGE_ROOT" $iostream_flags toolset=$boost_toolset -d+2 install
 
         # Finally, describe the variables that should be adjusted or
         # created when this package is employed by a user.  These
