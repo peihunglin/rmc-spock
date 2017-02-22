@@ -583,11 +583,12 @@ DefinedPackage::install(Context &ctx, Settings &settings /*in,out*/) {
     }
 
     // Create directories.  The installation prefix is temporary for now so it gets deleted if there's an error.
-    bfs::path installDir   = settings.installDirOverride.empty() ? ctx.optDirectory() : settings.installDirOverride;
-    TemporaryDirectory pkgRoot(installDir / settings.hash / name());
+    bfs::path installDir = settings.installDirOverride.empty() ? ctx.optDirectory() : settings.installDirOverride;
+    TemporaryDirectory installationPrefix(installDir / settings.hash);
+    bfs::path pkgRoot = installationPrefix.path() / name();
     TemporaryDirectory workingDir(ctx.buildDirectory() / "spock" / bfs::unique_path("build-%%%%%%%%"));
     if (settings.keepTempFiles) {
-        pkgRoot.keep();
+        installationPrefix.keep();
         workingDir.keep();
     }
     
@@ -595,7 +596,7 @@ DefinedPackage::install(Context &ctx, Settings &settings /*in,out*/) {
     std::string installCommands = findCommands("install", settings.version);
     std::vector<std::string> extraVars;
     extraVars.push_back("PACKAGE_ACTION=install");
-    extraVars.push_back("PACKAGE_ROOT='" + pkgRoot.path().string() + "'");
+    extraVars.push_back("PACKAGE_ROOT='" + pkgRoot.string() + "'");
     bfs::path script = createShellScript(settings, workingDir.path(),
                                          "tar xf '" + tarball.string() + "'\n\n" + installCommands,
                                          extraVars);
@@ -620,24 +621,25 @@ DefinedPackage::install(Context &ctx, Settings &settings /*in,out*/) {
     // Finalize installation of this package before moving on to post-install stuff
     if (!ssSettings.output.empty())
         bfs::rename(ssSettings.output, installDir / settings.hash / "build-log.txt");
-    pkgRoot.keep();
+    installationPrefix.keep();
     Package::Ptr retval = ctx.scanInstalledPackage(mySpec(settings));
     postInstall(ctx, settings, workingDir, pkgRoot);
+
     return retval;
 }
 
 void
 DefinedPackage::postInstall(Context &ctx, Settings &settings,
-                            const TemporaryDirectory &workingDir, const TemporaryDirectory &pkgRoot) {
+                            const TemporaryDirectory &workingDir, const bfs::path &pkgRoot) {
     if (config_["post-install"]) {
         std::string postInstallCommands = findCommands("post-install", settings.version);
         std::vector<std::string> extraVars;
         extraVars.push_back("PACKAGE_ACTION=post-install");
-        extraVars.push_back("PACKAGE_ROOT='" + pkgRoot.path().string() + "'");
+        extraVars.push_back("PACKAGE_ROOT='" + pkgRoot.string() + "'");
         bfs::path script = createShellScript(settings, workingDir.path(), postInstallCommands, extraVars);
         Context::SubshellSettings ssSettings("post " + name() + "=" + settings.version.toString());
         if (settings.quiet)
-            ssSettings.output = pkgRoot.path().parent_path() / "post-install-log.txt";
+            ssSettings.output = pkgRoot.parent_path() / "post-install-log.txt";
         if (ctx.subshell(script, ssSettings) != Context::COMMAND_SUCCESS)
             fail<Exception::CommandError>(this, "post-install commands failed", ssSettings.output);
 

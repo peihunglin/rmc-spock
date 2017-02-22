@@ -177,140 +177,142 @@ main(int argc, char *argv[]) {
     std::vector<std::string> command = parseCommandLine(argc, argv, settings);
     boost::regex whitespace("\\s+");
 
-    Spock::Context ctx;
+    try {
+        Spock::Context ctx;
 
-    // Suck in package name patterns from files
-    BOOST_FOREACH (const boost::filesystem::path &fileName, settings.pkgSelectionFiles) {
-        Sawyer::Container::LineVector lines(fileName);
-        for (size_t i=0; lines.lineChars(i); ++i) {
-            std::string line = boost::trim_copy(lines.lineString(i));
-            std::vector<std::string> words;
-            boost::split_regex(words, line, whitespace);
-            BOOST_FOREACH (const std::string word, words) {
-                if (boost::starts_with(word, "#"))
-                    break;
-                settings.pkgPatterns.push_back(word);
-            }
-        }
-    }
-
-    // Convert pattern strings to patterns
-    std::vector<PackagePattern> patterns;
-    BOOST_FOREACH (const std::string &patternStr, settings.pkgPatterns) {
-        if (!patternStr.empty())
-            patterns.push_back(patternStr);
-    }
-
-    // Try to find a solution.
-    Solver solver(ctx);
-    solver.solve(patterns);
-    mlog[INFO] <<"solver took " <<solver.nSteps() <<" steps\n";
-    if (solver.nSolutions() == 0) {
-        solver.showMessages(mlog);
-        mlog[ERROR] <<"no solutions found\n";
-        exit(1);
-    }
-    Packages soln = solver.solution(0);
-    ctx.sortByDependencyLattice(soln);
-    if (!settings.graphVizDeps.empty()) {
-        std::ofstream gv(settings.graphVizDeps.string().c_str());
-        gv <<ctx.toGraphViz(ctx.dependencyLattice(soln));
-    }
-
-    // Are there any missing packages?
-    bool partsMissing = false;
-    BOOST_FOREACH (const Package::Ptr &pkg, soln) {
-        if (!pkg->isInstalled()) {
-            partsMissing = true;
-            break;
-        }
-    }
-
-    // Show the entire solution
-    BOOST_FOREACH (const Package::Ptr &pkg, soln) {
-        if (pkg->isInstalled()) {
-            mlog[INFO] <<"  using " <<pkg->toString() <<"\n";
-        } else {
-            partsMissing = true;
-            mlog[ERROR] <<"missing " <<pkg->toString() <<"\n";
-            VersionNumbers vns = pkg->versions();
-            if (vns.size() > 1) {
-                mlog[INFO] <<"  " <<pkg->name() <<" available versions:";
-                BOOST_FOREACH (const VersionNumber &v, vns.values())
-                    mlog[INFO] <<" " <<v.toString();
-                mlog[INFO] <<"\n";
-            }
-        }
-    }
-    if (partsMissing && ASSUME_NO == settings.installMissing)
-        exit(1);
-
-    // Install missing packages. This loop may output to standard output and read from standard input, but only when running in
-    // interactive mode.
-    if (partsMissing) {
-        Packages inUse;
-        for (size_t i=0; i<soln.size(); ++i) {
-            if (soln[i]->isInstalled()) {
-                inUse.push_back(soln[i]);
-            } else {
-                VersionNumber version = askInstall(soln[i], settings.installMissing);
-                if (version.isEmpty())
-                    exit(1);
-
-                ctx.insertEmployed(inUse);
-                Packages parasites;
-                Package::Ptr newPkg = asGhost(soln[i])->install(ctx, version, parasites /*out*/);
-                inUse.push_back(newPkg);
-
-                // Any parasites installed just now will replace matching ghosts we encounter in the future
-                BOOST_FOREACH (const Package::Ptr &parasite, parasites) {
-                    for (size_t j=i+1; j<soln.size(); ++j) {
-                        if (!soln[j]->isInstalled() && soln[j]->name() == parasite->name()) {
-                            soln[j] = parasite;
-                            break;
-                        }
-                    }
+        // Suck in package name patterns from files
+        BOOST_FOREACH (const boost::filesystem::path &fileName, settings.pkgSelectionFiles) {
+            Sawyer::Container::LineVector lines(fileName);
+            for (size_t i=0; lines.lineChars(i); ++i) {
+                std::string line = boost::trim_copy(lines.lineString(i));
+                std::vector<std::string> words;
+                boost::split_regex(words, line, whitespace);
+                BOOST_FOREACH (const std::string word, words) {
+                    if (boost::starts_with(word, "#"))
+                        break;
+                    settings.pkgPatterns.push_back(word);
                 }
             }
         }
-        soln = inUse;
 
-        // Overwrite the graphviz file with new info now that we've installed packages
+        // Convert pattern strings to patterns
+        std::vector<PackagePattern> patterns;
+        BOOST_FOREACH (const std::string &patternStr, settings.pkgPatterns) {
+            if (!patternStr.empty())
+                patterns.push_back(patternStr);
+        }
+
+        // Try to find a solution.
+        Solver solver(ctx);
+        solver.solve(patterns);
+        mlog[INFO] <<"solver took " <<solver.nSteps() <<" steps\n";
+        if (solver.nSolutions() == 0) {
+            solver.showMessages(mlog);
+            mlog[ERROR] <<"no solutions found\n";
+            exit(1);
+        }
+        Packages soln = solver.solution(0);
+        ctx.sortByDependencyLattice(soln);
         if (!settings.graphVizDeps.empty()) {
             std::ofstream gv(settings.graphVizDeps.string().c_str());
             gv <<ctx.toGraphViz(ctx.dependencyLattice(soln));
         }
-    }
-    ctx.insertEmployed(soln);
 
-    // Save output in file?
-    if (!settings.outputFile.empty()) {
-        std::ofstream file(settings.outputFile.string().c_str());
-        BOOST_FOREACH (const Package::Ptr &pkg, soln)
-            file <<pkg->toString() <<"\n";
-    }
-        
-    // Run command in subshell
-    if (settings.showingWelcomeMessage) {
-        std::cout <<"\n"
-                  <<"You are being placed into a new subshell whose environment is configured\n"
-                  <<"as you have requested.  You can further customize this environment by\n"
-                  <<"running additional spock-shell commands and dropping into deeper recursive\n"
-                  <<"subshells. When you're done, you can exit this shell to return to your\n"
-                  <<"previous environment. In Bash, the $SHLVL variable will indicate your\n"
-                  <<"nesting level.\n\n";
-    }
+        // Are there any missing packages?
+        bool partsMissing = false;
+        BOOST_FOREACH (const Package::Ptr &pkg, soln) {
+            if (!pkg->isInstalled()) {
+                partsMissing = true;
+                break;
+            }
+        }
 
-    switch (ctx.subshell(command)) {
-        case Context::COMMAND_SUCCESS:
-            return 0;
-        case Context::COMMAND_FAILED:
-            return 1;
-        case Context::COMMAND_NOT_RUN:
-            return 2;
+        // Show the entire solution
+        BOOST_FOREACH (const Package::Ptr &pkg, soln) {
+            if (pkg->isInstalled()) {
+                mlog[INFO] <<"  using " <<pkg->toString() <<"\n";
+            } else {
+                partsMissing = true;
+                mlog[ERROR] <<"missing " <<pkg->toString() <<"\n";
+                VersionNumbers vns = pkg->versions();
+                if (vns.size() > 1) {
+                    mlog[INFO] <<"  " <<pkg->name() <<" available versions:";
+                    BOOST_FOREACH (const VersionNumber &v, vns.values())
+                        mlog[INFO] <<" " <<v.toString();
+                    mlog[INFO] <<"\n";
+                }
+            }
+        }
+        if (partsMissing && ASSUME_NO == settings.installMissing)
+            exit(1);
+
+        // Install missing packages. This loop may output to standard output and read from standard input, but only when running in
+        // interactive mode.
+        if (partsMissing) {
+            Packages inUse;
+            for (size_t i=0; i<soln.size(); ++i) {
+                if (soln[i]->isInstalled()) {
+                    inUse.push_back(soln[i]);
+                } else {
+                    VersionNumber version = askInstall(soln[i], settings.installMissing);
+                    if (version.isEmpty())
+                        exit(1);
+
+                    ctx.insertEmployed(inUse);
+                    Packages parasites;
+                    Package::Ptr newPkg = asGhost(soln[i])->install(ctx, version, parasites /*out*/);
+                    inUse.push_back(newPkg);
+
+                    // Any parasites installed just now will replace matching ghosts we encounter in the future
+                    BOOST_FOREACH (const Package::Ptr &parasite, parasites) {
+                        for (size_t j=i+1; j<soln.size(); ++j) {
+                            if (!soln[j]->isInstalled() && soln[j]->name() == parasite->name()) {
+                                soln[j] = parasite;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            soln = inUse;
+
+            // Overwrite the graphviz file with new info now that we've installed packages
+            if (!settings.graphVizDeps.empty()) {
+                std::ofstream gv(settings.graphVizDeps.string().c_str());
+                gv <<ctx.toGraphViz(ctx.dependencyLattice(soln));
+            }
+        }
+        ctx.insertEmployed(soln);
+
+        // Save output in file?
+        if (!settings.outputFile.empty()) {
+            std::ofstream file(settings.outputFile.string().c_str());
+            BOOST_FOREACH (const Package::Ptr &pkg, soln)
+                file <<pkg->toString() <<"\n";
+        }
+
+        // Run command in subshell
+        if (settings.showingWelcomeMessage) {
+            std::cout <<"\n"
+                      <<"You are being placed into a new subshell whose environment is configured\n"
+                      <<"as you have requested.  You can further customize this environment by\n"
+                      <<"running additional spock-shell commands and dropping into deeper recursive\n"
+                      <<"subshells. When you're done, you can exit this shell to return to your\n"
+                      <<"previous environment. In Bash, the $SHLVL variable will indicate your\n"
+                      <<"nesting level.\n\n";
+        }
+
+        switch (ctx.subshell(command)) {
+            case Context::COMMAND_SUCCESS:
+                return 0;
+            case Context::COMMAND_FAILED:
+                return 1;
+            case Context::COMMAND_NOT_RUN:
+                return 2;
+        }
+    
+    } catch (const Exception::SpockError &e) {
+        mlog[ERROR] <<e.what() <<"\n";
+        exit(1);
     }
-//    } catch (const Exception::SpockError &e) {
-//        mlog[ERROR] <<e.what() <<"\n";
-//        exit(1);
-//    }
 }

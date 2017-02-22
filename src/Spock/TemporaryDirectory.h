@@ -12,8 +12,11 @@ class TemporaryDirectory {
     boost::filesystem::path path_;
     bool keep_;
 
+private:
+    TemporaryDirectory() {}
+
 public:
-    TemporaryDirectory(const boost::filesystem::path &path)
+    explicit TemporaryDirectory(const boost::filesystem::path &path)
         : keep_(false) {
         if (!boost::filesystem::create_directories(path))
             throw Exception::CommandError("cannot create directory: " + path.string()); // exists already, otherwise exception
@@ -21,8 +24,12 @@ public:
     }
 
     ~TemporaryDirectory() {
-        if (!keep_)
-            boost::filesystem::remove_all(path_);
+        if (!keep_ && !path_.empty()) {
+            try {
+                boost::filesystem::remove_all(path_);
+            } catch (...) {
+            }
+        }
     }
 
     const boost::filesystem::path path() const {

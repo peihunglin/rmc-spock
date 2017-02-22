@@ -123,7 +123,7 @@ private:
                            const boost::filesystem::path &yamlFile, const boost::filesystem::path &installDir);
 
     // Runs post-install commands, such as installing parasites.
-    void postInstall(Context&, Settings&, const TemporaryDirectory &workingDir, const TemporaryDirectory &pkgRoot);
+    void postInstall(Context&, Settings&, const TemporaryDirectory &workingDir, const boost::filesystem::path &pkgRoot);
 };
 
 } // namespace
