@@ -72,7 +72,7 @@ cxx_version=$(echo $cxx_quad |cut -d: -f4)
     echo "rmc_languages        	all # ROSE frontend languages, comma-separated"
     echo
     echo "# Software dependencies"
-    echo "rmc_boost            	1.55"
+    echo "rmc_boost            	1.57"
     echo "rmc_cmake            	3"
     echo "rmc_dlib             	none"
     echo "rmc_doxygen          	none"

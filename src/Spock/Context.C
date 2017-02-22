@@ -159,7 +159,7 @@ Context::~Context() {}
 std::string
 Context::osCharacteristics() {
     std::string retval;
-    if (FILE *f = popen((scriptDirectory()/"impl"/"operating-system-name").c_str(), "r")) {
+    if (FILE *f = popen((scriptDirectory()/"spock-os-name").c_str(), "r")) {
         char buf[1024];
         if (fgets(buf, sizeof buf, f)) {
             retval = buf;

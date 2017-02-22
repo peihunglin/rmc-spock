@@ -50,6 +50,11 @@ usage: $arg0 [SWITCHES] [COMMAND...]
             Start an interactive subshell with the environment set
             up for building ROSE.
 
+        init SOURCE_DIR
+            Initialize the current working directory, which must
+            be empty, as a new ROSE build tree. This creates a file
+            named .rmc-main.cfg which holds configuration information.
+
         config [--dry-run]
             Run (or just show) ROSE's configure script with switches
             appropriate for the current environment. The current
@@ -253,39 +258,14 @@ read_config_file() {
     export RG_BLD=$(spock-realpath "$config_file"); RG_BLD="${RG_BLD%/*}"
     export ROSE_BUILD="$RG_BLD"
     rmc_parallelism $RMC_PARALLELISM # make sure its a number
-    export PS1_STACK="rmc=${RG_BLD##*/} $PS1_STACK"
     export ROSE_INSTALLED="$RG_BLD/installed"
 
-    #### Resolve the operating system name ####
+    export RMC_OS_NAME=$("$SPOCK_SCRIPTS/spock-os-name" --full)
+    export RMC_OS_NAME_SHORT=$("$SPOCK_SCRIPTS/spock-os-name" --short)
+    export RMC_OS_NAME_FILE=$("$SPOCK_SCRIPTS/spock-os-name" --file)
 
-    # Debian/Ubuntu-like systems
-    [ "$RMC_OS_NAME" = "" -a -r /etc/os-release ] && \
-        RMC_OS_NAME=$(source /etc/os-release; echo $NAME $VERSION_ID)
-
-    # Other debian-like systems
-    [ "$RMC_OS_NAME" = "" -a -r /etc/debian_version ] && \
-        RMC_OS_NAME="Debian $(cat /etc/debian_version)"
-
-    # Redhat-like systems
-    [ "$RMC_OS_NAME" = "" -a -r /etc/redhat-release ] && \
-        RMC_OS_NAME=$(cat /etc/redhat-release)
-
-    # All others, fall back to the Linux kernel version
-    [ "$RMC_OS_NAME" = "" ] && \
-        RMC_OS_NAME="Unknown $(uname -s)"
-
-    # Create a version that can be easily used as part of file names.
-    RMC_OS_NAME_FILE=$(echo -n "$RMC_OS_NAME" |tr -c '[+_.=a-zA-Z0-9-]' '_')
-
-    # Create a short OS name. E.g., instead of "Red Hat Enterprise Linux Workstation release 6.7 (Santiago)" we'll use
-    # just "RHEL 6.7".
-    RMC_OS_NAME_SHORT=$(echo "$RMC_OS_NAME" | sed \
-                        -e 's/Red Hat Enterprise Linux Workstation release \([0-9]\+\.[0-9]\+\).*/RHEL \1/' \
-                        -e 's/Red Hat Enterprise Linux Server \([0-9]\+\.[0-9]\+\).*/RHEL \1/' \
-			-e 's/Red Hat Enterprise Linux Server release \([0-9]\+\.[0-9]\+\).*/RHEL \1/' \
-                        -e 's/Debian GNU.Linux/Debian/')
-
-    export RMC_OS_NAME RMC_OS_NAME_FILE RMC_OS_NAME_SHORT
+    # Shell prompt adjustments
+    export PS1_STACK="${RG_BLD##*/} $PS1_STACK"
 }
 
 # Runs the rose-install-all-deps. Needed because Spock's --install is not fully implemented yet. Once it's implemented
