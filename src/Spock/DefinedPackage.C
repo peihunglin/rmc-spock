@@ -555,7 +555,7 @@ DefinedPackage::installConfigFile(Context &ctx, const Settings &settings, const 
 }
 
 std::string
-DefinedPackage::configHash(Context &ctx, const Packages &installDeps, const Packages &buildDeps) {
+DefinedPackage::configHash(Context &ctx, const Settings &settings, const Packages &installDeps, const Packages &buildDeps) {
     // Create a hash from all things that affect the configuration.
     bfs::path tmpFile = bfs::temp_directory_path() / bfs::unique_path("spock-%%%%%%%%");
     bfs::copy_file(configFile_, tmpFile);
@@ -565,6 +565,7 @@ DefinedPackage::configHash(Context &ctx, const Packages &installDeps, const Pack
             f <<pkg->toString() <<"\n";
         BOOST_FOREACH (const Package::Ptr &pkg, buildDeps)
             f <<pkg->toString() <<"\n";
+        f <<name() <<"=" <<settings.version.toString() <<"\n";
     }
 
     std::string hash;
@@ -630,7 +631,7 @@ DefinedPackage::install(Context &ctx, Settings &settings /*in,out*/) {
 
     // If we've previously attempted and failed to install this exact configuration, don't bother wasting time doing it again.
     bfs::path attempted;
-    std::string confhash = configHash(ctx, installDeps, buildDeps);
+    std::string confhash = configHash(ctx, settings, installDeps, buildDeps);
     if (!confhash.empty()) {
         attempted = installDir / (confhash + "-build-log.txt");
     } else {

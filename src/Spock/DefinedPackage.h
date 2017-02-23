@@ -127,7 +127,7 @@ private:
     void postInstall(Context&, Settings&, const TemporaryDirectory &workingDir, const boost::filesystem::path &pkgRoot);
 
     // Hash of things that affect the configuration
-    std::string configHash(Context&, const Packages &installDeps, const Packages &buildDeps);
+    std::string configHash(Context&, const Settings&, const Packages &installDeps, const Packages &buildDeps);
 };
 
 } // namespace
