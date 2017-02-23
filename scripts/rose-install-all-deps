@@ -72,13 +72,19 @@ source "$SPOCK_SCRIPTS/impl/basic-support.sh" || exit 1
 ########################################################################################################################
 
 ===() {
-    echo
-    echo
-    echo
-    echo "================================================================================"
-    (figlet "$@" || banner "$@" || echo "===" "$@" "===") 2>/dev/null
-    echo
-    echo
+    if false; then
+	echo
+	echo
+	echo
+	echo "================================================================================"
+	(figlet "$@" || banner "$@" || echo "===" "$@" "===") 2>/dev/null
+	echo
+	echo
+    else
+	# Less obtrusive version is better when we're installing only one config of each package
+	echo
+	echo
+    fi
     return 0
 }
 
@@ -145,6 +151,8 @@ using-these() {
 ########################################################################################################################
 
 if ($SPOCK_BINDIR/spock-ls compiler-collection |grep system >/dev/null 2>&1); then
+    echo "*** Installing system compilers"
+    echo
     echo "system compilers are apparently installed already"
     echo "if you want to make sure, run $SPOCK_SCRIPTS/spock-install-system-compilers"
 else
@@ -175,7 +183,7 @@ else
     if [ "$COMPILER_COLLECTIONS" = "installed" ]; then
 	using_collections=($($SPOCK_BINDIR/spock-ls -1 compiler-collection))
     elif [ "$COMPILER_COLLECTIONS" != "none" ]; then
-	echo "installing compiler collections: $COMPILER_COLLECTIONS"
+	echo "*** Installing compiler collections: $COMPILER_COLLECTIONS"
 	for vendor_version in $COMPILER_COLLECTIONS; do
 	    [ "$vendor_version" = "none" ] && continue
 	    vendor=$(echo "$vendor_version" |cut -d- -f1)
@@ -239,7 +247,7 @@ fi
 ########################################################################################################################
 
 # CMake creates C++ shared libraries upon which it depends when installed, and thus must be compiled with each compiler.
-echo "installing CMake versions (per compiler): $CMAKE_VERSIONS"
+echo "*** Installing CMake versions (per compiler): $CMAKE_VERSIONS"
 CMAKE_SPECS=()
 if [ "$CMAKE_VERSIONS" = "installed" ]; then
     CMAKE_SPECS=($($SPOCK_BINDIR/spock-ls -1 cmake))
@@ -265,7 +273,7 @@ using-these CMake "${CMAKE_SPECS[@]}"
 ########################################################################################################################
 
 # Boost has C++ libraries and thus must be compiled with each C++ compiler.
-echo "installing Boost versions (per compiler): $BOOST_VERSIONS"
+echo "*** Installing Boost versions (per compiler): $BOOST_VERSIONS"
 BOOST_SPECS=()
 if [ "$BOOST_VERSIONS" = "installed" ]; then
     die "boost \"installed\" setting is not implemented yet"
@@ -291,7 +299,7 @@ using-these Boost "${BOOST_SPECS[@]}"
 ########################################################################################################################
 
 # Dlib is a header-only library, so there's no install dependency on the C++ compiler.
-echo "installing DLib versions: $DLIB_VERSIONS"
+echo "*** Installing DLib versions: $DLIB_VERSIONS"
 DLIB_SPECS=()
 if [ "$DLIB_VERSIONS" = "installed" ]; then
     DLIB_SPECS=($($SPOCK_BINDIR/spock-ls -1 dlib))
@@ -315,7 +323,7 @@ using-these DLib "${DLIB_SPECS[@]}"
 ########################################################################################################################
 
 # Java has no C++ compiler dependencies.
-echo "installing Java versions: $JAVA_VERSIONS"
+echo "*** Installing Java versions: $JAVA_VERSIONS"
 JAVA_SPECS=()
 if [ "$JAVA_VERSIONS" = "installed" ]; then
     JAVA_SPECS=($($SPOCK_BINDIR/spock-ls -1 oracle-java))
@@ -339,7 +347,7 @@ using-these Java "${JAVA_SPECS[@]}"
 ########################################################################################################################
 
 # Python creates C++ libraries and thus has a C++ compiler dependency
-echo "installing Python versions: $PYTHON_VERSIONS"
+echo "*** Installing Python versions: $PYTHON_VERSIONS"
 PYTHON_SPECS=()
 if [ "$PYTHON_VERSIONS" = "installed" ]; then
     die "python \"installed\" setting is not implemented yet"
@@ -366,7 +374,7 @@ using-these Python "${PYTHON_SPECS[@]}"
 
 # Yices version 1 is a closed-source library. It apparently doesn't depend on a compiler since the website has only
 # one downloadable Linux configuration per version.
-echo "installing Yices versions: $YICES_VERSIONS"
+echo "*** Installing Yices versions: $YICES_VERSIONS"
 YICES_SPECS=()
 if [ "$YICES_VERSIONS" = "installed" ]; then
     YICES_SPECS=($($SPOCK_BINDIR/spock-ls -1 yices))
@@ -392,7 +400,7 @@ using-these Yices "${YICES_SPECS[@]}"
 # YAML-cpp is a C++ library that depends on Boost C++ libraries. Therefore YAML-cpp has depends on the C++ compiler.
 # However, we don't need to iterate over the compilers here because they're already implied by $BOOST_SPECS. YAML-cpp
 # uses CMake during its build process, which we've installed above.
-echo "installing YAML-cpp versions (per boost): $YAMLCPP_VERSIONS"
+echo "*** Installing YAML-cpp versions (per boost): $YAMLCPP_VERSIONS"
 YAMLCPP_SPECS=()
 if [ "$YAMLCPP_VERSIONS" = "installed" ]; then
     die "yamlcpp \"installed\" setting is not implemented yet"

@@ -5,6 +5,15 @@ arg0="rmc ${0##*/}"
 
 source "$SPOCK_SCRIPTS/impl/basic-support.sh" || exit 1
 
+# General compiler flags
+cc_flags() {
+    echo "-fPIC -rdynamic"
+}
+
+cxx_flags() {
+    echo "-fPIC -rdynamic -ftemplate-backtrace-limit=0"
+}
+
 # Flags for compiler optimization
 optimize_flags() {
     local switch="$1"
@@ -21,6 +30,15 @@ warning_flags() {
     case "$RMC_WARNINGS" in
 	yes) echo -n " $switch='-Wall -Wno-unused-local-typedefs -Wno-attributes'" ;;
 	no|ambivalent) : nothing ;;
+    esac
+}
+
+# Flags for controlling debugability
+debug_flags() {
+    local switch="$1"
+    case "$RMC_DEBUG" in
+	yes) echo -n " $switch=-g" ;;
+	no)  echo -n " $switch=-fomit-frame-pointer" ;;
     esac
 }
 
@@ -92,13 +110,14 @@ script=$(tempfile)
 trap "rm -f $script" EXIT
 (
     echo -n "env CC='$C_COMPILER' CXX='$CXX_COMPILER' FC='$FORTRAN_COMPILER'"
+    echo -n " CFLAGS='$(cc_flags)' CXXFLAGS='$(cxx_flags)'"
     echo -n " $RG_SRC/configure"
-    echo -n " --with-CXXFLAGS='-fPIC -rdynamic -g'"
-    echo -n " --with-CFLAGS='-fPIC -rdynamic -g'"
     optimize_flags --with-C_OPTIMIZE
     optimize_flags --with-CXX_OPTIMIZE
     warning_flags --with-C_WARNINGS
     warning_flags --with-CXX_WARNINGS
+    debug_flags --with-C_DEBUG
+    debug_flags --with-CXX_DEBUG
     echo -n " --disable-boost-version-check"
     echo -n " --disable-gcc-version-check"
     optional_enable assertion-behavior "$RMC_ASSERTIONS"

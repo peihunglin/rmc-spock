@@ -20,10 +20,11 @@ public:
         std::string hash;                               // hash assigned for this installation
         bool quiet;                                     // if set, then shell scripts produce no output to the tty
         bool keepTempFiles;                             // do not delete temporary files and directories?
+        bool tryAgain;                                  // true=>try to install even if we've tried before
         boost::filesystem::path installDirOverride;     // to override the usual $BOOST_ROOT/var/installed
         Packages parasites;                             // parasites also installed when the host was installed
 
-        Settings(): quiet(true), keepTempFiles(false) {}
+        Settings(): quiet(true), keepTempFiles(false), tryAgain(false) {}
     };
 
 private:
@@ -124,6 +125,9 @@ private:
 
     // Runs post-install commands, such as installing parasites.
     void postInstall(Context&, Settings&, const TemporaryDirectory &workingDir, const boost::filesystem::path &pkgRoot);
+
+    // Hash of things that affect the configuration
+    std::string configHash(Context&, const Packages &installDeps, const Packages &buildDeps);
 };
 
 } // namespace

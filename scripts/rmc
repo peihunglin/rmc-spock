@@ -200,14 +200,19 @@ package_spec() {
 
 # Find the top of the ROSE build tree by looking for .rmc-main.cfg
 find_build_tree() {
-    local dir=$(pwd)
-    while [ "$dir" != "" ]; do
-	if [ -e "$dir/.rmc-main.cfg" ]; then
-	    echo "$dir"
-	    return 0
-	fi
-	dir="${dir%/*}"
-    done
+    if [ -n "$RG_BLD" -a -e "$RG_BLD/.rmc-main.cfg" ]; then
+	echo "$RG_BLD"
+	return 0
+    else
+	local dir=$(pwd)
+	while [ "$dir" != "" ]; do
+	    if [ -e "$dir/.rmc-main.cfg" ]; then
+		echo "$dir"
+		return 0
+	    fi
+	    dir="${dir%/*}"
+	done
+    fi
     die "cannot find top of ROSE build tree"
 }
 
@@ -260,9 +265,9 @@ read_config_file() {
     rmc_parallelism $RMC_PARALLELISM # make sure its a number
     export ROSE_INSTALLED="$RG_BLD/installed"
 
-    export RMC_OS_NAME=$("$SPOCK_SCRIPTS/spock-os-name" --full)
-    export RMC_OS_NAME_SHORT=$("$SPOCK_SCRIPTS/spock-os-name" --short)
-    export RMC_OS_NAME_FILE=$("$SPOCK_SCRIPTS/spock-os-name" --file)
+    export RMC_OS_NAME="$($SPOCK_SCRIPTS/spock-os-name --long)"
+    export RMC_OS_NAME_SHORT="$($SPOCK_SCRIPTS/spock-os-name --short)"
+    export RMC_OS_NAME_FILE="$($SPOCK_SCRIPTS/spock-os-name --file)"
 
     # Shell prompt adjustments
     export PS1_STACK="${RG_BLD##*/} $PS1_STACK"

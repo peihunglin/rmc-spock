@@ -246,8 +246,8 @@ main(int argc, char *argv[]) {
         if (partsMissing && ASSUME_NO == settings.installMissing)
             exit(1);
 
-        // Install missing packages. This loop may output to standard output and read from standard input, but only when running in
-        // interactive mode.
+        // Install missing packages. This loop may output to standard output and read from standard input, but only when
+        // running in interactive mode.
         if (partsMissing) {
             Packages inUse;
             for (size_t i=0; i<soln.size(); ++i) {

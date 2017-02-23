@@ -554,6 +554,30 @@ DefinedPackage::installConfigFile(Context &ctx, const Settings &settings, const 
     bfs::copy_file(yamlSrc, yamlDst);
 }
 
+std::string
+DefinedPackage::configHash(Context &ctx, const Packages &installDeps, const Packages &buildDeps) {
+    // Create a hash from all things that affect the configuration.
+    bfs::path tmpFile = bfs::temp_directory_path() / bfs::unique_path("spock-%%%%%%%%");
+    bfs::copy_file(configFile_, tmpFile);
+    {
+        std::ofstream f(tmpFile.string().c_str(), std::ios::app);
+        BOOST_FOREACH (const Package::Ptr &pkg, installDeps)
+            f <<pkg->toString() <<"\n";
+        BOOST_FOREACH (const Package::Ptr &pkg, buildDeps)
+            f <<pkg->toString() <<"\n";
+    }
+
+    std::string hash;
+    if (FILE *p = popen(("sha1sum " + tmpFile.string()).c_str(), "r")) {
+        char buf[64];
+        if (fgets(buf, sizeof buf, p) && strlen(buf)>8)
+            hash = std::string(buf).substr(0, 8);
+        (void) pclose(p);
+    }
+
+    return hash;
+}
+
 Package::Ptr
 DefinedPackage::install(Context &ctx, Settings &settings /*in,out*/) {
     Context::SavedStack saved(ctx);                      // for exception safety
@@ -586,6 +610,7 @@ DefinedPackage::install(Context &ctx, Settings &settings /*in,out*/) {
     bfs::path installDir = settings.installDirOverride.empty() ? ctx.optDirectory() : settings.installDirOverride;
     TemporaryDirectory installationPrefix(installDir / settings.hash);
     bfs::path pkgRoot = installationPrefix.path() / name();
+    bfs::create_directory(pkgRoot);
     TemporaryDirectory workingDir(ctx.buildDirectory() / "spock" / bfs::unique_path("build-%%%%%%%%"));
     if (settings.keepTempFiles) {
         installationPrefix.keep();
@@ -601,11 +626,22 @@ DefinedPackage::install(Context &ctx, Settings &settings /*in,out*/) {
                                          "tar xf '" + tarball.string() + "'\n\n" + installCommands,
                                          extraVars);
 
+    // If we've previously attempted and failed to install this exact configuration, don't bother wasting time doing it again.
+    bfs::path attempted;
+    std::string confhash = configHash(ctx, installDeps, buildDeps);
+    if (!confhash.empty()) {
+        attempted = installDir / (confhash + "-build-log.txt");
+    } else {
+        attempted = installDir / (settings.hash + "-build-log.txt");
+    }
+    if (!settings.tryAgain && bfs::exists(attempted))
+        fail<Exception::Conflict>(this, "installation was previously attempted and failed", attempted);
+    
     // Run the installation script. Put the output in a place where it won't be destroyed right away if there's a
     // failure. On success, we'll move it to a permanent location for historical record.
     Context::SubshellSettings ssSettings("building " + mySpec(settings));
     if (settings.quiet)
-        ssSettings.output = installDir / (settings.hash + "-build-log.txt");
+        ssSettings.output = attempted;
     if (ctx.subshell(script, ssSettings) != Context::COMMAND_SUCCESS)
         fail<Exception::CommandError>(this, "installation script failed", ssSettings.output);
 
@@ -622,6 +658,7 @@ DefinedPackage::install(Context &ctx, Settings &settings /*in,out*/) {
     if (!ssSettings.output.empty())
         bfs::rename(ssSettings.output, installDir / settings.hash / "build-log.txt");
     installationPrefix.keep();
+    bfs::remove(attempted);
     Package::Ptr retval = ctx.scanInstalledPackage(mySpec(settings));
     postInstall(ctx, settings, workingDir, pkgRoot);
 
