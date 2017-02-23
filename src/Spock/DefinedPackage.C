@@ -600,6 +600,8 @@ DefinedPackage::install(Context &ctx, Settings &settings /*in,out*/) {
     mlog[DEBUG] <<"solving " <<mySpec(settings) <<" build dependencies...\n";
     Packages buildDeps = solveDependencies(ctx, settings, "install", "build");
     mlog[DEBUG] <<"using " <<mySpec(settings) <<" build dependencies\n";
+    Context::SavedStack contextExcursion(ctx);
+    ctx.pushEnvironment();                              // contextExcursion's destructor will pop this context
     ctx.insertEmployed(buildDeps);
     if (mlog[INFO]) {
         BOOST_FOREACH (const Package::Ptr &p, buildDeps)
@@ -660,6 +662,13 @@ DefinedPackage::install(Context &ctx, Settings &settings /*in,out*/) {
     installationPrefix.keep();
     bfs::remove(attempted);
     Package::Ptr retval = ctx.scanInstalledPackage(mySpec(settings));
+    contextExcursion.restore();                         // no need for the build environment anymore
+
+    // Post-install should run in the context of the new package and its usage dependencies. This also checks that we can use
+    // the package we just installed, so we set things up even if the post-install does nothing.
+    ctx.pushEnvironment();                              // will be popped by the contextExcursion destructor
+    ctx.insertEmployed(installDeps);
+    ctx.insertEmployed(retval);
     postInstall(ctx, settings, workingDir, pkgRoot);
 
     return retval;

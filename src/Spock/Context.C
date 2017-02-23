@@ -29,13 +29,24 @@ namespace Spock {
 Sawyer::Message::Facility Context::mlog;
 
 Context::SavedStack::SavedStack(Context &ctx)
-    : ctx_(ctx), stackSize_(ctx.environmentStackSize()) {}
+    : ctx_(ctx), stackSize_(ctx.environmentStackSize()), forgotten_(false) {}
 
 Context::SavedStack::~SavedStack() {
+    if (!forgotten_)
+        restore();
+}
+
+void
+Context::SavedStack::forget() {
+    forgotten_ = true;
+}
+
+void
+Context::SavedStack::restore() {
     while (ctx_.environmentStackSize() > stackSize_)
         ctx_.popEnvironment();
 }
-
+    
 // Save and restore a Context object for exception safety
 Context::Context() {
     envStack_.push_back(EnvStackItem());

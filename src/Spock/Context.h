@@ -43,9 +43,12 @@ public:
     class SavedStack {
         Context &ctx_;
         size_t stackSize_;
+        bool forgotten_;
     public:
         explicit SavedStack(Context &ctx);
-        ~SavedStack();
+        ~SavedStack();                                  // calls restore() unless forgotten_ is set
+        void forget();                                  // cause the desctructor to do nothing
+        void restore();                                 // restore stack to original size (unless it's smaller already)
     };
     
     /** Obtain context from environment. */
