@@ -7,17 +7,40 @@ source "$SPOCK_SCRIPTS/impl/basic-support.sh" || exit 1
 source "$SPOCK_SCRIPTS/impl/spock-realpath.sh" || exit 1
 
 # Check command-line arguments
+do_batch_mode=
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+	--)
+	    shift
+	    break
+	    ;;
+	--batch)
+	    do_batch_mode=yes
+	    shift
+	    ;;
+	-*)
+	    echo "$arg0: unknown switch: $1" >&2
+	    exit 1
+	    ;;
+	*)
+	    break
+	    ;;
+    esac
+done
 if [ "$#" -ne 1 ]; then
     echo "usage: $arg0 \$PATH_TO_ROSE_SOURCE_TREE" >&2
     exit 1
 fi
 
 if [ "$1" = "help" -o "$1" = "--help" -o "$1" = "-h" ]; then
-    echo "usage: $arg0 PATH_TO_ROSE_SOURCE_TREE"
-    echo "   initializes the CWD to be a ROSE build tree by creating a default .rmc-main.cfg file"
+    echo "usage: $arg0 [--batch] PATH_TO_ROSE_SOURCE_TREE"
+    echo "   Initializes the CWD to be a ROSE build tree by creating a default .rmc-main.cfg file."
+    echo "   Use environment variables to override RMC settings. For instance, COMPILER overrides"
+    echo "   the rmc_compiler setting, LANGUAGES overrides the rmc_languages setting, etc.  The"
+    echo "   defaults should already be sane, and the user is plopped into an editor anyway, so"
+    echo "   these overrides are mostly for batch mode when this script is called from other scripts."
     exit 0
 fi
-
 
 # Sanity checks
 rose_srcdir=$(spock-realpath "$1")
@@ -33,10 +56,19 @@ rose_srcdir=$(spock-realpath "$1")
     die "the CWD must be a new (empty) build tree"
 
 # What C++ compiler are we using right now?
-cxx_quad=$($SPOCK_SCRIPTS/impl/detect-compiler-characteristics --quad --baselang=c++ c++)
-cxx_vendor=$(echo $cxx_quad |cut -d: -f1)
-cxx_lang=$(echo $cxx_quad |cut -d: -f3)
-cxx_version=$(echo $cxx_quad |cut -d: -f4)
+if [ "$COMPILER" = "" ]; then
+    cxx_quad=$($SPOCK_SCRIPTS/impl/detect-compiler-characteristics --quad --baselang=c++ c++)
+    cxx_vendor=$(echo $cxx_quad |cut -d: -f1)
+    cxx_lang=$(echo $cxx_quad |cut -d: -f3)
+    cxx_version=$(echo $cxx_quad |cut -d: -f4)
+    COMPILER="${cxx_vendor}-${cxx_version}-${cxx_lang}"
+fi
+
+config_property() {
+    local rmc_command="$1" value="$2" comment="$3"
+    [ -n "$comment" ] && comment="# $comment"
+    printf '%-15s %-15s %s\n' "$rmc_command" "$value" "$comment"
+}
 
 # Create a default .rmc-main.cfg
 (
@@ -55,39 +87,45 @@ cxx_version=$(echo $cxx_quad |cut -d: -f4)
     echo "# you may need to add some software dependencies manually in"
     echo "# order to use them."
     echo
+    echo "# All of these settings are fully documented in ROSE's internal"
+    echo "# confluence pages. Find them using the search feature."
+    echo
     echo "# Basic settings"
-    echo "rmc_rosesrc          	$(spock-realpath "$rose_srcdir")"
-    echo "rmc_build            	autoconf"
-    echo "rmc_parallelism      	system"
+    config_property rmc_rosesrc       "$(spock-realpath "$rose_srcdir")"
+    config_property rmc_build         "${BUILD:-autoconf}"               "build system: 'autoconf' or 'cmake'"
+    config_property rmc_parallelism   "${PARALLELISM:-system}"           "number or 'system'"
     echo
     echo "# Compiler settings"
-    echo "rmc_compiler         	$cxx_vendor-$cxx_version-$cxx_lang"
-    echo "rmc_debug            	yes # turns on -g"
-    echo "rmc_optimize         	ambivalent # use ROSE default level"
-    echo "rmc_warnings         	yes # show compiler warnings"
-    echo "rmc_code_coverage    	no # generate code coverage stats"
+    config_property rmc_compiler      "$COMPILER"                        "('gnu'|'llvm'|'intel')-version[-language]"
+    config_property rmc_debug         "${DEBUG:-yes}"                    "debug support: 'yes' or 'no'"
+    config_property rmc_optimize      "${OPTIMIZE:-ambivalent}"          "optimizations: 'yes', 'no', or 'ambivalent'"
+    config_property rmc_warnings      "${WARNINGS:-yes}"                 "compiler warnings: 'yes' or 'no'"
+    config_property rmc_code_coverage "${CODE_COVERAGE:-no}"             "generate code coverage stats: 'yes' or 'no'"
     echo
     echo "# Configuration options"
-    echo "rmc_assertions       	ambivalent # use ROSE default handling"
-    echo "rmc_languages        	all # ROSE frontend languages, comma-separated"
+    config_property rmc_assertions    "${ASSERTIONS:-ambivalent}"        "the --enable-assertions value or 'ambivalent'"
+    config_property rmc_languages     "${LANGUAGES:-all}"                "ROSE frontend languages, comma-separated"
     echo
     echo "# Software dependencies"
-    echo "rmc_boost            	1.57"
-    echo "rmc_cmake            	3"
-    echo "rmc_dlib             	none"
-    echo "rmc_doxygen          	none"
-    echo "rmc_dwarf            	none"
-    echo "rmc_edg              	ambivalent # use ROSE default"
-    echo "rmc_java             	none # requires manual download"
-    echo "rmc_magic            	none"
-    echo "rmc_python           	3"
-    echo "rmc_qt               	none"
-    echo "rmc_readline         	none"
-    echo "rmc_sqlite           	none"
-    echo "rmc_wt               	none"
-    echo "rmc_yaml             	none"
-    echo "rmc_yices            	none"
+    config_property rmc_boost         "${BOOST:-1.57}"                   "Boost version number (required)"
+    config_property rmc_cmake         "${CMAKE:-3}"                      "CMake version number (required)"
+    config_property rmc_dlib          "${DLIB:-none}"                    "DLib version number (optional)"
+    config_property rmc_doxygen       "${DOXYGEN:-none}"                 "Doxygen version number (optional)"
+    config_property rmc_dwarf         "${DWARF:-none}"                   "DWARF library version number (optional)"
+    config_property rmc_edg           "${EDG:-ambivalent}"               "EDG version number (optional)"
+    config_property rmc_java          "${JAVA:-none}"                    "Oracle JDK version number (optional)"
+    config_property rmc_magic         "${MAGIC:-none}"                   "libmagic version number (optional)"
+    config_property rmc_python        "${PYTHON:-3}"                     "Python version number (optional)"
+    config_property rmc_qt            "${QT:-none}"                      "Qt version number (optional)"
+    config_property rmc_readline      "${READLINE:-none}"                "libreadline version number (optional)"
+    config_property rmc_sqlite        "${SQLITE:-none}"                  "SQLite version number (optional)"
+    config_property rmc_wt            "${WT:-none}"                      "Wt version number (optional)"
+    config_property rmc_yaml          "${YAML:-none}"                    "Yaml-cpp version number (optional)"
+    config_property rmc_yices         "${YICES:-none}"                   "Yices version number (optional)"
 ) >.rmc-main.cfg
 
-"${EDITOR:-vi}" .rmc-main.cfg
-echo "Now run $SPOCK_BINDIR/rmc to enter the build subshell"
+if [ "$do_batch_mode" = "" ]; then
+    "${EDITOR:-vi}" .rmc-main.cfg
+    echo "Now run $SPOCK_BINDIR/rmc to enter the build subshell"
+fi
+exit 0
