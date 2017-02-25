@@ -81,7 +81,7 @@ commandLineParser(const std::string &purpose, const std::string &description, Sa
     Parser p;
     p.errorStream(mlog[FATAL]);
     p.purpose(purpose);
-    p.doc("Description", "description");
+    p.doc("Description", description);
     p.resetInclusionPrefixes();                         // because of "@12345678" being a hash
 
     SwitchGroup gen("General switches");

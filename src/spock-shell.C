@@ -46,7 +46,7 @@ parseCommandLine(int argc, char *argv[], Settings &settings) {
     using namespace Sawyer::CommandLine;
 
     Parser p = commandLineParser(purpose, description, mlog);
-    p.doc("Synopsis", "@prop{programName} @s{package}=@v{hash} [@v{command}...]");
+    p.doc("Synopsis", "@prop{programName} [@v{switches}] [--] [@v{command}...]");
 
     SwitchGroup tool("Tool-specific switches");
 
@@ -84,7 +84,7 @@ parseCommandLine(int argc, char *argv[], Settings &settings) {
                           ->with("yes", ASSUME_YES)
                           ->with("ask", ASK_USER))
                 .doc("Try to install missing packages that are missing?  The @v{how} value is one of the following words:"
-                     "@named{no}{Do not try to install anything. If something is missing, show and error and exit."
+                     "@named{no}{Do not try to install anything. If something is missing, show and error and exit.}"
                      "@named{ask}{Prompt the user for an answer at each step.}"
                      "@named{yes}{Install missing packages using defaults for each choice. This has the same effect as using "
                      "\"ask\" and pressing enter to use the default value at each prompt, except the output will be less "
