@@ -94,11 +94,14 @@ target_link_libraries(spock-using spock)
 add_executable(spock-rm src/spock-rm.C)
 target_link_libraries(spock-rm spock)
 
+add_executable(spock-download src/spock-download.C)
+target_link_libraries(spock-download spock)
+
 #################### Installation ####################
 
 install(
   TARGETS
-    spock spock-shell spock-ls spock-compiler spock-using spock-rm
+    spock spock-shell spock-ls spock-compiler spock-using spock-rm spock-download
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
 )
