@@ -13,7 +13,7 @@ download:
     shell: |
         vers_major=$(echo "$PACKAGE_VERSION" |cut -d. -f1)
         vers_minor=$(echo "$PACKAGE_VERSION" |cut -d. -f2)
-        vers=$(printf "%d.%02d" $vers_major $vers_minor)
+        vers=$(printf "%d.%02d" $vers_major ${vers_minor#0})
         wget -O - "ftp://ftp.astron.com/pub/file/file-$vers.tar.gz" |tar xzf -
         mv file* download
         tar cf - download |gzip -9 >download.tar.gz
@@ -22,7 +22,7 @@ install:
   - version: ">=5"
     shell: |
       cd download
-      cc --spock-query
+      cc --spock-triplet
 
       env \
         CC=cc \
