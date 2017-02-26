@@ -139,7 +139,7 @@ while [ "$#" -gt 0 ]; do
 done
 
 if [ "$command" = "" ]; then
-    : ${do_install:=--install=ask}
+    : ${do_install:=--install=yes}
     : ${do_debug:=">=march"}
 else
     : ${do_install:=--install=no}
