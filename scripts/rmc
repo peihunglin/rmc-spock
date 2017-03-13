@@ -219,6 +219,10 @@ find_build_tree() {
 read_config_file() {
     local config_file="$1"
 
+    # Variables that might be used in the configure script
+    export RG_BLD=$(spock-realpath "$config_file"); RG_BLD="${RG_BLD%/*}"
+    export ROSE_BUILD="$RG_BLD"
+
     # Set defaults
     export RMC_ROSESRC=
     export RMC_BUILD=autoconf
@@ -244,6 +248,7 @@ read_config_file() {
     export RMC_WT=none
     export RMC_YAML=none
     export RMC_YICES=none
+    export RMC_INSTALLED=yes
 
     # Read config file to override the defaults
     source "$config_file" || exit 1
@@ -260,10 +265,7 @@ read_config_file() {
     # Export important variables not exported by rmc_* commands
     export RG_SRC="$RMC_ROSESRC"
     export ROSE_SOURCE="$RMC_ROSESRC"
-    export RG_BLD=$(spock-realpath "$config_file"); RG_BLD="${RG_BLD%/*}"
-    export ROSE_BUILD="$RG_BLD"
     rmc_parallelism $RMC_PARALLELISM # make sure its a number
-    export ROSE_INSTALLED="$RG_BLD/installed"
 
     export RMC_OS_NAME="$($SPOCK_SCRIPTS/spock-os-name --long)"
     export RMC_OS_NAME_SHORT="$($SPOCK_SCRIPTS/spock-os-name --short)"
@@ -271,6 +273,21 @@ read_config_file() {
 
     # Shell prompt adjustments
     export PS1_STACK="${RG_BLD##*/} $PS1_STACK"
+
+    # If ROSE is being installed, then make sure its lib dir is searched.
+    case "$RMC_INSTALLED" in
+	yes|ambivalent|"")
+	    export ROSE_INSTALLED="$RG_BLD/installed"
+	    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$ROSE_INSTALLED/lib"
+	    ;;
+	no)
+	    export ROSE_INSTALLED="/NO_ROSE_INSTALLATION_PREFIX"
+	    ;;
+	*)
+	    export ROSE_INSTALLED="$RMC_INSTALLED"
+	    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$ROSE_INSTALLED/lib"
+	    ;;
+    esac
 }
 
 # Runs the rose-install-all-deps. Needed because Spock's --install is not fully implemented yet. Once it's implemented
@@ -331,8 +348,9 @@ rmc_build() {
 }
 
 rmc_install() {
+    # Argument is "yes", "no", "ambivalent", or the name of a (possibly not existing) directory
     check_one_arg rmc_install "$@"
-    : ignored
+    RMC_INSTALLED="$1"
 }
 
 rmc_parallelism() {

@@ -92,8 +92,6 @@ optional_enable() {
 [ "$RMC_BUILD" = "autoconf" ] || die "build type '$RMC_BUILD' is not supported yet"
 [ "$RMC_CODE_COVERAGE" = "yes" ] && die "code coverage not supported yet"
 
-export ROSE_INSTALLED="$RG_BLD/installed"
-
 # Command-line args
 dry_run=
 while [ "$#" -gt 0 ]; do
