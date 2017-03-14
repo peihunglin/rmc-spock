@@ -1,0 +1,44 @@
+# The spot library used by CodeThorn
+package: spot
+
+versions: [ 1.2, 1.2.1, 1.2.2, 1.2.3, 1.2.4, 1.2.5, 1.2.6,
+            1.99.1, 1.99.2, 1.99.3, 1.99.4, 1.99.5, 1.99.6, 1.99.7, 1.99.8, 1.99.9,
+            2.0, 2.0.1, 2.0.2, 2.0.3,
+            2.1, 2.1.1, 2.1.2,
+            2.2, 2.2.1, 2.2.2,
+            2.3, 2.3.1 ]
+
+dependencies:
+  - version: ">=1.2"
+    install: boost
+    build: []
+
+  - version: ">=1.99"
+    install: c++-compiler
+    build: []
+
+  - version: ">=2"
+    install: c++11-compiler
+    build: []
+
+variables:
+  - version: ">=1"
+    download_url: "https://www.lrde.epita.fr/dload/spot/spot-$PACKAGE_VERSION.tar.gz"
+
+download:
+  - version: ">=1"
+    shell: |
+      wget -O - "$download_url" |tar xzf -
+      mv spot-$PACKAGE_VERSION download
+      tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=1"
+    shell: |
+      c++ --spock-triplet
+      cd download
+
+      CC=cc CXX=c++ CPPFLAGS=$(spock-compiler-incdirs) LDFLAGS=$(spock-compiler-libdirs) \
+          ./configure --prefix="$PACKAGE_ROOT" --disable-python
+      make -j$PARALLELISM
+      make install

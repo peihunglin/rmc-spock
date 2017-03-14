@@ -118,6 +118,7 @@ install(
     scripts/spock-compiler-install-program
     scripts/spock-os-name
     scripts/rose-install-all-deps
+    scripts/rose-install-intel-compilers
   DESTINATION scripts
 )
 

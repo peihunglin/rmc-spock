@@ -63,6 +63,9 @@ source "$SPOCK_SCRIPTS/impl/basic-support.sh" || exit 1
 # List of YAML-CPP versions
 : ${YAMLCPP_VERSIONS:="0.5.1 0.5.2 0.5.3"}
 
+# List of Spot library versions
+: ${SPOT_VERSIONS:="1.2.6"}
+
 # Ignore failures if "yes"
 : ${IGNORE_FAILURES:=yes}
 
@@ -228,7 +231,7 @@ else
 	    if [ "$cxx_spec" = "" ]; then
 		echo "warning: $collection has no $lang compiler (skipping)" >&2
 	    else
-		CXX_COMPILER_SPECS=("${CXX_COMPILER_SPECS[@]}" "$cxx_spec")
+		CXX_COMPILER_SPECS=("${CXX_COMPILER_SPECS[@]}" $cxx_spec)
 	    fi
 	done
     done
@@ -419,6 +422,44 @@ else
 fi
 
 using-these YAML-cpp "${YAMLCPP_SPECS[@]}"
+
+
+########################################################################################################################
+=== Spot
+########################################################################################################################
+
+# Spot (https://spot.lrde.epita.fr) is a C++ libtrary for LTL, \omega-automata manipulation, and model checking.
+echo "*** Installing Spot versions: $SPOT_VERSIONS"
+SPOT_SPECS=()
+if [ "$SPOT_VERSIONS" = "installed" ]; then
+    die "spot \"installed\" setting is not implemented yet"
+else
+    for spot_version in $SPOT_VERSIONS; do
+	[ "$spot_version" = "none" ] && continue
+	if [ "${spot_version#2}" != "$spot_version" ]; then
+	    # Version >=2 no longer depends on boost.
+	    spec=$(install-package "$boost_spec" "spot-$spot_version")
+	    if [ "$spec" = "" ]; then
+		cannot_install
+	    else
+		SPOT_SPECS=("${SPOT_SPECS[@]}" "$spec")
+	    fi
+	else
+	    # Version 1 (or if we don't know the version) depends on boost
+	    for boost_spec in "${BOOST_SPECS[@]}"; do
+		spec=$(install-package "$boost_spec" "spot-$spot_version")
+		if [ "$spec" = "" ]; then
+		    cannot_install
+		else
+		    SPOT_SPECS=("${SPOT_SPECS[@]}" "$spec")
+		fi
+	    done
+	fi
+    done
+fi
+
+using-these Spot "${SPOT_SPECS[@]}"
+
 
 ########################################################################################################################
 

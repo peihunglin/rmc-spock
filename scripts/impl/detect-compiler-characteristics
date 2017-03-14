@@ -181,9 +181,18 @@ case "$compiler_baselang" in
 	"$compiler_exe" $compiler_flags -o "$conftest" "$input_cxx" || exit 1
 	compiler_vendor=$("$conftest")
 	;;
-    c|fortran)
+    c)
 	"$compiler_exe" $compiler_flags -o "$conftest" "$input_c" || exit 1
 	compiler_vendor=$("$conftest")
+	;;
+    fortran)
+	# With GNU the "gfortran" frontend will happily parse a C source file to give us version info.
+	if "$compiler_exe" $compiler_flags -o "$conftest" "$input_c" 2>/dev/null; then
+	    compiler_vendor=$("$conftest")
+	else
+	    # Since Intel "ifort" is the only other fortran compiler we support, assume this is intel.
+	    compiler_vendor=intel
+	fi
 	;;
 esac
 
@@ -231,6 +240,34 @@ EOF
 EOF
 	"$compiler_exe" $compiler_flags -o "$conftest" "$input_c" && compiler_version=$("$conftest")
 	;;
+
+    intel:c)
+	cat >"$input_c" <<EOF
+            #include <stdio.h>
+            int main() {
+                printf("%d.%d.%d\n", __INTEL_COMPILER/100, __INTEL_COMPILER%100, __INTEL_COMPILER_UPDATE);
+                return 0;
+            }
+EOF
+        "$compiler_exe" $compiler_flags -o "$conftest" "$input_c" && compiler_version=$("$conftest")
+        ;;
+
+    intel:c++)
+	cat >"$input_cxx" <<EOF
+            #include <iostream>
+            int main() {
+                std::cout <<(__INTEL_COMPILER / 100) <<"."
+                          <<(__INTEL_COMPILER % 100) <<"."
+                          <<__INTEL_COMPILER_UPDATE  <<"\n";
+            }
+EOF
+        "$compiler_exe" $compiler_flags -o "$conftest" "$input_cxx" && compiler_version=$("$conftest")
+        ;;
+
+    intel:fortran)
+	# Seems the only way to get version is by asking the compiler and parsing its output.
+	compiler_version=$("$compiler_exe" $compiler_flags --version |sed -n '1 s/^.*) *\([0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/p')
+	;;
 esac
     
 [ "$compiler_version" = "" ] && die "cannot determine version number for $compiler_exe $compiler_flags"
@@ -242,8 +279,8 @@ esac
 
 version_output=$(tempfile)
 (
-    case "$compiler_vendor:$compiler_lang" in
-	gnu:*|intel:c*|llvm:*)
+    case "$compiler_vendor:$compiler_baselang" in
+	gnu:*|intel*|llvm:*)
 	    "$compiler_exe" $compiler_flags --version
 	    ;;
 	*)

@@ -1,0 +1,59 @@
+#!/bin/bash
+
+: ${DESTINATION:=$HOME/bin}
+
+# Make sure all shell variables are set that this script might want to use
+if [ -n "$SPOCK_BINDIR" ]; then
+    eval $("$SPOCK_BINDIR/spock-ls" --shellvars --export) || exit 1
+else
+    eval $(spock-ls --shellvars --export) || exit 1
+fi
+
+# This script searches for Intel compilers (like "icpc") in common places and installs a shell script (like "icpc-16.0.3")
+# that's a wrapper around each compiler. This allows us to invoke specific versions of the compilers, and to be able to
+# invoke multiple versions in a single shell environment.
+
+for dir in /usr/apps/intel/{14,15,16}*; do
+    [ -r "$dir/setup.sh" ] || continue
+    (
+	echo "installing $dir"
+	source "$dir/setup.sh"
+
+	# C++
+	quad=$($SPOCK_SCRIPTS/impl/detect-compiler-characteristics --baselang c++ --quad icpc)
+	if [ "$quad" != "" ]; then
+	    version=$(echo "$quad" |cut -d: -f4)
+	    (
+		echo "#!/bin/bash"
+		echo "source $dir/setup.sh"
+		echo "exec icpc \"\$@\""
+	    ) >"$DESTINATION/icpc-$version"
+	    chmod 755 "$DESTINATION/icpc-$version"
+	fi
+
+	# C
+	quad=$($SPOCK_SCRIPTS/impl/detect-compiler-characteristics --baselang c --quad icc)
+	if [ "$quad" != "" ]; then
+	    version=$(echo "$quad" |cut -d: -f4)
+	    (
+		echo "#!/bin/bash"
+		echo "source $dir/setup.sh"
+		echo "exec icc \"\$@\""
+	    ) >"$DESTINATION/icc-$version"
+	    chmod 755 "$DESTINATION/icc-$version"
+	fi
+
+	# Fortran
+	quad=$($SPOCK_SCRIPTS/impl/detect-compiler-characteristics --baselang fortran --quad ifort)
+	if [ "$quad" != "" ]; then
+	    version=$(echo "$quad" |cut -d: -f4)
+	    (
+		echo "#!/bin/bash"
+		echo "source $dir/setup.sh"
+		echo "exec ifort \"\$@\""
+	    ) >"$DESTINATION/ifort-$version"
+	    chmod 755 "$DESTINATION/ifort-$version"
+	fi
+    )
+done
+exit 0

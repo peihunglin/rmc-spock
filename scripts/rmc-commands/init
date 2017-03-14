@@ -118,6 +118,7 @@ config_property() {
     config_property rmc_python        "${PYTHON:-3}"                     "Python version number (optional)"
     config_property rmc_qt            "${QT:-none}"                      "Qt version number (optional)"
     config_property rmc_readline      "${READLINE:-none}"                "libreadline version number (optional)"
+    config_property rmc_spot          "${SPOT:-none}"                    "Spot library version number (optional)"
     config_property rmc_sqlite        "${SQLITE:-none}"                  "SQLite version number (optional)"
     config_property rmc_wt            "${WT:-none}"                      "Wt version number (optional)"
     config_property rmc_yaml          "${YAML:-none}"                    "Yaml-cpp version number (optional)"
