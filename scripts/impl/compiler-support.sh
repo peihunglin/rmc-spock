@@ -54,6 +54,22 @@ spock-compiler-install() {
     done
     mkdir -p "$package_bindir" || exit 1
 
+    # Compilers sometimes need to add some compiler-specific libraries to the shared object search path in order for the
+    # programs compile with that compiler to be able to run. Intel expects users to choose one Intel compiler by
+    # sourcing a setup.sh file into their environment, but we want to delay that until spock chooses the
+    # compiler. Really, all we need is just the LD_LIBRARY_PATH, so the Intel compiler wrappers support a switch that
+    # returns that info without running the compiler. GNU compilers already have a --print-search-dirs switch that
+    # does something similar (I'm not sure it's needed though [matzke, 2017-03-15].
+    compiler_libdirs=
+    case "$compiler_vendor" in
+	#gnu|llvm)
+	#    compiler_libdirs="$($executable --print-search-dirs 2>/dev/null | sed -n '/^libraries:/ s/^libraries: *=\? *//p')"
+	#    ;;
+	intel)
+	    compiler_libdirs="$($executable --spock-so-paths 2>/dev/null)"
+	    ;;
+    fi
+
     # Create the compiler executables in the package's "bin" directory. This directory also needs the YAML configuration
     # file so the spock-compiler wrapper knows how to run the real compiler.
     (
@@ -63,7 +79,7 @@ spock-compiler-install() {
 
 	(
 	    echo "#!/bin/bash"
-	    echo "echo \"\${0##*/} is not a valid $compiler_vendor $compiler_lang compiler\" >&2"
+	    echo "echo \"\$0 is not a valid $compiler_vendor $compiler_lang compiler\" >&2"
 	    echo "exit 1"
 	) >not-a-compiler
 	chmod 755 not-a-compiler
@@ -132,6 +148,8 @@ spock-compiler-install() {
 	echo "  ${bl}_VERSION:  '$compiler_version'"
 	echo "  ${bl}_ROOT:     '$package_root'"
 	echo "  ${bl}_COMPILER: '$package_root/bin/$compiler_cmd'"
+	[ "$compiler_libdirs" != "" ] &&
+	    echo "  LD_LIBRARY_PATH: '$compiler_libdirs'"
     ) >"$package_yaml"
 
     echo "$package_spec"

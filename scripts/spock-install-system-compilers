@@ -61,16 +61,16 @@ if [ "$#" -gt 1 ]; then
     scan "$1" "$2"
 elif [ "$#" -eq 0 ]; then
     # Look for compilers with certain name prefixes
-   scan c++ g++
-   scan c++ clang++
-   scan c++ icpc
+    scan c++ g++
+    scan c++ clang++
+    scan c++ icpc
 
-   scan c gcc
-   scan c clang
-   scan c icc
+    scan c gcc
+    scan c clang
+    scan c icc
 
-   scan fortran gfortran
-   scan fortran ifort
+    scan fortran gfortran
+    scan fortran ifort
 else
     usage
 fi

@@ -9,10 +9,62 @@ else
     eval $(spock-ls --shellvars --export) || exit 1
 fi
 
-# This script searches for Intel compilers (like "icpc") in common places and installs a shell script (like "icpc-16.0.3")
-# that's a wrapper around each compiler. This allows us to invoke specific versions of the compilers, and to be able to
-# invoke multiple versions in a single shell environment.
+# Intel C++ compilers need a GNU C++ compiler to be installed first.  Since Spock will not allow compilers from two
+# different vendors to be used at the same time (because in general they have incompatible ABIs), we need to tell
+# the Intel compilers where GNU compilers are located when the Intel compiler runs.
+#
+# Note: I have not been able to locate any documentation about which version of GNU is required, so we just assume
+# that the default "g++" found in $PATH is sufficient. To override this, set the GXX_ROOT variable described in the
+# Intel documentation while this script is running (it will remember the value and store it in the generated scripts).
+# [Robb Matzke, 2017-03-14]
+if [ "$(which g++)" = "" ] || ! g++ --version >/dev/null 2>&1; then
+    echo "Intel C++ compilers need to have a valid GNU 'g++' compiler in \$PATH" >&2
+    exit 1
+fi
+GXX_BINDIR="$(which g++)"; GXX_BINDIR="${GXX_BINDIR%/*}"
 
+if [ "$GXX_ROOT" = "" ]; then
+    GXX_ROOT="$(g++ --print-search-dirs |sed -n '/^install:/ s/^install: *//p')"
+
+    # Intel's scripts are sensitive to the "/" at the end of the directory name, so remove it.
+    GXX_ROOT="${GXX_ROOT%/}"
+
+    if [ "$GXX_ROOT" = "" -o ! -d "$GXX_ROOT" ]; then
+	echo "Intel C++ compilers depend on GNU C++ compilers" >&2
+	echo "invoke as \"GXX_ROOT=the_gnu_installation_prefix $0 $*\"" >&2
+	exit 1
+    fi
+fi
+
+# Function to generate the compiler wrapper shell script
+generate_wrapper() {
+    local intel_setup="$1" compiler_exe="$2"
+
+    echo "#!/bin/bash"
+
+    # Intel compilers need to be able to find a valid g++ even though we want to hide g++ from users when they said
+    # to use only the Intel compiler.  Therefore, we must temporarily move the binary directory for the valid g++ before
+    # our own fake g++ that normally hides the real g++.
+    echo "export PATH=\"$GXX_BINDIR:\$PATH\""
+
+    # The Intel compiler setup script that we want to run only when running the Intel compiler. Doing it this way allows
+    # the user to invoke more than one version of the Intel compiler in his shell.
+    echo "source $intel_setup || exit 1"
+
+    # Programs compiled with an Intel compiler might need to link with Intel compiler-specific shared libraries, which
+    # the $intel_setup script puts in $LD_LIBRARY_PATH. We need to expose those when the user chooses to use a specific
+    # compiler, so we need a way to query them from the compiler (wrapper script) itself.
+    echo '[ "$#" -eq 1 -a "$1" = "--spock-so-paths" ] && echo "$LD_LIBRARY_PATH" && exit 0'
+
+    # Finally, run the real Intel compiler
+    echo "exec $compiler_exe \"\$@\""
+}
+
+
+
+# This script searches for Intel compilers (like "icpc") in common places and installs a shell script (like
+# "icpc-16.0.3") that's a wrapper around each compiler. This allows us to invoke specific versions of the compilers, and
+# to be able to invoke multiple versions in a single shell environment.
 for dir in /usr/apps/intel/{14,15,16}*; do
     [ -r "$dir/setup.sh" ] || continue
     (
@@ -23,11 +75,7 @@ for dir in /usr/apps/intel/{14,15,16}*; do
 	quad=$($SPOCK_SCRIPTS/impl/detect-compiler-characteristics --baselang c++ --quad icpc)
 	if [ "$quad" != "" ]; then
 	    version=$(echo "$quad" |cut -d: -f4)
-	    (
-		echo "#!/bin/bash"
-		echo "source $dir/setup.sh"
-		echo "exec icpc \"\$@\""
-	    ) >"$DESTINATION/icpc-$version"
+	    generate_wrapper "$dir/setup.sh" icpc >"$DESTINATION/icpc-$version"
 	    chmod 755 "$DESTINATION/icpc-$version"
 	fi
 
@@ -35,11 +83,7 @@ for dir in /usr/apps/intel/{14,15,16}*; do
 	quad=$($SPOCK_SCRIPTS/impl/detect-compiler-characteristics --baselang c --quad icc)
 	if [ "$quad" != "" ]; then
 	    version=$(echo "$quad" |cut -d: -f4)
-	    (
-		echo "#!/bin/bash"
-		echo "source $dir/setup.sh"
-		echo "exec icc \"\$@\""
-	    ) >"$DESTINATION/icc-$version"
+	    generate_wrapper "$dir/setup.sh" icc >"$DESTINATION/icc-$version"
 	    chmod 755 "$DESTINATION/icc-$version"
 	fi
 
@@ -47,11 +91,7 @@ for dir in /usr/apps/intel/{14,15,16}*; do
 	quad=$($SPOCK_SCRIPTS/impl/detect-compiler-characteristics --baselang fortran --quad ifort)
 	if [ "$quad" != "" ]; then
 	    version=$(echo "$quad" |cut -d: -f4)
-	    (
-		echo "#!/bin/bash"
-		echo "source $dir/setup.sh"
-		echo "exec ifort \"\$@\""
-	    ) >"$DESTINATION/ifort-$version"
+	    generate_wrapper "$dir/setup.sh" ifort >"$DESTINATION/ifort-$version"
 	    chmod 755 "$DESTINATION/ifort-$version"
 	fi
     )
