@@ -7,17 +7,29 @@ source "$SPOCK_SCRIPTS/impl/basic-support.sh" || exit 1
 source "$SPOCK_SCRIPTS/impl/spock-realpath.sh" || exit 1
 
 # Check command-line arguments
-do_batch_mode=
+do_batch_mode= do_force= do_help=
 while [ "$#" -gt 0 ]; do
     case "$1" in
 	--)
 	    shift
 	    break
 	    ;;
+
 	--batch)
 	    do_batch_mode=yes
 	    shift
 	    ;;
+
+	-f|--force)
+	    do_force=yes
+	    shift
+	    ;;
+
+	-h|--help)
+	    do_help=yes
+	    shift
+	    ;;
+
 	-*)
 	    echo "$arg0: unknown switch: $1" >&2
 	    exit 1
@@ -27,20 +39,29 @@ while [ "$#" -gt 0 ]; do
 	    ;;
     esac
 done
+
+if [ -n "$do_help" -o "$1" = "help" ]; then
+    echo "usage: $arg0 [SWITCHES] PATH_TO_ROSE_SOURCE_TREE"
+    echo "   Initializes the CWD to be a ROSE build tree by creating a default .rmc-main.cfg file,"
+    echo "   then plop the user into an editor to make adjustments (unless --batch)."
+    echo "     -b, --batch"
+    echo "       Don't do anything that requires user interaction, such as invoking the editor."
+    echo "       Use environment variables to override RMC settings. For instance, COMPILER overrides"
+    echo "       the rmc_compiler setting, LANGUAGES overrides the rmc_languages setting, etc.  The"
+    echo "       defaults should already be sane, and the user is plopped into an editor anyway, so"
+    echo "       these overrides are mostly for batch mode when this script is called from other scripts."
+    echo "     -f, --force"
+    echo "       Force creation of a new .rmc-main.cfg file even if the current working directory is"
+    echo "       not empty or it already contains a .rmc-main.cfg file."
+    exit 0
+fi
+
 if [ "$#" -ne 1 ]; then
     echo "usage: $arg0 \$PATH_TO_ROSE_SOURCE_TREE" >&2
+    echo "also try: $arg0 --help" >&2
     exit 1
 fi
 
-if [ "$1" = "help" -o "$1" = "--help" -o "$1" = "-h" ]; then
-    echo "usage: $arg0 [--batch] PATH_TO_ROSE_SOURCE_TREE"
-    echo "   Initializes the CWD to be a ROSE build tree by creating a default .rmc-main.cfg file."
-    echo "   Use environment variables to override RMC settings. For instance, COMPILER overrides"
-    echo "   the rmc_compiler setting, LANGUAGES overrides the rmc_languages setting, etc.  The"
-    echo "   defaults should already be sane, and the user is plopped into an editor anyway, so"
-    echo "   these overrides are mostly for batch mode when this script is called from other scripts."
-    exit 0
-fi
 
 # Sanity checks
 rose_srcdir=$(spock-realpath "$1")
@@ -48,11 +69,9 @@ rose_srcdir=$(spock-realpath "$1")
     die "not a directory: $rose_srcdir"
 [ -e "$rose_srcdir/src/frontend/BinaryFormats/ElfSection.C" ] ||
     die "not a ROSE source tree: $rose_srcdir"
-[ -e "src/frontend/BinaryFormats/ElfSection.C" ] &&
-    die "you must run this from the top of your (new) build tree"
-[ -e ".rmc-main.cfg" ] &&
+[ -e ".rmc-main.cfg" -a "$do_force" = "" ] &&
     die "this build tree is already initialized"
-[ "$(ls)" = "" ] ||
+[ "$(ls)" = "" -o -n "$do_force" ] ||
     die "the CWD must be a new (empty) build tree"
 
 # What C++ compiler are we using right now?
@@ -67,7 +86,7 @@ fi
 config_property() {
     local rmc_command="$1" value="$2" comment="$3"
     [ -n "$comment" ] && comment="# $comment"
-    printf '%-15s %-15s %s\n' "$rmc_command" "$value" "$comment"
+    printf '%-23s %-23s %s\n' "$rmc_command" "$value" "$comment"
 }
 
 # Create a default .rmc-main.cfg
@@ -109,20 +128,20 @@ config_property() {
     echo "# Software dependencies"
     config_property rmc_boost         "${BOOST:-1.57}"                   "Boost version number (required)"
     config_property rmc_cmake         "${CMAKE:-3}"                      "CMake version number (required)"
-    config_property rmc_dlib          "${DLIB:-none}"                    "DLib version number (optional)"
-    config_property rmc_doxygen       "${DOXYGEN:-none}"                 "Doxygen version number (optional)"
+    config_property rmc_dlib          "${DLIB:-18.17}"                   "DLib version number (optional)"
+    config_property rmc_doxygen       "${DOXYGEN:-ambivalent}"           "Doxygen version number (optional)"
     config_property rmc_dwarf         "${DWARF:-none}"                   "DWARF library version number (optional)"
     config_property rmc_edg           "${EDG:-ambivalent}"               "EDG version number (optional)"
-    config_property rmc_java          "${JAVA:-none}"                    "Oracle JDK version number (optional)"
+    config_property rmc_java          "${JAVA:-8}"                       "Oracle JDK version number (optional)"
     config_property rmc_magic         "${MAGIC:-none}"                   "libmagic version number (optional)"
     config_property rmc_python        "${PYTHON:-3}"                     "Python version number (optional)"
     config_property rmc_qt            "${QT:-none}"                      "Qt version number (optional)"
     config_property rmc_readline      "${READLINE:-none}"                "libreadline version number (optional)"
-    config_property rmc_spot          "${SPOT:-none}"                    "Spot library version number (optional)"
+    config_property rmc_spot          "${SPOT:-1.2.6}"                   "Spot library version number (optional)"
     config_property rmc_sqlite        "${SQLITE:-none}"                  "SQLite version number (optional)"
-    config_property rmc_wt            "${WT:-none}"                      "Wt version number (optional)"
-    config_property rmc_yaml          "${YAML:-none}"                    "Yaml-cpp version number (optional)"
-    config_property rmc_yices         "${YICES:-none}"                   "Yices version number (optional)"
+    config_property rmc_wt            "${WT:-3.3.4}"                     "Wt version number (optional)"
+    config_property rmc_yaml          "${YAML:-0.5.1}"                   "Yaml-cpp version number (optional)"
+    config_property rmc_yices         "${YICES:-1.0.34}"                 "Yices version number (optional)"
 ) >.rmc-main.cfg
 
 if [ "$do_batch_mode" = "" ]; then
