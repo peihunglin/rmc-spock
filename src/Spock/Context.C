@@ -391,8 +391,12 @@ Context::subshell(const std::vector<std::string> &command, const SubshellSetting
         int argc = 0;
         if (command.empty()) {
             argv = new char*[2];
-            arg0 = strdup("/bin/bash");
-            argv[argc++] = strdup("/bin/bash");
+            if (const char *s = getenv("SHELL")) {
+                arg0 = strdup(s);
+            } else {
+                arg0 = strdup("/bin/bash");
+            }
+            argv[argc++] = strdup(arg0);
             argv[argc] = NULL;
         } else {
             argv = new char*[command.size()+1];
