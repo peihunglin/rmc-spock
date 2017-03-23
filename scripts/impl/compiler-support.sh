@@ -68,7 +68,7 @@ spock-compiler-install() {
 	intel)
 	    compiler_libdirs="$($executable --spock-so-paths 2>/dev/null)"
 	    ;;
-    fi
+    esac
 
     # Create the compiler executables in the package's "bin" directory. This directory also needs the YAML configuration
     # file so the spock-compiler wrapper knows how to run the real compiler.

@@ -159,7 +159,7 @@ install:
         case "$cxx_vendor" in
             gnu) boost_toolset=gcc ;;
             llvm) boost_toolset=clang ;;
-            *) echo "what boost toolset for $cxx_vendor?" >&2; exit 1 ;;
+            intel) boost_toolset=intel-linux ;;
         esac
         (
             echo "using $boost_toolset : $cxx_version : c++ ;"
