@@ -8,7 +8,7 @@ arg0="${0##*/}"
 
 #-------------------- Commandline parsing --------------------
 
-prefix="$HOME/.spock"
+prefix=
 downloads=
 while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -43,12 +43,21 @@ while [ "$#" -gt 0 ]; do
 	    exit 1
 	    ;;
 	*)
-	    echo "usage: $0 [--prefix=DIRECTORY]" >&2
+	    echo "usage: $0 [--prefix=DIRECTORY] [--downloads=DIRECTORY]" >&2
 	    exit 1
 	    ;;
     esac
 done
-[ "$downloads" = "" ] && downloads="$prefix/var/downloads"
+
+if [ "$prefix" = "" ]; then
+    prefix="$HOME/.spock"
+    echo "$arg0: assuming --prefix=$prefix"
+fi
+if [ "$downloads" = "" ]; then
+    downloads="$prefix/var/downloads"
+    echo "$arg0: assuming --downloads=$downloads"
+fi
+
 mkdir -p "$downloads" || exit 1
 
 #-------------------- Basic Setup --------------------
@@ -64,6 +73,12 @@ if ! mkdir _build; then
     echo "$arg0: please delete your old '_build' directory first" >&2
     exit 1
 fi
+os_file_name=$(hostname --short)
+if [ -x "$prefix/$os_file_name/bin/spock" ]; then
+    echo "$arg0: spock appears to be already installed in $prefix" >&2
+    exit 1
+fi
+
 
 # Figure out what compiler to use.
 cxx_quad=
@@ -121,8 +136,9 @@ ncpus=$(sed -n '/^processor[ \t]\+:/p' </proc/cpuinfo |wc -l)
 #-------------------- Boost --------------------
 : ${boost_url:=http://sourceforge.net/projects/boost/files/boost/1.62.0/boost_1_62_0.tar.bz2/download}
 boost_libs=chrono,date_time,filesystem,iostreams,program_options,random,regex,serialization,signals,system,thread,wave
+boost_root="$prefix/dependencies/$os_file_name/boost"
 
-if [ ! -d "$prefix/dependencies/boost" ]; then
+if [ ! -d "$boost_root" ]; then
     (
         set -ex
 	mkdir -p _build/boost
@@ -148,11 +164,11 @@ if [ ! -d "$prefix/dependencies/boost" ]; then
 	    llvm) boost_cxx_vendor=clang ;;
 	    *) boost_cxx_vendor="$cxx_vendor" ;;
 	esac
-	       
+
         echo "using $boost_cxx_vendor : $cxx_version : $cxx_exe ;" >tools/build/src/user-config.jam
-        ./bootstrap.sh --prefix="$prefix/dependencies/boost" --with-libraries="$boost_libs" --with-toolset="$boost_cxx_vendor"
-        ./b2 --prefix="$prefix/dependencies/boost" -sNO_BZIP2=1 toolset="$boost_cxx_vendor" -j$ncpus
-        ./b2 --prefix="$prefix/dependencies/boost" -sNO_BZIP2=1 toolset="$boost_cxx_vendor" install
+        ./bootstrap.sh --prefix="$boost_root" --with-libraries="$boost_libs" --with-toolset="$boost_cxx_vendor"
+        ./b2 --prefix="$boost_root" -sNO_BZIP2=1 toolset="$boost_cxx_vendor" -j$ncpus
+        ./b2 --prefix="$boost_root" -sNO_BZIP2=1 toolset="$boost_cxx_vendor" install
     )
     rm -rf _build/boost_1_62_0
 fi
@@ -160,7 +176,8 @@ fi
 #-------------------- Yaml-cpp --------------------
 : ${yamlcpp_url:=https://github.com/jbeder/yaml-cpp}
 
-if [ ! -d "$prefix/dependencies/yamlcpp" ]; then
+yamlcpp_root="$prefix/dependencies/$os_file_name/yamlcpp"
+if [ ! -d "$yamlcpp_root" ]; then
     (
         set -ex
 	cd _build
@@ -184,8 +201,8 @@ if [ ! -d "$prefix/dependencies/yamlcpp" ]; then
               -DCMAKE_C_COMPILER="$c_exe" \
               -DCMAKE_CXX_COMPILER="$cxx_exe" \
               -DBUILD_SHARED_LIBS=Yes \
-              -DBOOST_ROOT="$prefix/dependencies/boost" \
-              -DCMAKE_INSTALL_PREFIX="$prefix/dependencies/yamlcpp"
+              -DBOOST_ROOT="$boost_root" \
+              -DCMAKE_INSTALL_PREFIX="$yamlcpp_root"
         make -j$ncpus install
     )
     rm -rf _build/yamlcpp-bld _build/yamlcpp-src
@@ -194,7 +211,8 @@ fi
 #-------------------- Sawyer --------------------
 : ${sawyer_url:=https://github.com/matzke1/sawyer}
 
-if [ ! -d "$prefix/dependencies/sawyer" ]; then
+sawyer_root="$prefix/dependencies/$os_file_name/sawyer"
+if [ ! -d "$sawyer_root" ]; then
     (
         set -ex
         cd _build
@@ -216,8 +234,8 @@ if [ ! -d "$prefix/dependencies/sawyer" ]; then
         cmake ../sawyer-src \
               -DCMAKE_C_COMPILER="$c_exe" \
               -DCMAKE_CXX_COMPILER="$cxx_exe" \
-              -DBOOST_ROOT="$prefix/dependencies/boost" \
-              -DCMAKE_INSTALL_PREFIX="$prefix/dependencies/sawyer"
+              -DBOOST_ROOT="$boost_root" \
+              -DCMAKE_INSTALL_PREFIX="$sawyer_root"
         make -j$ncpus install
     )
     rm -rf _build/sawyer-bld _build/sawyer-src
@@ -233,9 +251,9 @@ fi
           -DCMAKE_CXX_COMPILER="$cxx_exe" \
           -DCMAKE_BUILD_TYPE=Debug \
           -DCMAKE_MODULE_PATH=$(pwd)/../cmake \
-          -DBOOST_ROOT="$prefix/dependencies/boost" \
-          -DSawyer_DIR="$prefix/dependencies/sawyer/lib/cmake/Sawyer" \
-          -DYamlCpp_ROOT="$prefix/dependencies/yamlcpp" \
+          -DBOOST_ROOT="$boost_root" \
+          -DSawyer_DIR="$sawyer_root/lib/cmake/Sawyer" \
+          -DYamlCpp_ROOT="$yamlcpp_root" \
           -DCMAKE_INSTALL_PREFIX="$prefix"
 
     make -j$ncpus
@@ -244,10 +262,10 @@ fi
 
 #-------------------- Initial setup --------------------
 export SPOCK_ROOT="$prefix"
-"$SPOCK_ROOT/bin/spock-ls" --shellvars || exit 1
-eval $($prefix/bin/spock-ls --export --shellvars)
+"$SPOCK_ROOT/bin/$os_file_name/spock-ls" --shellvars || exit 1
+eval $($prefix/bin/$os_file_name/spock-ls --export --shellvars)
 "$SPOCK_SCRIPTS/spock-install-system-compilers"
-"$SPOCK_BINDIR/spock-ls"
+"$SPOCK_BINDIR/$os_file_name/spock-ls"
 
 set +x
 

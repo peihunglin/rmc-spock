@@ -40,6 +40,11 @@ endif()
 find_package(Sawyer 0.9.0 CONFIG REQUIRED)
 find_package(YamlCpp MODULE REQUIRED)
 
+execute_process(
+  COMMAND hostname --short
+  OUTPUT_VARIABLE os_file_name
+  OUTPUT_STRIP_TRAILING_WHITESPACE)
+
 set(lib_src
   src/Spock/Context.C
   src/Spock/DefinedPackage.C
@@ -69,14 +74,14 @@ include_directories(
 # The executables in the build tree should have an RPATH that points
 # to the build tree, and when we install those exectables we need to
 # relink them to point to the library installation directory.
-set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib/${os_file_name}")
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) # Don't use install path in builddir
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE) # auto add stuff to install path
 
 # the RPATH to be used when installing, but only if it's not a system directory
-list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
+list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib/${os_file_name}" isSystemDir)
 if("${isSystemDir}" STREQUAL "-1")
-   set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+   set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib/${os_file_name}")
 endif()
 
 add_executable(spock-shell src/spock-shell.C)
@@ -99,19 +104,30 @@ target_link_libraries(spock-download spock)
 
 #################### Installation ####################
 
+# Binaries
 install(
   TARGETS
     spock spock-shell spock-ls spock-compiler spock-using spock-rm spock-download
-  RUNTIME DESTINATION bin
-  LIBRARY DESTINATION lib
-)
+  RUNTIME DESTINATION bin/${os_file_name}
+  LIBRARY DESTINATION lib/${os_file_name}
+  )
 
+# Portable wrappers around the binaries
+install(PROGRAMS scripts/spock-wrapper.sh DESTINATION bin RENAME spock-shell)
+install(PROGRAMS scripts/spock-wrapper.sh DESTINATION bin RENAME spock-ls)
+install(PROGRAMS scripts/spock-wrapper.sh DESTINATION bin RENAME spock-compiler)
+install(PROGRAMS scripts/spock-wrapper.sh DESTINATION bin RENAME spock-using)
+install(PROGRAMS scripts/spock-wrapper.sh DESTINATION bin RENAME spock-rm)
+install(PROGRAMS scripts/spock-wrapper.sh DESTINATION bin RENAME spock-download)
+
+# Scripts for the bin directory so they're in $PATH
 install(
   PROGRAMS
     scripts/rmc
   DESTINATION bin
 )
 
+# Other scripts not usually in $PATH
 install(
   PROGRAMS
     scripts/spock-install-system-compilers
@@ -122,6 +138,7 @@ install(
   DESTINATION scripts
 )
 
+# Internal scripts, almost certainly not in $PATH
 install(
   PROGRAMS  
     scripts/impl/detect-compiler-characteristics
@@ -129,6 +146,7 @@ install(
   DESTINATION scripts/impl
 )
 
+# Implementation details for scripts
 install(
   FILES
     scripts/impl/basic-support.sh
@@ -138,6 +156,7 @@ install(
   DESTINATION scripts/impl
 )
 
+# RMC sub-commands
 install(
   PROGRAMS
     scripts/rmc-commands/config
@@ -146,8 +165,8 @@ install(
   DESTINATION scripts/rmc-commands
 )
 
+# Package descriptions
 file(GLOB package_files "${CMAKE_CURRENT_SOURCE_DIR}/lib/packages/*.yaml")
-
 install(
   FILES ${package_files}
   DESTINATION lib/packages

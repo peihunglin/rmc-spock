@@ -75,7 +75,7 @@ spock-compiler-install() {
     (
 	set -e
 	cd "$package_bindir"
-	cp "$SPOCK_BINDIR/spock-compiler" "."
+	cp "$SPOCK_BINDIR/$(hostname --short)/spock-compiler" "."
 
 	(
 	    echo "#!/bin/bash"
