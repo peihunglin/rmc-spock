@@ -64,7 +64,7 @@ while [ "$#" -gt 0 ]; do
 	    have_silent=--silent
 	    shift
 	    ;;
-	--no-silent)
+	--no-silent|--verbose|-v)
 	    have_silent=
 	    shift
 	    ;;
