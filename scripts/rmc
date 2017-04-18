@@ -488,6 +488,10 @@ rmc_python() {
     case "$RMC_PYTHON" in
 	2|*python2*) RMC_PYTHON=2 ;;
 	3|*python3*) RMC_PYTHON=3 ;;
+	none)
+	    echo "$arg0: python is a ROSE requirement but you specified \"$RMC_PYTHON\"" >&2
+	    exit 1
+	    ;;
     esac
 }
 

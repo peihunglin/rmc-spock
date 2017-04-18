@@ -7,11 +7,11 @@ source "$SPOCK_SCRIPTS/impl/basic-support.sh" || exit 1
 
 # General compiler flags
 cc_flags() {
-    echo "-fPIC -rdynamic"
+    echo "-fPIC"
 }
 
 cxx_flags() {
-    echo "-fPIC -rdynamic -ftemplate-backtrace-limit=0"
+    echo "-fPIC -ftemplate-backtrace-limit=0"
 }
 
 # Flags for compiler optimization
