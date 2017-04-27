@@ -1,5 +1,5 @@
 package:        wt
-versions:       [ 3.3.3, 3.3.4, 3.3.5 ]
+versions:       [ 3.3.3, 3.3.4, 3.3.5, 3.3.6, 3.3.7 ]
 
 dependencies:
   - version: "=3.3.3"
@@ -23,6 +23,10 @@ dependencies:
     # gcc-5.4.0 boost-1.60 fails
     # gcc-6.2.0 boost-1.60 works
     install: [ boost, libgraphicsmagick, c++-compiler ]
+    build:   [ c-compiler ]
+
+  - version: ">=3.3.6"
+    install: [ boost>=1.41, libgraphicsmagick, c++-compiler ]
     build:   [ c-compiler ]
 
 
