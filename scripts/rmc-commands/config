@@ -14,8 +14,30 @@ cxx_flags() {
     echo "-fPIC -ftemplate-backtrace-limit=0"
 }
 
+# Flags for code coverage
+code_coverage_flags() {
+    case "$RMC_CODE_COVERAGE" in
+	yes)
+	    case "$CXX_VENDOR" in
+		gnu|llvm)
+		    echo "-fprofile-arcs -ftest-coverage"
+		    ;;
+		*)
+		    die "cannot generate code coverage results for $CXX_VENDOR compilers"
+		    ;;
+	    esac
+	    ;;
+	""|no|ambivalent)
+	    : nothing to do
+	    ;;
+	*)
+	    die "unrecognized code coverage mode: $RMC_CODE_COVERAGE"
+	    ;;
+    esac
+}
+
 # Flags for compiler optimization
-optimize_flags() {
+autoconf_optimize_flags() {
     local switch="$1"
     case "$RMC_OPTIMIZE" in
 	yes) echo -n " $switch='-O3 -DNDEBUG'" ;;
@@ -24,8 +46,16 @@ optimize_flags() {
     esac
 }
 
+cmake_optimize_flags() {
+    case "$RMC_OPTIMIZE" in
+	yes) echo -n "-O3 -DNDEBUG" ;;
+	no)  echo -n "-O0" ;;
+	ambivalent) : nothing ;;
+    esac
+}
+
 # Flags for controlling warnings
-warning_flags() {
+autoconf_warning_flags() {
     local switch="$1"
     case "$RMC_WARNINGS" in
 	yes) echo -n " $switch='-Wall -Wno-unused-local-typedefs -Wno-attributes'" ;;
@@ -33,8 +63,15 @@ warning_flags() {
     esac
 }
 
+cmake_warning_flags() {
+    case "$RMC_WARNINGS" in
+	yes) echo -n "-Wall -Wno-unused-local-typedefs -Wno-attributes" ;;
+	no|ambivalent) : nothing ;;
+    esac
+}
+
 # Flags for controlling debugability
-debug_flags() {
+autoconf_debug_flags() {
     local switch="$1"
     case "$RMC_DEBUG" in
 	yes) echo -n " $switch=-g" ;;
@@ -42,9 +79,16 @@ debug_flags() {
     esac
 }
 
+cmake_debug_flags() {
+    case "$RMC_DEBUG" in
+	yes) echo -n "-g" ;;
+	no)  echo -n "-fomit-frame-pointer" ;;
+    esac
+}
+
 # Generates "--with-XXX=VALUE", "--without-XXX", or nothing.
 # If if_true is non-empty, then use it as the value in the "--with-XXX=VALUE" form.
-optional_with() {
+autoconf_optional_with() {
     local name="$1" value="$2" if_true="$3"
     case "$value" in
 	no|none)
@@ -62,7 +106,7 @@ optional_with() {
 
 # Generates "--enable-XXX=VALUE", "--disable-XXX", or nothing
 # If if_true is non-empty, then use it as the value in the "--enable-XXX=VALUE" form.
-optional_enable() {
+autoconf_optional_enable() {
     local name="$1" value="$2" if_true="$3"
     case "$value" in
 	no|none)
@@ -78,6 +122,160 @@ optional_enable() {
     esac
 }
 
+cmake_optional() {
+    local name="$1" value="$2" if_true="$3"
+    case "$value" in
+	no|none)
+	    echo -n " -D$name=no"
+	    ;;
+	""|ambivalent)
+	    : nothing
+	    ;;
+	*)
+	    [ -n "$if_true" ] && value="$if_true"
+	    echo -n " -D$name='$value'"
+	    ;;
+    esac
+}
+
+cmake_error_if_specified() {
+    local name="$1" value="$2" if_true="$3"
+    case "$value" in
+	""|ambivalent)
+	    : good
+	    ;;
+	*)
+	    [ -n "$if_true" ] && value="$if_true"
+	    die "cmake does not support $name '$value'; try setting it to 'ambivalent'"
+	    ;;
+    esac
+}
+
+# Cmake switch for specified language
+cmake_language_name() {
+    local lang="$1"
+
+    case "$lang" in
+	binaries) echo "enable-binary-analysis" ;;
+	c++)      echo "enable-c" ;;
+	*)        echo "enable-$lang" ;;
+    esac
+}
+
+# Decide which frontend languages to enable
+cmake_frontend_languages() {
+    declare -A languages
+    for lang in $(echo "$RMC_LANGUAGES" |tr , ' '); do
+	languages["$lang"]=yes
+    done
+
+    # Note that cmake doesn't distinguish between c and c++
+    [ -n "${languages[c++]}" ] && languages[c]=yes
+
+    if [ -n "${languages[all]}" ]; then
+	[ "$RMC_LANGUAGES" = "all" ] || die "incompatible languages: $RMC_LANGUAGES"
+	echo -n " -Denable-binary-analysis=ON"
+	echo -n " -Denable-c=ON"
+	echo -n " -Denable-cuda=ON"
+	echo -n " -Denable-java=ON"
+	echo -n " -Denable-opencl=ON"
+	echo -n " -Denable-fortran=ON"
+	echo -n " -Denable-php=ON"
+	echo -n " -Denable-python=ON"
+	echo -n " -Denable-x10=ON"
+    elif [ -n "${languages[none]}" ]; then
+	[ "$RMC_LANGUAGES" = "none" ] || die "incompatible languages: $RMC_LANGUAGES"
+	echo -n " -Denable-binary-analysis=OFF"
+	echo -n " -Denable-c=OFF"
+	echo -n " -Denable-cuda=OFF"
+	echo -n " -Denable-java=OFF"
+	echo -n " -Denable-opencl=OFF"
+	echo -n " -Denable-fortran=OFF"
+	echo -n " -Denable-php=OFF"
+	echo -n " -Denable-python=OFF"
+	echo -n " -Denable-x10=OFF"
+    else
+	# "c++" intentionally omitted
+	for lang in binaries c cuda fortran java opencl php python x10; do
+	    if [ -n "${languages[$lang]}" ]; then
+		echo -n " -D$(cmake_language_name $lang)=ON"
+	    else
+		echo -n " -D$(cmake_language_name $lang)=OFF"
+	    fi
+	done
+    fi
+}
+
+# Echo the autoconf "configure" command-line to standard output
+autoconf_command() {
+    echo -n "env CC='$C_COMPILER' CXX='$CXX_COMPILER' FC='$FORTRAN_COMPILER'"
+    echo -n " CFLAGS='$(cc_flags) $(code_coverage_flags)' CXXFLAGS='$(cxx_flags) $(code_coverage_flags)'"
+    echo -n " LDFLAGS='-Wall $(code_coverage_flags)'"
+    echo -n " $ROSE_SOURCE/configure"
+    autoconf_optimize_flags --with-C_OPTIMIZE
+    autoconf_optimize_flags --with-CXX_OPTIMIZE
+    autoconf_warning_flags --with-C_WARNINGS
+    autoconf_warning_flags --with-CXX_WARNINGS
+    autoconf_debug_flags --with-C_DEBUG
+    autoconf_debug_flags --with-CXX_DEBUG
+    echo -n " --disable-boost-version-check"
+    echo -n " --disable-gcc-version-check"
+    autoconf_optional_enable assertion-behavior "$RMC_ASSERTIONS"
+    autoconf_optional_enable edg_version "$RMC_EDG"
+    autoconf_optional_enable languages "$RMC_LANGUAGES"
+    echo -n " --prefix='$ROSE_INSTALLED'"
+    echo -n " --with-ROSE_LONG_MAKE_CHECK_RULE=yes"
+    echo -n " --with-boost='$BOOST_ROOT'"
+    autoconf_optional_with dlib "$RMC_DLIB" "$DLIB_INCDIRS"
+    autoconf_optional_with doxygen "$RMC_DOXYGEN" "$DOXYGEN"
+    autoconf_optional_with dwarf "$RMC_DWARF" "$DWARF_ROOT"
+    autoconf_optional_with gfortran "$FORTRAN_COMPILER"
+    autoconf_optional_with java "$RMC_JAVA" "$JAVA_COMPILER"
+    autoconf_optional_with libreadline "$RMC_READLINE" "$LIBREADLINE_ROOT"
+    autoconf_optional_with magic "$RMC_MAGIC" "$LIBMAGIC_ROOT"
+    echo -n " --with-pch=no"
+    autoconf_optional_with python "$RMC_PYTHON" "$(which python)"
+    autoconf_optional_with sqlite3 "$RMC_SQLITE" "$SQLITE_ROOT"
+    autoconf_optional_with wt "$RMC_WT" "$WT_ROOT"
+    autoconf_optional_with yaml "$RMC_YAML" "$YAMLCPP_ROOT"
+    autoconf_optional_with yices "$RMC_YICES" "$YICES_ROOT"
+    echo
+}
+
+# Echo the cmake command-line to standard output
+cmake_command() {
+    # These don't seem to be supported by cmake yet
+    cmake_error_if_specified dlib     "$RMC_DLIB"     "$DLIB_INCDIRS"
+    cmake_error_if_specified doxygen  "$RMC_DOXYGEN"  "$DOXYGEN"
+    cmake_error_if_specified java     "$RMC_JAVA"     "$JAVA_COMPILER"
+    cmake_error_if_specified readline "$RMC_READLINE" "$LIBREADLINE_ROOT"
+    cmake_error_if_specified magic    "$RMC_MAGIC"    "$LIBMAGIC_ROOT"
+    cmake_error_if_specified python   "$RMC_PYTHON"   "$(which python)"
+    cmake_error_if_specified sqlite   "$RMC_SQLITE"   "$SQLITE_ROOT"
+    cmake_error_if_specified wt       "$RMC_WT"       "$WT_ROOT"
+    cmake_error_if_specified yaml     "$RMC_YAML"     "$YAMLCPP_ROOT"
+    cmake_error_if_specified yices    "$RMC_YICES"    "$YICES_ROOT"
+
+    local compiler_flags="$(cmake_optimize_flags) $(cmake_warning_flags) $(cmake_debug_flags) $(code_coverage_flags)"
+
+    echo -n "$CMAKE_ROOT/bin/cmake"
+    echo -n " -DCMAKE_C_COMPILER=cc"
+    echo -n " -DCMAKE_C_FLAGS='$(cc_flags) $compiler_flags'"
+    echo -n " -DCMAKE_CXX_COMPILER=c++"
+    echo -n " -DCMAKE_CXX_FLAGS='$(cxx_flags) $compiler_flags'"
+    echo -n " -DCMAKE_INSTALL_PREFIX='$ROSE_INSTALLED'"
+    echo -n " -DBOOST_ROOT='$BOOST_ROOT'"
+
+    cmake_frontend_languages
+
+    cmake_optional ASSERTION_BEHAVIOR "$RMC_ASSERTIONS"
+    cmake_optional with-dwarf "$RMC_DWARF" "$DWARF_ROOT"
+    cmake_optional EDG_VERSION "$RMC_EDG"
+    cmake_optional enable-yices "$RMC_YICES" "$YICES_ROOT"
+
+    echo " $ROSE_SOURCE"
+}
+
 ########################################################################################################################
 
 # Check a few things that should have been configured by RMC-2. Some of these are invariants in the RMC environment
@@ -89,8 +287,6 @@ optional_enable() {
 [ "$C_VENDOR" != "$CXX_VENDOR" ] && die "mismatched C and C++ compiler vendors";
 [ "$C_VERSION" != "$CXX_VERSION" ] && die "mismatched C and C++ compiler versions";
 [ "$BOOST_ROOT" = "" ] && die "no boost library selected";
-[ "$RMC_BUILD" = "autoconf" ] || die "build type '$RMC_BUILD' is not supported yet"
-[ "$RMC_CODE_COVERAGE" = "yes" ] && die "code coverage not supported yet"
 
 # Command-line args
 dry_run=
@@ -102,43 +298,25 @@ while [ "$#" -gt 0 ]; do
     esac
 done
 
+# Sanity checks. Give some functions an opportunity to exit since they're normally invoked as $(...)
+code_coverage_flags >/dev/null
+
 # Write the configure command to a temporary file before running it. This seems to be the best way to get the quoting
 # correct at the same time as providing a way to handle the --dry-run switch.
 script=$(tempfile)
 trap "rm -f $script" EXIT
-(
-    echo -n "env CC='$C_COMPILER' CXX='$CXX_COMPILER' FC='$FORTRAN_COMPILER'"
-    echo -n " CFLAGS='$(cc_flags)' CXXFLAGS='$(cxx_flags)'"
-    echo -n " $RG_SRC/configure"
-    optimize_flags --with-C_OPTIMIZE
-    optimize_flags --with-CXX_OPTIMIZE
-    warning_flags --with-C_WARNINGS
-    warning_flags --with-CXX_WARNINGS
-    debug_flags --with-C_DEBUG
-    debug_flags --with-CXX_DEBUG
-    echo -n " --disable-boost-version-check"
-    echo -n " --disable-gcc-version-check"
-    optional_enable assertion-behavior "$RMC_ASSERTIONS"
-    optional_enable edg_version "$RMC_EDG"
-    optional_enable languages "$RMC_LANGUAGES"
-    echo -n " --prefix='$ROSE_INSTALLED'"
-    echo -n " --with-ROSE_LONG_MAKE_CHECK_RULE=yes"
-    echo -n " --with-boost='$BOOST_ROOT'"
-    optional_with dlib "$RMC_DLIB" "$DLIB_INCDIRS"
-    optional_with doxygen "$RMC_DOXYGEN" "$DOXYGEN"
-    optional_with dwarf "$RMC_DWARF" "$DWARF_ROOT"
-    optional_with gfortran "$FORTRAN_COMPILER"
-    optional_with java "$RMC_JAVA" "$JAVA_COMPILER"
-    optional_with libreadline "$RMC_READLINE" "$LIBREADLINE_ROOT"
-    optional_with magic "$RMC_MAGIC" "$LIBMAGIC_ROOT"
-    echo -n " --with-pch=no"
-    optional_with python "$RMC_PYTHON" "$(which python)"
-    optional_with sqlite3 "$RMC_SQLITE" "$SQLITE_ROOT"
-    optional_with wt "$RMC_WT" "$WT_ROOT"
-    optional_with yaml "$RMC_YAML" "$YAMLCPP_ROOT"
-    optional_with yices "$RMC_YICES" "$YICES_ROOT"
-    echo
-) >"$script"
+
+case "$RMC_BUILD" in
+    autoconf)
+	autoconf_command >"$script"
+	;;
+    cmake)
+	cmake_command >"$script"
+	;;
+    *)
+	die "unknown build system: $RMC_BUILD"
+	;;
+esac
 
 if [ -n "$dry_run" ]; then
     cat "$script"
