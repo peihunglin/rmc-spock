@@ -449,7 +449,7 @@ DefinedPackage::download(Context &ctx, const Settings &settings) {
 
         // Run the download script
         std::string downloadCommands = findCommands("download", settings.version);
-        TemporaryDirectory workingDir(ctx.buildDirectory() / "spock" / bfs::unique_path("download-%%%%%%%%"));
+        TemporaryDirectory workingDir(ctx.buildDirectory() / bfs::unique_path("spock-download-%%%%%%%%"));
         if (settings.keepTempFiles)
             workingDir.keep();
         bfs::path script = createShellScript(settings, workingDir.path(), downloadCommands, extraVars);
@@ -614,7 +614,7 @@ DefinedPackage::install(Context &ctx, Settings &settings /*in,out*/) {
     TemporaryDirectory installationPrefix(installDir / settings.hash);
     bfs::path pkgRoot = installationPrefix.path() / name();
     bfs::create_directory(pkgRoot);
-    TemporaryDirectory workingDir(ctx.buildDirectory() / "spock" / bfs::unique_path("build-%%%%%%%%"));
+    TemporaryDirectory workingDir(ctx.buildDirectory() / bfs::unique_path("spock-build-%%%%%%%%"));
     if (settings.keepTempFiles) {
         installationPrefix.keep();
         workingDir.keep();
