@@ -29,8 +29,13 @@ install:
         LDFLAGS="$(spock-compiler-libdirs)" \
         CPPFLAGS="$(spock-compiler-incdirs)" \
         ./configure \
-        --prefix=$PACKAGE_ROOT
+        --prefix=$PACKAGE_ROOT \
+        --with-zlib-prefix=$ZLIB_ROOT
 
       make -j$PARALLELISM
-      make -j$PARALLELISM check
+
+      # "make check" doesn't work because the libpng makefiles generate executables that
+      # find libz.so in /lib/... instead of the one we specified with "--with-zlib-prefix"
+      #make -j$PARALLELISM check
+
       make install

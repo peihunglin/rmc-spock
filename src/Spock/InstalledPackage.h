@@ -66,7 +66,7 @@ public:
 
     /** Environment variable search paths.
      *
-     *  These are the values for variables like $PATH and $LD_LIBRARY_PATH.
+     *  These are the values for variables like $PATH and $LD_RUN_PATH.
      *
      * @{ */
     const Environment& environmentSearchPaths() const { return environmentSearchPaths_; }

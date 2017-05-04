@@ -31,6 +31,6 @@ install:
         serverlib="${libjvm%/libjvm.so}"
 
         spock-export PATH            $PACKAGE_ROOT/jdk/bin
-        spock-export LD_LIBRARY_PATH $serverlib
+        spock-export LD_RUN_PATH     $serverlib
         spock-export JAVA_VENDOR     oracle
         spock-export JAVA_COMPILER   $PACKAGE_ROOT/jdk/bin/javac

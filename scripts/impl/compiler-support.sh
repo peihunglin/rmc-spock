@@ -57,7 +57,7 @@ spock-compiler-install() {
     # Compilers sometimes need to add some compiler-specific libraries to the shared object search path in order for the
     # programs compile with that compiler to be able to run. Intel expects users to choose one Intel compiler by
     # sourcing a setup.sh file into their environment, but we want to delay that until spock chooses the
-    # compiler. Really, all we need is just the LD_LIBRARY_PATH, so the Intel compiler wrappers support a switch that
+    # compiler. Really, all we need is just the LD_RUN_PATH, so the Intel compiler wrappers support a switch that
     # returns that info without running the compiler. GNU compilers already have a --print-search-dirs switch that
     # does something similar (I'm not sure it's needed though [matzke, 2017-03-15].
     compiler_libdirs=
@@ -149,7 +149,7 @@ spock-compiler-install() {
 	echo "  ${bl}_ROOT:     '$package_root'"
 	echo "  ${bl}_COMPILER: '$package_root/bin/$compiler_cmd'"
 	[ "$compiler_libdirs" != "" ] &&
-	    echo "  LD_LIBRARY_PATH: '$compiler_libdirs'"
+	    echo "  LD_RUN_PATH: '$compiler_libdirs'"
     ) >"$package_yaml"
 
     echo "$package_spec"

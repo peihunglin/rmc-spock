@@ -151,8 +151,9 @@ install:
 
         cd download
 
-        # Configuration
-
+        # Configuration.  It's unfortunate that boost uses a custom build script instead of something more popular like
+        # cmake or autoconf. Therefore, I'm not quite sure that these commands are actually building what I expect them
+        # to be building.
         cxx_vendor=$(c++ --spock-triplet |cut -d: -f1)
         cxx_version=$(c++ --spock-triplet |cut -d: -f3)
         boost_toolset=
@@ -162,18 +163,21 @@ install:
             intel) boost_toolset=intel-linux ;;
         esac
         (
-            echo "using $boost_toolset : $cxx_version : c++ ;"
+            echo "# Warning!!! Spaces are significant in the following strings."
+            echo "# using $boost_toolset : $cxx_version : c++ ;"
             echo "using zlib : $ZLIB_VERSION : <include>$ZLIB_INCDIRS <search>$ZLIB_LIBDIRS ;"
         ) >"$user_jam"
         
         ./bootstrap.sh --prefix="$PACKAGE_ROOT" --with-libraries=$libraries_commas --with-toolset=$boost_toolset
 
-        # Our scripts customarily build, then install as two separate
-        # steps.  This is sometimes more efficient if the installation
-        # directory is an NFS mount.  Also, be liberal about turning
-        # on debugging output during the build, which is saved along
-        # with the installation.
 
+        # Our scripts customarily build, then install as two separate steps.  This is sometimes more efficient if the
+        # installation directory is an NFS mount.  Also, be liberal about turning on debugging output during the build,
+        # which is saved along with the installation.
+        #
+        # I could not find documentation about whether "b2" commands also need the --prefix switch. The generated
+        # project-config.jam file specifies a prefix, but I'm not sure if all versions of boost we support did this, so
+        # specify the prefix again here.
         ./b2 --prefix="$PACKAGE_ROOT" $iostream_flags toolset=$boost_toolset -d+2 -j$PARALLELISM
         ./b2 --prefix="$PACKAGE_ROOT" $iostream_flags toolset=$boost_toolset -d+2 install
 
@@ -187,7 +191,7 @@ install:
         #   ALL_LIBDIRS     - ditto, but for all packages
         #   BOOST_INCDIRS   - directories containing include files
         #   ALL_INCDIRS     - ditto, but for all packages
-        #   LD_LIBRARY_PATH - directories containing shared libs
+        #   LD_RUN_PATH     - directories containing shared libs
         #   PATH            - directories containing executables
 
 # The "post-install" script is available to run after Spock installs

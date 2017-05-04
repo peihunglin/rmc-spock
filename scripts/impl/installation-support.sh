@@ -67,9 +67,9 @@ spock-finalize() {
 		echo "    ALL_LIBDIRS: '$PACKAGE_ROOT/lib'"
 
 		# If there appear to be shared libraries in $PACKAGE_ROOT/lib, then add them
-		# to the LD_LIBRARY_PATH
+		# to the LD_RUN_PATH
 		if [ -n "$(ls $PACKAGE_ROOT/lib/*.so 2>/dev/null)" ]; then
-		    echo "    LD_LIBRARY_PATH:            '$PACKAGE_ROOT/lib'"
+		    echo "    LD_RUN_PATH:                '$PACKAGE_ROOT/lib'"
 		fi
 	    fi
 

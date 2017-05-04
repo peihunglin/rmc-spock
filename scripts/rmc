@@ -279,14 +279,14 @@ read_config_file() {
     case "$RMC_INSTALLED" in
 	yes|ambivalent|"")
 	    export ROSE_INSTALLED="$RG_BLD/installed"
-	    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$ROSE_INSTALLED/lib"
+	    export LD_RUN_PATH="$LD_LIBRARY_PATH:$ROSE_INSTALLED/lib"
 	    ;;
 	no)
 	    export ROSE_INSTALLED="/NO_ROSE_INSTALLATION_PREFIX"
 	    ;;
 	*)
 	    export ROSE_INSTALLED="$RMC_INSTALLED"
-	    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$ROSE_INSTALLED/lib"
+	    export LD_RUN_PATH="$LD_LIBRARY_PATH:$ROSE_INSTALLED/lib"
 	    ;;
     esac
 }
