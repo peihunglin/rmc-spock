@@ -3,7 +3,7 @@ package:        boost
 # List of all versions supported by this file
 versions:       [ 1.50.0, 1.51.0, 1.52.0, 1.53.0, 1.54.0, 1.55.0,
                   1.56.0, 1.57.0, 1.58.0, 1.59.0, 1.60.0, 1.61.0,
-                  1.62.0, 1.63.0 ]
+                  1.62.0, 1.63.0, 1.64.0 ]
 
 # Dependencies for building and installation.
 #
@@ -59,13 +59,9 @@ variables:
   - version: ">=1.50"
     iostream_flags: -sNO_COMPRESSION=1 -sNO_ZLIB=1 -sNO_BZIP2=1
     libraries: chrono date_time filesystem iostreams program_options random regex serialization signals system thread wave
-    user_jam: tools/build/v2/user-config.jam
 
   - version: ">=1.54"
     iostream_flags: "-sNO_BZIP2=1"
-
-  - version: ">=1.56"
-    user_jam: tools/build/src/user-config.jam
 
 # Instructions for how to obtain the package.  Spock will use
 # the last section which matches the version beging installed.
@@ -164,9 +160,10 @@ install:
         esac
         (
             echo "# Warning!!! Spaces are significant in the following strings."
-            echo "# using $boost_toolset : $cxx_version : c++ ;"
+            echo "using $boost_toolset : : $(which c++) ;"
             echo "using zlib : $ZLIB_VERSION : <include>$ZLIB_INCDIRS <search>$ZLIB_LIBDIRS ;"
-        ) >"$user_jam"
+        ) >"user-config.jam"
+        export BOOST_BUILD_PATH="$(pwd)"
         
         ./bootstrap.sh --prefix="$PACKAGE_ROOT" --with-libraries=$libraries_commas --with-toolset=$boost_toolset
 
@@ -178,8 +175,12 @@ install:
         # I could not find documentation about whether "b2" commands also need the --prefix switch. The generated
         # project-config.jam file specifies a prefix, but I'm not sure if all versions of boost we support did this, so
         # specify the prefix again here.
-        ./b2 --prefix="$PACKAGE_ROOT" $iostream_flags toolset=$boost_toolset -d+2 -j$PARALLELISM
-        ./b2 --prefix="$PACKAGE_ROOT" $iostream_flags toolset=$boost_toolset -d+2 install
+        #
+        # I could not find documentation about whether adding the "using zlib" to user-config.jam is sufficient to cause
+        # that configuration of zlib to be used, or whether adding it only to b2 is sufficient (does bootstrap.sh need to
+        # know about zlib when building b2?). Therefore, I'm adding it in both places.
+        ./b2 --prefix="$PACKAGE_ROOT" $iostream_flags toolset=$boost_toolset -d+2 -s ZLIB_INCLUDE=$ZLIB_INCDIRS -s ZLIB_LIBPATH=$ZLIB_LIBDIRS -j$PARALLELISM
+        ./b2 --prefix="$PACKAGE_ROOT" $iostream_flags toolset=$boost_toolset -d+2 -s ZLIB_INCLUDE=$ZLIB_INCDIRS -s ZLIB_LIBPATH=$ZLIB_LIBDIRS install
 
         # Finally, describe the variables that should be adjusted or
         # created when this package is employed by a user.  These
