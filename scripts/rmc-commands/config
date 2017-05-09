@@ -273,6 +273,9 @@ cmake_command() {
     cmake_optional EDG_VERSION "$RMC_EDG"
     cmake_optional enable-yices "$RMC_YICES" "$YICES_ROOT"
 
+    # Most user systems don't have cuda, so this should be the default
+    echo -n " -Denable-cuda=OFF"
+
     echo " $ROSE_SOURCE"
 }
 
