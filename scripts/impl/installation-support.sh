@@ -62,7 +62,16 @@ spock-finalize() {
     if [ "$PACKAGE_ACTION" = "install" ]; then
 	(
 	    # Libraries
-	    if [ -d "$PACKAGE_ROOT/lib" ]; then
+	    if [ -d "$PACKAGE_ROOT/lib64" ]; then
+		echo "    ${PACKAGE_NAME_UC}_LIBDIRS: '$PACKAGE_ROOT/lib64'"
+		echo "    ALL_LIBDIRS: '$PACKAGE_ROOT/lib64'"
+
+		# If there appear to be shared libraries in $PACKAGE_ROOT/lib64, then add them
+		# to the LD_RUN_PATH
+		if [ -n "$(ls $PACKAGE_ROOT/lib64/*.so 2>/dev/null)" ]; then
+		    echo "    LD_RUN_PATH:                '$PACKAGE_ROOT/lib64'"
+		fi
+	    elif [ -d "$PACKAGE_ROOT/lib" ]; then
 		echo "    ${PACKAGE_NAME_UC}_LIBDIRS: '$PACKAGE_ROOT/lib'"
 		echo "    ALL_LIBDIRS: '$PACKAGE_ROOT/lib'"
 
