@@ -32,5 +32,6 @@ install:
 
         spock-export PATH            $PACKAGE_ROOT/jdk/bin
         spock-export LD_RUN_PATH     $serverlib
+        spock-export JAVA_LIBDIRS    $serverlib
         spock-export JAVA_VENDOR     oracle
         spock-export JAVA_COMPILER   $PACKAGE_ROOT/jdk/bin/javac
