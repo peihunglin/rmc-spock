@@ -29,6 +29,7 @@ private:
     boost::filesystem::path pkgdir_;                    // directory holding definitions of packages to be installed
     boost::filesystem::path scriptdir_;                 // file containing shell scripts
     boost::filesystem::path builddir_;                  // directory where building of packages takes place
+    std::string hostName_;                              // host name or string for host-specific directory names
     Directory allPackages_;                             // database of all known packages, installed or not
     PackagePtr spockItself_;                            // pseudo-package for spock itself
     DefinitionsByName definitionsByName_;               // all known package definitions indexed by their name
@@ -58,6 +59,9 @@ public:
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Directories and file names
 public:
+    /** Host name, or string to use in host-specific paths. */
+    std::string hostName() const;
+
     /** Name of the root directory for other spock directories. */
     boost::filesystem::path rootDirectory() const;
 

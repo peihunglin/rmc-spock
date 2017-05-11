@@ -46,7 +46,7 @@ Context::SavedStack::restore() {
     while (ctx_.environmentStackSize() > stackSize_)
         ctx_.popEnvironment();
 }
-    
+
 // Save and restore a Context object for exception safety
 Context::Context() {
     envStack_.push_back(EnvStackItem());
@@ -59,7 +59,7 @@ Context::Context() {
     } else {
         setEnvVar("SPOCK_VERSION", VERSION);
     }
-    
+
     // The ROOT directory is the default prefix for most other directories
     if (const char *s = getenv("SPOCK_ROOT")) {
         rootdir_ = s;
@@ -98,7 +98,7 @@ Context::Context() {
         setEnvVar("SPOCK_PKGDIR", pkgdir_.string());
     }
     SAWYER_MESG(mlog[DEBUG]) <<"package directory (SPOCK_PKGDIR): " <<pkgdir_ <<"\n";
-        
+
     // The VAR directory holds run-time information that was not installed along with Spock
     if (const char *s = getenv("SPOCK_VARDIR")) {
         vardir_ = s;
@@ -108,14 +108,24 @@ Context::Context() {
     }
     SAWYER_MESG(mlog[DEBUG]) <<"runtime directory (SPOCK_VARDIR): " <<vardir_ <<"\n";
 
-    // The OPT directory holds installed packages
+    // The SPOCK_HOSTNAME is the hostname to use in certain file names.
+    if (const char *s = getenv("SPOCK_HOSTNAME")) {
+        hostName_ = s;
+    } else {
+        char buf[256];
+        if (gethostname(buf, sizeof buf) == 0) {
+            hostName_ = buf;
+        } else {
+            hostName_ = "unknown";
+        }
+        setEnvVar("SPOCK_HOSTNAME", hostName_);
+    }
+
+    // The OPT directory holds installed packages, per host name
     if (const char *s = getenv("SPOCK_OPTDIR")) {
         optdir_ = s;
     } else {
-        optdir_ = vardir_ / "installed";
-        char buf[256];
-        if (gethostname(buf, sizeof buf) == 0)
-            optdir_ /= buf;
+        optdir_ = vardir_ / "installed" / hostName_;
         setEnvVar("SPOCK_OPTDIR", optdir_.string());
     }
     SAWYER_MESG(mlog[DEBUG]) <<"installed packages (SPOCK_OPTDIR): " <<optdir_ <<"\n";
@@ -127,7 +137,7 @@ Context::Context() {
         builddir_ = bfs::temp_directory_path();
         setEnvVar("SPOCK_BLDDIR", builddir_.string());
     }
-    
+
     // All packages installed by this version of Spock depend on this version of Spock. In order to
     // achieve that, we must first create a pseudo-package to represent spock.
     scanInstalledPackages();
@@ -249,6 +259,11 @@ Context::findOrCreateSelf() {
 
     ASSERT_require(currentSpock.size() == 1);
     return currentSpock[0];
+}
+
+std::string
+Context::hostName() const {
+    return hostName_;
 }
 
 bfs::path

@@ -4,10 +4,11 @@ arg0="${0##*/}"
 dir0="${0%/*}"
 
 # Portable wrapper around OS-specific version
-os_name="$(hostname --short)"
+[ "$SPOCK_HOSTNAME" = "" ] && SPOCK_HOSTNAME="$(hostname --short)"
+export SPOCK_HOSTNAME
 
 # Installed version
-[ -x "$dir0/$os_name/$arg0" ] && exec "$dir0/$os_name/$arg0" "$@"
+[ -x "$dir0/$SPOCK_HOSTNAME/$arg0" ] && exec "$dir0/$SPOCK_HOSTNAME/$arg0" "$@"
 
 # Is user asking us to install spock on this machine?
 if [ "$arg0" = "install-spock" ]; then
@@ -23,7 +24,7 @@ if [ "$arg0" = "install-spock" ]; then
 fi
 
 (
-    echo "$arg0: not installed on $os_name"
+    echo "$arg0: not installed on $SPOCK_HOSTNAME"
     echo "$arg0: install using these steps:"
     echo "$arg0:   \$ git clone https://github.com/matzke1/rmc-spock"
     echo "$arg0:   \$ (cd rmc-spock && ./scripts/bootstrap.sh)"

@@ -112,6 +112,9 @@ main(int argc, char *argv[]) {
 
     if (listShellVariables) {
         std::string expt = exportVars ? "export " : "";
+        std::cout <<expt <<"SPOCK_VERSION='" <<VERSION <<"'\n";
+        std::cout <<expt <<"SPOCK_SPEC='" <<ctx.spockItself()->toString() <<"'\n";
+        std::cout <<expt <<"SPOCK_HOSTNAME='" <<ctx.hostName() <<"'\n";
         std::cout <<expt <<"SPOCK_ROOT='" <<ctx.rootDirectory().string() <<"'\n";
         std::cout <<expt <<"SPOCK_BINDIR='" <<ctx.binDirectory().string() <<"'\n";
         std::cout <<expt <<"SPOCK_OPTDIR='" <<ctx.optDirectory().string() <<"'\n";
@@ -119,8 +122,6 @@ main(int argc, char *argv[]) {
         std::cout <<expt <<"SPOCK_VARDIR='" <<ctx.varDirectory().string() <<"'\n";
         std::cout <<expt <<"SPOCK_SCRIPTS='" <<ctx.scriptDirectory().string() <<"'\n";
         std::cout <<expt <<"SPOCK_BLDDIR='" <<ctx.buildDirectory().string() <<"'\n";
-        std::cout <<expt <<"SPOCK_VERSION='" <<VERSION <<"'\n";
-        std::cout <<expt <<"SPOCK_SPEC='" <<ctx.spockItself()->toString() <<"'\n";
         exit(0);
     }
     

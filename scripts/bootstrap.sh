@@ -73,8 +73,8 @@ if ! mkdir _build; then
     echo "$arg0: please delete your old '_build' directory first" >&2
     exit 1
 fi
-os_file_name=$(hostname --short)
-if [ -x "$prefix/$os_file_name/bin/spock" ]; then
+[ "$SPOCK_HOSTNAME" = "" ] && SPOCK_HOSTNAME=$(hostname --short)
+if [ -x "$prefix/$SPOCK_HOSTNAME/bin/spock" ]; then
     echo "$arg0: spock appears to be already installed in $prefix" >&2
     exit 1
 fi
@@ -136,7 +136,7 @@ ncpus=$(sed -n '/^processor[ \t]\+:/p' </proc/cpuinfo |wc -l)
 #-------------------- Boost --------------------
 : ${boost_url:=http://sourceforge.net/projects/boost/files/boost/1.62.0/boost_1_62_0.tar.bz2/download}
 boost_libs=chrono,date_time,filesystem,iostreams,program_options,random,regex,serialization,signals,system,thread,wave
-boost_root="$prefix/dependencies/$os_file_name/boost"
+boost_root="$prefix/dependencies/$SPOCK_HOSTNAME/boost"
 
 if [ ! -d "$boost_root" ]; then
     (
@@ -176,7 +176,7 @@ fi
 #-------------------- Yaml-cpp --------------------
 : ${yamlcpp_url:=https://github.com/jbeder/yaml-cpp}
 
-yamlcpp_root="$prefix/dependencies/$os_file_name/yamlcpp"
+yamlcpp_root="$prefix/dependencies/$SPOCK_HOSTNAME/yamlcpp"
 if [ ! -d "$yamlcpp_root" ]; then
     (
         set -ex
@@ -211,7 +211,7 @@ fi
 #-------------------- Sawyer --------------------
 : ${sawyer_url:=https://github.com/matzke1/sawyer}
 
-sawyer_root="$prefix/dependencies/$os_file_name/sawyer"
+sawyer_root="$prefix/dependencies/$SPOCK_HOSTNAME/sawyer"
 if [ ! -d "$sawyer_root" ]; then
     (
         set -ex
@@ -254,6 +254,7 @@ fi
           -DBOOST_ROOT="$boost_root" \
           -DSawyer_DIR="$sawyer_root/lib/cmake/Sawyer" \
           -DYamlCpp_ROOT="$yamlcpp_root" \
+	  -DHOSTNAME="$SPOCK_HOSTNAME" \
           -DCMAKE_INSTALL_PREFIX="$prefix"
 
     make -j$ncpus
@@ -262,10 +263,10 @@ fi
 
 #-------------------- Initial setup --------------------
 export SPOCK_ROOT="$prefix"
-"$SPOCK_ROOT/bin/$os_file_name/spock-ls" --shellvars || exit 1
-eval $($prefix/bin/$os_file_name/spock-ls --export --shellvars)
+"$SPOCK_ROOT/bin/$SPOCK_HOSTNAME/spock-ls" --shellvars || exit 1
+eval $($prefix/bin/$SPOCK_HOSTNAME/spock-ls --export --shellvars)
 "$SPOCK_SCRIPTS/spock-install-system-compilers"
-"$SPOCK_BINDIR/$os_file_name/spock-ls"
+"$SPOCK_BINDIR/$SPOCK_HOSTNAME/spock-ls"
 
 set +x
 

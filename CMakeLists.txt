@@ -40,10 +40,12 @@ endif()
 find_package(Sawyer 0.9.0 CONFIG REQUIRED)
 find_package(YamlCpp MODULE REQUIRED)
 
-execute_process(
-  COMMAND hostname --short
-  OUTPUT_VARIABLE os_file_name
-  OUTPUT_STRIP_TRAILING_WHITESPACE)
+if("${HOSTNAME}" STREQUAL "")
+  execute_process(
+    COMMAND hostname --short
+    OUTPUT_VARIABLE HOSTNAME
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+endif()
 
 set(lib_src
   src/Spock/Context.C
@@ -74,14 +76,14 @@ include_directories(
 # The executables in the build tree should have an RPATH that points
 # to the build tree, and when we install those exectables we need to
 # relink them to point to the library installation directory.
-set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib/${os_file_name}")
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib/${HOSTNAME}")
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) # Don't use install path in builddir
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE) # auto add stuff to install path
 
 # the RPATH to be used when installing, but only if it's not a system directory
-list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib/${os_file_name}" isSystemDir)
+list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib/${HOSTNAME}" isSystemDir)
 if("${isSystemDir}" STREQUAL "-1")
-   set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib/${os_file_name}")
+   set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib/${HOSTNAME}")
 endif()
 
 add_executable(spock-shell src/spock-shell.C)
@@ -108,8 +110,8 @@ target_link_libraries(spock-download spock)
 install(
   TARGETS
     spock spock-shell spock-ls spock-compiler spock-using spock-rm spock-download
-  RUNTIME DESTINATION bin/${os_file_name}
-  LIBRARY DESTINATION lib/${os_file_name}
+  RUNTIME DESTINATION bin/${HOSTNAME}
+  LIBRARY DESTINATION lib/${HOSTNAME}
   )
 
 # Portable wrappers around the binaries
