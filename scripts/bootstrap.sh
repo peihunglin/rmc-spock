@@ -165,7 +165,8 @@ if [ ! -d "$boost_root" ]; then
 	    *) boost_cxx_vendor="$cxx_vendor" ;;
 	esac
 
-        echo "using $boost_cxx_vendor : $cxx_version : $cxx_exe ;" >tools/build/src/user-config.jam
+        echo "using $boost_cxx_vendor : : $cxx_exe ;" >user-config.jam
+	export BOOST_BUILD_PATH="$(pwd)"
         ./bootstrap.sh --prefix="$boost_root" --with-libraries="$boost_libs" --with-toolset="$boost_cxx_vendor"
         ./b2 --prefix="$boost_root" -sNO_BZIP2=1 toolset="$boost_cxx_vendor" -j$ncpus
         ./b2 --prefix="$boost_root" -sNO_BZIP2=1 toolset="$boost_cxx_vendor" install
