@@ -626,7 +626,9 @@ DefinedPackage::install(Context &ctx, Settings &settings /*in,out*/) {
     extraVars.push_back("PACKAGE_ACTION=install");
     extraVars.push_back("PACKAGE_ROOT='" + pkgRoot.string() + "'");
     bfs::path script = createShellScript(settings, workingDir.path(),
-                                         "tar xf '" + tarball.string() + "'\n\n" + installCommands,
+                                         "tar xf '" + tarball.string() + "'\n\n" +
+                                         "spock-apply-patches $patches\n\n" +
+                                         installCommands,
                                          extraVars);
 
     // If we've previously attempted and failed to install this exact configuration, don't bother wasting time doing it again.

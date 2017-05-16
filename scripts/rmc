@@ -180,6 +180,8 @@ package_spec() {
     local pkgname= pkgspec=
     case "$function" in
 	rmc_compiler) pkgspec="$pkgvers"; pkgvers= ;;
+	rmc_dwarf) pkgname="libdwarf" ;;
+	rmc_elf) pkgname="libelf" ;;
 	rmc_magic) pkgname="libmagic" ;;
 	rmc_yaml) pkgname="yamlcpp" ;;
 	rmc_java) pkgname="oracle-java" ;;
@@ -239,6 +241,7 @@ read_config_file() {
     export RMC_DOXYGEN=none
     export RMC_DWARF=none
     export RMC_EDG=ambivalent
+    export RMC_ELF=none
     export RMC_JAVA=none
     export RMC_MAGIC=none
     export RMC_PYTHON=3
@@ -464,6 +467,11 @@ rmc_edg() {
     RMC_EDG="$1"
 }
 
+rmc_elf() {
+    check_one_arg rmc_elf "$@"
+    RMC_ELF="$1"
+}
+
 rmc_java() {
     check_one_arg rmc_java "$@"
     RMC_JAVA="$1"
@@ -567,6 +575,7 @@ if [ "$RMC_HASH" = "" ]; then
 	package_spec rmc_dlib     "$RMC_DLIB"
 	package_spec rmc_doxygen  "$RMC_DOXYGEN"
 	package_spec rmc_dwarf    "$RMC_DWARF"
+	package_spec rmc_elf      "$RMC_ELF"
 	package_spec rmc_java     "$RMC_JAVA"
 	package_spec rmc_magic    "$RMC_MAGIC"
 	package_spec rmc_python   "$RMC_PYTHON"
@@ -590,7 +599,7 @@ if [ "$RMC_HASH" = "" ]; then
 	    preinstall || exit 1
 	fi
     fi
-    
+
     # Attempt to resolve the dependency constraints and cache the results for later.
     if ! "$SPOCK_BINDIR/spock-shell" --with-file "$depfile" --output "$blddir/.spock" \
 	 $do_install $do_graph --log="$do_debug" true; then
@@ -598,7 +607,7 @@ if [ "$RMC_HASH" = "" ]; then
 	exit 1
     fi
     rm -rf "$depfile"
-    
+
 elif [ "$RMC_HASH" != "$config_sum" ]; then
     # We must already be in a subshell, so check that the user didn't modify the config file
     die "$blddir/.rmc-main.cfg changed; you must exit this shell and rerun rmc"

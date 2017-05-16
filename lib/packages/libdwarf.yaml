@@ -1,0 +1,44 @@
+package: libdwarf
+
+# Versions before 2016.06.13 are unable to use the correct libelf because
+# the makefile ignores CPPFLAGS and LDFLAGS values given to the configure script.
+# Version 2016.05.07 is the first version to use the ".1" in libdwarf.so.1
+versions: [ 2016.06.13, 2016.10.01, 2016.10.21, 2016.11.24, 2017.04.16 ]
+
+dependencies:
+  - version: ">=2016.06.13"
+    aliases: []
+    install: [ c-compiler, "libelf<=0.164" ]
+    build: []
+
+  - version: ">=2017.04.16"
+    aliases: []
+    install: [ c-compiler, libelf ]
+    build: []
+
+download:
+  - version: ">=2016.06.13"
+    shell: |
+      version_no_dots=$(echo $PACKAGE_VERSION |tr -d .)
+      wget -O - https://www.prevanders.net/libdwarf-$version_no_dots.tar.gz |tar xzf -
+      mv dwarf-$version_no_dots download
+      tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=2010"
+    shell: |
+      cc --spock-triplet
+
+      cd download/libdwarf
+
+      CC=cc CPPFLAGS="-I. $(spock-compiler-incdirs)" LDFLAGS="$(spock-compiler-libdirs)" \
+        ./configure --enable-shared --disable-nonshared --prefix="$PACKAGE_ROOT"
+
+      make -j$PARALLELISM
+
+      # Upstream does not provide a useful "install" target, so do it the hard way.
+      mkdir -p "$PACKAGE_ROOT/lib"
+      cp libdwarf.so.1 "$PACKAGE_ROOT/lib/."
+      (cd "$PACKAGE_ROOT/lib" && ln -s libdwarf.so.1 libdwarf.so)
+      mkdir -p "$PACKAGE_ROOT/include"
+      cp dwarf.h libdwarf.h "$PACKAGE_ROOT/include/."

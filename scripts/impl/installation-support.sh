@@ -23,6 +23,19 @@ spock-compiler-incdirs() {
     fi
 }
 
+# Apply patches. The patch names, like "foo" are used to construct a file name
+# that's distributed with Spock and installed in the same place as the package
+# definitions.  E.g., "foo" becomes $SPOCK_PKGDIR/boost-foo.diff when compiling
+# boost.
+spock-apply-patches() {
+    local patch_names="$1"
+    local patch_name
+    for patch_name in $patch_names; do
+	patch_name="${SPOCK_PKGDIR}/${PACKAGE_NAME}-$patch_name.diff"
+	patch --directory=download -p1 <"$patch_name" || return 1
+    done
+}
+
 ################################################################################
 # Functions to set up the YAML "environment" section of the installed.yaml file.
 if [ "$PACKAGE_ACTION" = "install" ]; then

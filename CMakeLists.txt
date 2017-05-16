@@ -168,7 +168,7 @@ install(
 )
 
 # Package descriptions
-file(GLOB package_files "${CMAKE_CURRENT_SOURCE_DIR}/lib/packages/*.yaml")
+file(GLOB package_files "${CMAKE_CURRENT_SOURCE_DIR}/lib/packages/*.yaml" "${CMAKE_CURRENT_SOURCE_DIR}/lib/packages/*.diff")
 install(
   FILES ${package_files}
   DESTINATION lib/packages

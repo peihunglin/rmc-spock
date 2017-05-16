@@ -363,10 +363,12 @@ Solver::appendConstraint(const Constraints &constraints, const Package::Ptr &pkg
             } else {
                 ASSERT_require(versions.isEmpty());
                 std::string failure = "for package " + pkg->name() + ", version sets {";
-                BOOST_FOREACH (const VersionNumber &v, pkg->versions().values())
+                VersionNumbers vns = pkg->versions();
+                BOOST_FOREACH (const VersionNumber &v, vns.values())
                     failure += " " + v.toString();
                 failure += " } and {";
-                BOOST_FOREACH (const VersionNumber &v, constraint->versions().values())
+                vns = constraint->versions();
+                BOOST_FOREACH (const VersionNumber &v, vns.values())
                     failure += " " + v.toString();
                 failure += " } are disjoint";
                 insertMessage(failure);
