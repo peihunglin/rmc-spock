@@ -239,7 +239,7 @@ spock-compiler-install-program() {
     [ "$exe" = "" ] && return 1
 
     # Do not install if this is a spock-installed compiler already
-    if "$exe" --spock-triplet 2>/dev/null; then
+    if "$exe" --spock-triplet </dev/null 2>/dev/null; then
 	echo "$arg0: refusing to install an already-installed compiler: $exe" >&2
 	return 1
     fi

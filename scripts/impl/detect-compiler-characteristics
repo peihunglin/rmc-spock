@@ -127,13 +127,13 @@ EOF
 compiler_lang=
 
 if [ "$compiler_baselang" = "" -o "$compiler_baselang" = "c++" ]; then
-    "$compiler_exe" $compiler_flags -o "$conftest" "$input_cxx" >/dev/null 2>&1 && compiler_lang=$("$conftest")
+    "$compiler_exe" $compiler_flags -o "$conftest" "$input_cxx" </dev/null >/dev/null 2>&1 && compiler_lang=$("$conftest")
     [ "$compiler_lang" = "" ] || compiler_baselang=c++
 fi
 
 if [ "$compiler_lang" = "" ]; then
     if [ "$compiler_baselang" = "" -o "$compiler_baselang" = "fortran" ]; then
-	"$compiler_exe" $compiler_flags -o "$conftest" "$input_f" >/dev/null 2>&1 && compiler_lang=$("$conftest")
+	"$compiler_exe" $compiler_flags -o "$conftest" "$input_f" </dev/null >/dev/null 2>&1 && compiler_lang=$("$conftest")
 	compiler_lang="${compiler_lang# *}"
 	[ "$compiler_lang" = "" ] || compiler_baselang=fortran
     fi
@@ -141,7 +141,7 @@ fi
   
 if [ "$compiler_lang" = "" ]; then
     if [ "$compiler_baselang" = "" -o "$compiler_baselang" = "c" ]; then
-	"$compiler_exe" $compiler_flags -o "$conftest" "$input_c" >/dev/null 2>&1 && compiler_lang=$("$conftest")
+	"$compiler_exe" $compiler_flags -o "$conftest" "$input_c" </dev/null >/dev/null 2>&1 && compiler_lang=$("$conftest")
 	[ "$compiler_lang" = "" ] || compiler_baselang=c
     fi
 fi
