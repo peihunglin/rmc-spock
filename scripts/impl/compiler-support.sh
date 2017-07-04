@@ -123,7 +123,7 @@ spock-compiler-install() {
 	fortran) compiler_cmd=fc  ;;
 	*)       die "baselang $compiler_baselang not supported yet (spock-compiler-install)"
     esac
-    
+
     # Create the package YAML file that describes how to use this compiler.
     (
 	echo "package:  '$compiler_vendor-$compiler_lang'"
@@ -237,6 +237,12 @@ spock-compiler-conditional-install-collection() {
 spock-compiler-install-program() {
     local collection="$1" compiler_baselang="$2" exe=$(which "$3")
     [ "$exe" = "" ] && return 1
+
+    # Avoid running ccache wrappers
+    if [ "${cmd/ccache/}" != "$cmd" ]; then
+	echo "$arg0: refusing to install ccache-managed compiler $exe" >&2
+	return 1
+    fi
 
     # Do not install if this is a spock-installed compiler already
     if "$exe" --spock-triplet </dev/null 2>/dev/null; then
