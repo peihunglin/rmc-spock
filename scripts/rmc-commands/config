@@ -5,6 +5,31 @@ arg0="rmc ${0##*/}"
 
 source "$SPOCK_SCRIPTS/impl/basic-support.sh" || exit 1
 
+show_help_and_exit() {
+    #     --------------------------------------------------------------------------------
+    echo "Usage:   $arg0 [SWITCHES]"
+    echo
+    echo "Purpose: Runs whatever configuration commands are necessary in order to"
+    echo "         configure ROSE for building.  This is optionally ROSE's 'build'"
+    echo "         command followed by either 'configure' or 'cmake'. The commands"
+    echo "         are always run in the appropriate directory regardless of your"
+    echo "         current working directory."
+    echo
+    echo "Switches:"
+    echo "         --dry-run | -n"
+    echo "                 Show what commands would be run without running them."
+    echo "         --build | -b"
+    echo "                 Run the 'build' script in the source tree. This is a"
+    echo "                 shell script that runs tools such as automake if you"
+    echo "                 need to regenerate the Makefile.in files (and some"
+    echo "                 others) in the source tree."
+    echo
+    echo "         All other configuration comes from the .rmc-main.cfg file"
+    echo "         located at the top of the build tree."
+    echo
+    exit 0
+}
+
 # General compiler flags
 cc_flags() {
     echo "-fPIC"
@@ -295,10 +320,13 @@ cmake_command() {
 
 # Command-line args
 dry_run=
+run_build_script=
 while [ "$#" -gt 0 ]; do
     case "$1" in
 	--) shift; break ;;
+	-h|--help) show_help_and_exit; shift ;;
 	-n|--dry-run) dry_run=yes; shift ;;
+	-b|--build) run_build_script=yes; shift ;;
 	*) echo "$0: unknown switch: $1" >&2; exit 1 ;;
     esac
 done
@@ -309,14 +337,19 @@ code_coverage_flags >/dev/null
 # Write the configure command to a temporary file before running it. This seems to be the best way to get the quoting
 # correct at the same time as providing a way to handle the --dry-run switch.
 script=$(tempfile)
-trap "rm -f $script" EXIT
+echo "# configuration commands" >"$script"
+trap "rm -f '$script'" EXIT
+
+if [ -n "$run_build_script" ]; then
+    echo "(cd $RG_BLD && ./build) || exit 1" >>"$script"
+fi
 
 case "$RMC_BUILD" in
     autoconf)
-	autoconf_command >"$script"
+	autoconf_command >>"$script"
 	;;
     cmake)
-	cmake_command >"$script"
+	cmake_command >>"$script"
 	;;
     *)
 	die "unknown build system: $RMC_BUILD"

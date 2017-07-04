@@ -1,0 +1,35 @@
+package:        libgpg-error
+versions:       [ 1.27 ]
+
+dependencies:
+  - version: ">=1.27"
+    aliases: []
+    install: [ c-compiler ]
+    build:   []
+
+download:
+  - version: ">=1.27"
+    shell: |
+        wget -O - h https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-$PACKAGE_VERSION.tar.bz2 |tar xjf -
+        mv libgpg-error-$PACKAGE_VERSION download
+        tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=1.27"
+    shell: |
+      cc --spock-triplet
+
+      cd download
+
+      env \
+        CC=cc \
+        LDFLAGS="$(spock-compiler-libdirs)" \
+        CPPFLAGS="$(spock-compiler-incdirs)" \
+        ./configure \
+        --prefix=$PACKAGE_ROOT \
+        --disable-languages
+
+      make -j$PARALLELISM
+      make -j$PARALLELISM check
+
+      make install

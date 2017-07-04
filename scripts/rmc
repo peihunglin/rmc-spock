@@ -3,7 +3,7 @@
 # Spock's implementation of the ROSE Meta Config (RMC).
 
 # Additional documentation, tutorial, and examples are at
-# [https://rosecompiler.atlassian.net/wiki/display/~matzke/ROSE+Meta+Config+version+2]. If that link doesn't work, got
+# [https://rosecompiler.atlassian.net/wiki/display/~matzke/ROSE+Meta+Config+version+2]. If that link doesn't work, gocd
 # to the ROSE Confluence application and search for "ROSE Meta Config version 2".
 
 arg0="${0##*/}"
@@ -182,6 +182,7 @@ package_spec() {
 	rmc_compiler) pkgspec="$pkgvers"; pkgvers= ;;
 	rmc_dwarf) pkgname="libdwarf" ;;
 	rmc_elf) pkgname="libelf" ;;
+	rmc_gcrypt) pkgname="libgcrypt" ;;
 	rmc_magic) pkgname="libmagic" ;;
 	rmc_yaml) pkgname="yamlcpp" ;;
 	rmc_java) pkgname="oracle-java" ;;
@@ -242,6 +243,7 @@ read_config_file() {
     export RMC_DWARF=none
     export RMC_EDG=ambivalent
     export RMC_ELF=none
+    export RMC_GCRYPT=none
     export RMC_JAVA=none
     export RMC_MAGIC=none
     export RMC_PYTHON=3
@@ -472,6 +474,11 @@ rmc_elf() {
     RMC_ELF="$1"
 }
 
+rmc_gcrypt() {
+    check_one_arg rmc_gcrypt "$@"
+    RMC_GCRYPT="$1"
+}
+
 rmc_java() {
     check_one_arg rmc_java "$@"
     RMC_JAVA="$1"
@@ -576,6 +583,7 @@ if [ "$RMC_HASH" = "" ]; then
 	package_spec rmc_doxygen  "$RMC_DOXYGEN"
 	package_spec rmc_dwarf    "$RMC_DWARF"
 	package_spec rmc_elf      "$RMC_ELF"
+	package_spec rmc_gcrypt   "$RMC_GCRYPT"
 	package_spec rmc_java     "$RMC_JAVA"
 	package_spec rmc_magic    "$RMC_MAGIC"
 	package_spec rmc_python   "$RMC_PYTHON"
