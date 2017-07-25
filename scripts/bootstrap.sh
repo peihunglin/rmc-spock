@@ -263,6 +263,10 @@ fi
 )
 
 #-------------------- Initial setup --------------------
+# make sure our own lib dirs are at the front in case the user has set this. Ideally, it shouldn't
+# be necessary to set LD_LIBRARY_PATH at all, but unfortunately it is required in some situations.
+export LD_LIBRARY_PATH="$boost_root/lib:$yamlcpp_root/lib:$sawyer_root/lib:$LD_LIBRARY_PATH"
+
 export SPOCK_ROOT="$prefix"
 "$SPOCK_ROOT/bin/$SPOCK_HOSTNAME/spock-ls" --shellvars || exit 1
 eval $($prefix/bin/$SPOCK_HOSTNAME/spock-ls --export --shellvars)
