@@ -35,9 +35,11 @@ dependencies:
 variables:
   - version: ">=3.3.3"
     download_url: "http://prdownloads.sourceforge.net/witty/wt-$PACKAGE_VERSION.tar.gz?download"
+    patches: rpaths
 
   - version: ">=3.3.4"
     download_url: "https://github.com/kdeforche/wt/archive/$PACKAGE_VERSION.tar.gz"
+    patches: rpaths
 
 download:
   - version: ">=3.3.3"
