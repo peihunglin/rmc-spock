@@ -30,6 +30,7 @@ Sawyer::Message::Facility mlog;
 enum AutoAnswer { ASSUME_NO=0, ASK_USER, ASSUME_YES };
 
 struct Settings {
+    boost::filesystem::path changeCwd;                      // change to this directory before doing anything
     std::vector<std::string> pkgPatterns;                   // package patterns we should use in the subshell
     std::vector<boost::filesystem::path> pkgSelectionFiles; // file containing more package name patterns
     boost::filesystem::path outputFile;                     // write selected packages to this file
@@ -49,6 +50,10 @@ parseCommandLine(int argc, char *argv[], Settings &settings) {
     p.doc("Synopsis", "@prop{programName} [@v{switches}] [--] [@v{command}...]");
 
     SwitchGroup tool("Tool-specific switches");
+
+    tool.insert(Switch("", 'C')
+                .argument("directory", anyParser(settings.changeCwd))
+                .doc("Change to the specified working directory before doing anything."));
 
     tool.insert(Switch("with", 'w')
                 .argument("package", listParser(anyParser(settings.pkgPatterns)))
@@ -176,6 +181,11 @@ main(int argc, char *argv[]) {
     Settings settings;
     std::vector<std::string> command = parseCommandLine(argc, argv, settings);
     boost::regex whitespace("\\s+");
+
+    if (!settings.changeCwd.empty() && chdir(settings.changeCwd.native().c_str()) == -1) {
+        mlog[FATAL] <<"cannot change directories to " <<settings.changeCwd <<": " <<strerror(errno) <<"\n";
+        exit(1);
+    }
 
     try {
         Spock::Context ctx;
