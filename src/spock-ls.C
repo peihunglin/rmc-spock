@@ -5,8 +5,10 @@ static const char *description =
 
 #include <Spock/Context.h>
 #include <Spock/Exception.h>
+#include <Spock/InstalledPackage.h>
 #include <Spock/Package.h>
 #include <Spock/PackagePattern.h>
+#include <boost/date_time/posix_time/time_formatters.hpp>
 
 using namespace Spock;
 using namespace Sawyer::Message::Common;
@@ -19,6 +21,7 @@ bool listShellVariables = false;                        // list shell variable s
 bool exportVars = false;                                // if listShellVariables, prefix them each with "export "
 bool showDeps = true;                                   // show direct dependencies?
 bool showComments = false;                              // adds comments in parentheses
+bool showUsedTime = false;                              // show time of last use
 bool findingGhosts = false;                             // find installable packages rather than installed packages?
 boost::filesystem::path showGraph;                      // generate a dependency graph
 
@@ -55,6 +58,10 @@ parseCommandLine(int argc, char *argv[]) {
     p.with(Switch("graph")
            .argument("file", anyParser(showGraph))
            .doc("Generate a GraphViz dependency graph and save it in the specified @v{file}."));
+
+    p.with(Switch("used")
+           .intrinsicValue(true, showUsedTime)
+           .doc("Sort installed packages by the time they were last used by spock-shell, and emit this time in the listing."));
     
     return p.parse(argc, argv).apply().unreachedArgs();
 }
@@ -67,6 +74,19 @@ sortByName(const Package::Ptr &a, const Package::Ptr &b) {
 bool
 sameName(const Package::Ptr &a, const Package::Ptr &b) {
     return a->toString() == b->toString();
+}
+
+bool
+sortByLastUsed(const Package::Ptr &a, const Package::Ptr &b) {
+    if (a->isInstalled() && b->isInstalled()) {
+        boost::posix_time::ptime aLastUse = asInstalled(a)->usedTimeStamp();
+        boost::posix_time::ptime bLastUse = asInstalled(b)->usedTimeStamp();
+        return aLastUse < bLastUse;
+    } else if (a->isInstalled() != b->isInstalled()) {
+        return a->isInstalled();
+    } else {
+        return false;
+    }
 }
 
 Packages
@@ -134,6 +154,9 @@ main(int argc, char *argv[]) {
             gv <<ctx.toGraphViz(ctx.dependencyLattice(packages));
         }
 
+        if (showUsedTime)
+            std::sort(packages.begin(), packages.end(), sortByLastUsed);
+
         BOOST_FOREACH (const Package::Ptr &pkg, packages) {
             std::cout <<pkg->toString();
             if (showComments) {
@@ -151,6 +174,9 @@ main(int argc, char *argv[]) {
                     std::cout <<")";
                 }
             }
+
+            if (showUsedTime && pkg->isInstalled())
+                std::cout <<" " <<boost::posix_time::to_simple_string(asInstalled(pkg)->usedTimeStamp());
             
             if (showDeps) {
                 BOOST_FOREACH (const PackagePattern &deppat, pkg->dependencyPatterns())

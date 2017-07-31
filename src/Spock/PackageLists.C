@@ -40,7 +40,7 @@ PackageLists::isAnyListEmpty() const {
 }
 
 // Sort alphabetically by package name, and then by descending version number, then by installed before not-installed, then
-// descending timestamp.
+// descending installation timestamp.
 bool
 sortByNameVersion(const Package::Ptr &a, const Package::Ptr &b) {
     if (a->isInstalled() != b->isInstalled())
@@ -52,8 +52,8 @@ sortByNameVersion(const Package::Ptr &a, const Package::Ptr &b) {
     if (a->isInstalled()) {
         InstalledPackage::Ptr ai = asInstalled(a);
         InstalledPackage::Ptr bi = asInstalled(b);
-        if (ai->timestamp() != bi->timestamp())
-            return bi->timestamp() < ai->timestamp();   // descending timestamps for installed packages
+        if (ai->installedTimeStamp() != bi->installedTimeStamp())
+            return bi->installedTimeStamp() < ai->installedTimeStamp(); // descending timestamps for installed packages
     }
     return a->hash() < b->hash();                       // ascending hash if present
 }

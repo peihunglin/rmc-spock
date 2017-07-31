@@ -9,6 +9,7 @@ static const char *description =
 #include <Spock/DefinedPackage.h>
 #include <Spock/Exception.h>
 #include <Spock/GhostPackage.h>
+#include <Spock/InstalledPackage.h>
 #include <Spock/Package.h>
 #include <Spock/PackagePattern.h>
 #include <Spock/Solver.h>
@@ -301,6 +302,10 @@ main(int argc, char *argv[]) {
                 file <<pkg->toString() <<"\n";
         }
 
+        // Touch timestamps for the installed package cache
+        BOOST_FOREACH (const Package::Ptr &pkg, soln)
+            asInstalled(pkg)->stampUsedTime(ctx);
+        
         // Run command in subshell
         if (settings.showingWelcomeMessage) {
             std::cout <<"\n"

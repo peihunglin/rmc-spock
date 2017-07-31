@@ -5,6 +5,7 @@
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/date_time/posix_time/conversion.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
@@ -123,7 +124,12 @@ InstalledPackage::instance(const Context &ctx, const std::string &hash, const bo
     if (!config["timestamp"] || config["timestamp"].Type() != YAML::NodeType::Scalar)
         throw Exception::SyntaxError("missing timestamp in file " + configFile.string());
     boost::posix_time::ptime timestamp = boost::posix_time::time_from_string(config["timestamp"].as<std::string>());
-    self->timestamp(timestamp);
+    self->installedTimeStamp(timestamp);
+
+    // If a *.used file exists, its modification time is the last time that spock-shell used this installed package.
+    bfs::path timeStampFile = self->usedTimeStampFile(ctx);
+    boost::system::error_code ec;
+    self->usedTimeStamp_ = boost::posix_time::from_time_t(bfs::last_write_time(timeStampFile, ec /*out*/));
 
     return Ptr(self);
 }
@@ -148,8 +154,29 @@ InstalledPackage::flags(const std::vector<GlobalFlag::Ptr> &fv) {
 }
 
 void
-InstalledPackage::timestamp(const boost::posix_time::ptime &ts) {
-    timestamp_ = ts;
+InstalledPackage::installedTimeStamp(const boost::posix_time::ptime &ts) {
+    installedTimeStamp_ = ts;
+}
+
+bfs::path
+InstalledPackage::usedTimeStampFile(const Context &ctx) const {
+    return ctx.optDirectory() / (hash() + ".used");
+}
+
+void
+InstalledPackage::usedTimeStamp(const Context &ctx, const boost::posix_time::ptime &ts) {
+    stampUsedTime(ctx);
+    bfs::path fileName = usedTimeStampFile(ctx);
+    std::time_t unixTime = boost::posix_time::to_time_t(usedTimeStamp_);
+    bfs::last_write_time(fileName, unixTime);
+    usedTimeStamp_ = boost::posix_time::from_time_t(bfs::last_write_time(fileName)); // possible filesystem limitation
+}
+
+void
+InstalledPackage::stampUsedTime(const Context &ctx) {
+    bfs::path fileName = usedTimeStampFile(ctx);
+    std::ofstream f(fileName.string().c_str());         // creates file and/or updates modification time
+    usedTimeStamp_ = boost::posix_time::from_time_t(bfs::last_write_time(fileName));
 }
 
 void

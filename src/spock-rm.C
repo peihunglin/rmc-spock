@@ -18,6 +18,7 @@ namespace {
 Sawyer::Message::Facility mlog;
 bool dryRun = false;
 bool useForce = false;
+size_t staleDays = 0;
 
 std::vector<std::string>
 parseCommandLine(int argc, char *argv[]) {
@@ -32,6 +33,13 @@ parseCommandLine(int argc, char *argv[]) {
     p.with(Switch("force", 'f')
            .intrinsicValue(true, useForce)
            .doc("Forcibly do the operation."));
+
+    p.with(Switch("stale")
+           .argument("days", nonNegativeIntegerParser(staleDays))
+           .doc("Select packages that have not been used for at least the specified number of days.  Note that "
+                "this looks only at the time at which the last spock-shell command to use the package was started, and "
+                "that for long-running spock-shell commands the package might still be in use.  The default is to not "
+                "consider time-of-use when generating the list of packages."));
     
     return p.parse(argc, argv).apply().unreachedArgs();
 }
@@ -45,6 +53,27 @@ bool
 sameName(const Package::Ptr &a, const Package::Ptr &b) {
     return a->toString() == b->toString();
 }
+
+bool
+sortByLastUsed(const Package::Ptr &a, const Package::Ptr &b) {
+    boost::posix_time::ptime aLastUse = asInstalled(a)->usedTimeStamp();
+    boost::posix_time::ptime bLastUse = asInstalled(b)->usedTimeStamp();
+    return aLastUse < bLastUse;
+}
+
+class IsYoungerThan {
+    boost::posix_time::time_duration threshold;
+    boost::posix_time::ptime now;
+public:
+    IsYoungerThan(time_t nSeconds)
+        : threshold(0, 0, nSeconds, 0) {
+        now = boost::posix_time::from_time_t(time(NULL));
+    }
+
+    bool operator()(const Package::Ptr &pkg) {
+        return now - asInstalled(pkg)->usedTimeStamp() < threshold;
+    }
+};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 } // namespace
@@ -76,6 +105,10 @@ main(int argc, char *argv[]) {
         }
         std::sort(packages.begin(), packages.end(), sortByName);
         packages.erase(std::unique(packages.begin(), packages.end(), sameName), packages.end());
+
+        // Remove from the list packages that have been used recently.
+        if (staleDays > 0)
+            packages.erase(std::remove_if(packages.begin(), packages.end(), IsYoungerThan(staleDays*86400)), packages.end());
 
         // Dependency lattice containing all installed packages
         Context::Lattice lattice = ctx.dependencyLattice(ctx.findInstalled(PackagePattern()));
