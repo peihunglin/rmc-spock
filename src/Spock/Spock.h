@@ -15,6 +15,8 @@
 namespace Spock {
 
 extern const char *VERSION;
+extern bool globalVerbose;
+extern bool globalKeepTempFiles;
 
 /** Secondary package names. */
 typedef Sawyer::Container::Set<std::string> Aliases;

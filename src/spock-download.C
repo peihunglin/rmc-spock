@@ -15,6 +15,7 @@ using namespace Sawyer::Message::Common;
 namespace {
 
 Sawyer::Message::Facility mlog;
+bool verbose = false;
 
 std::vector<std::string>
 parseCommandLine(int argc, char *argv[]) {
@@ -49,6 +50,8 @@ main(int argc, char *argv[]) {
                     BOOST_FOREACH (const VersionNumber &version, versions.values()) {
                         DefinedPackage::Settings dfSettings;
                         dfSettings.version = version;
+                        dfSettings.quiet = !globalVerbose;
+                        dfSettings.keepTempFiles = globalKeepTempFiles;
                         std::cout <<asGhost(package)->definition()->download(ctx, dfSettings).string() <<"\n";
                     }
                 }

@@ -54,13 +54,6 @@ sameName(const Package::Ptr &a, const Package::Ptr &b) {
     return a->toString() == b->toString();
 }
 
-bool
-sortByLastUsed(const Package::Ptr &a, const Package::Ptr &b) {
-    boost::posix_time::ptime aLastUse = asInstalled(a)->usedTimeStamp();
-    boost::posix_time::ptime bLastUse = asInstalled(b)->usedTimeStamp();
-    return aLastUse < bLastUse;
-}
-
 class IsYoungerThan {
     boost::posix_time::time_duration threshold;
     boost::posix_time::ptime now;
