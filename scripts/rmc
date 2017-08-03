@@ -184,6 +184,7 @@ package_spec() {
 	rmc_elf) pkgname="libelf" ;;
 	rmc_gcrypt) pkgname="libgcrypt" ;;
 	rmc_magic) pkgname="libmagic" ;;
+	rmc_pqxx) pkgname="libpqxx" ;;
 	rmc_yaml) pkgname="yamlcpp" ;;
 	rmc_java) pkgname="oracle-java" ;;
 	rmc_*) pkgname="${function#rmc_}" ;;
@@ -248,6 +249,7 @@ read_config_file() {
     export RMC_GCRYPT=none
     export RMC_JAVA=none
     export RMC_MAGIC=none
+    export RMC_PQXX=none
     export RMC_PYTHON=3
     export RMC_QT=none
     export RMC_READLINE=none
@@ -496,6 +498,11 @@ rmc_magic() {
     RMC_MAGIC="$1"
 }
 
+rmc_pqxx() {
+    check_one_arg rmc_pqxx "$@"
+    RMC_PQXX="$1"
+}
+
 rmc_python() {
     check_one_arg rmc_python "$@"
     RMC_PYTHON="$1"
@@ -594,6 +601,7 @@ if [ "$RMC_HASH" = "" ]; then
 	package_spec rmc_gcrypt   "$RMC_GCRYPT"
 	package_spec rmc_java     "$RMC_JAVA"
 	package_spec rmc_magic    "$RMC_MAGIC"
+	package_spec rmc_pqxx     "$RMC_PQXX"
 	package_spec rmc_python   "$RMC_PYTHON"
 	package_spec rmc_qt       "$RMC_QT"
 	package_spec rmc_readline "$RMC_READLINE"

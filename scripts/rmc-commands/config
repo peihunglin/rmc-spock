@@ -83,14 +83,31 @@ cmake_optimize_flags() {
 autoconf_warning_flags() {
     local switch="$1"
     case "$RMC_WARNINGS" in
-	yes) echo -n " $switch='-Wall -Wno-unused-local-typedefs -Wno-attributes'" ;;
+	yes)
+	    echo -n " $switch='-Wall"
+	    echo -n " -Wno-unused-local-typedefs" # common warning from boost
+	    echo -n " -Wno-attributes"
+	    echo -n " -Wno-deprecated-declarations" # common warning from dlib using std::auto_ptr
+	    echo -n " -Wno-terminate" # common warning from dlib throwing an exception in destructors
+	    echo -n " -Wno-misleading-indentation" # common warning from ROSE generated header files
+	    echo -n " -Wno-nonnull-compare" # because ROSE has lots of "assert(this)"
+	    echo -n "'"
+	    ;;
 	no|ambivalent) : nothing ;;
     esac
 }
 
 cmake_warning_flags() {
     case "$RMC_WARNINGS" in
-	yes) echo -n "-Wall -Wno-unused-local-typedefs -Wno-attributes" ;;
+	yes)
+	    echo -n "-Wall"
+	    echo -n " -Wno-unused-local-typedefs" # common warning from boost
+	    echo -n " -Wno-attributes"
+	    echo -n " -Wno-deprecated-declarations" # common warning from dlib using std::auto_ptr
+	    echo -n " -Wno-terminate" # common warning from dlib throwing an exception in destructors
+	    echo -n " -Wno-misleading-indentation" # common warning from ROSE generated header files
+	    echo -n " -Wno-nonnull-compare" # because ROSE has lots of "assert(this)"
+	    ;;
 	no|ambivalent) : nothing ;;
     esac
 }
@@ -261,6 +278,7 @@ autoconf_command() {
     autoconf_optional_with libreadline "$RMC_READLINE" "$LIBREADLINE_ROOT"
     autoconf_optional_with magic "$RMC_MAGIC" "$LIBMAGIC_ROOT"
     echo -n " --with-pch=no"
+    autoconf_optional_with pqxx "$RMC_PQXX" "$LIBPQXX_ROOT"
     autoconf_optional_with python "$RMC_PYTHON" "$(which python)"
     autoconf_optional_with sqlite3 "$RMC_SQLITE" "$SQLITE_ROOT"
     autoconf_optional_with wt "$RMC_WT" "$WT_ROOT"
@@ -279,7 +297,7 @@ cmake_command() {
     cmake_error_if_specified gcrypt   "$RMC_GCRYPT"   "$LIBGCRYPT_ROOT"
     cmake_error_if_specified java     "$RMC_JAVA"     "$JAVA_COMPILER"
     cmake_error_if_specified magic    "$RMC_MAGIC"    "$LIBMAGIC_ROOT"
-    cmake_error_if_specified python   "$RMC_PYTHON"   "$(which python)"
+    cmake_error_if_specified pqxx     "$RMC_PQXX"     "$LIBPQXX_ROOT"
     cmake_error_if_specified readline "$RMC_READLINE" "$LIBREADLINE_ROOT"
     cmake_error_if_specified sqlite   "$RMC_SQLITE"   "$SQLITE_ROOT"
     cmake_error_if_specified wt       "$RMC_WT"       "$WT_ROOT"
@@ -301,6 +319,9 @@ cmake_command() {
     cmake_optional ASSERTION_BEHAVIOR "$RMC_ASSERTIONS"
     cmake_optional EDG_VERSION "$RMC_EDG"
     cmake_optional enable-yices "$RMC_YICES" "$YICES_ROOT"
+
+    [ -n "$PYTHON_INCDIRS" ] && echo -n " -DPYTHON_INCLUDE_DIRS='$PYTHON_INCDIRS'"
+    [ -n "$PYTHON_LIBDIRS" ] && echo -n " -DPYTHON_LIBRARIES='$PYTHON_LIBDIRS'"
 
     # Most user systems don't have cuda, so this should be the default
     echo -n " -Denable-cuda=OFF"

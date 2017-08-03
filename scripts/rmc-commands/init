@@ -138,6 +138,7 @@ config_property() {
     config_property rmc_gcrypt        "${GCRYPT:-1.7}"                   "GNU gcrypt library version number (optional)"
     config_property rmc_java          "${JAVA:-8}"                       "Oracle JDK version number (optional)"
     config_property rmc_magic         "${MAGIC:-none}"                   "libmagic version number (optional)"
+    config_property rmc_pqxx          "${PQXX:-none}"                    "PostgreSQL C++ library (optional)"
     config_property rmc_python        "${PYTHON:-3}"                     "Python version number (required)"
     config_property rmc_qt            "${QT:-none}"                      "Qt version number (optional)"
     config_property rmc_readline      "${READLINE:-none}"                "libreadline version number (optional)"
