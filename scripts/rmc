@@ -236,6 +236,8 @@ read_config_file() {
     export RMC_WARNINGS=ambivalent
     export RMC_CODE_COVERAGE=ambivalent
     export RMC_ASSERTIONS=ambivalent
+
+    export RMC_BINWALK=none
     export RMC_BOOST=
     export RMC_CMAKE=3
     export RMC_DLIB=none
@@ -439,6 +441,11 @@ rmc_assertions() {
     RMC_ASSERTIONS="$1"
 }
 
+rmc_binwalk() {
+    check_one_arg rmc_binwalk "$@"
+    RMC_BINWALK="$1"
+}
+
 rmc_boost() {
     check_one_arg rmc_boost "$@"
     RMC_BOOST="$1"
@@ -577,6 +584,7 @@ if [ "$RMC_HASH" = "" ]; then
     (
 	package_spec rmc_compiler "$RMC_CXX_COMPILER"
 	package_spec rmc_compiler "$RMC_C_COMPILER"
+	package_spec rmc_binwalk  "$RMC_BINWALK"
 	package_spec rmc_boost    "$RMC_BOOST"
 	package_spec rmc_cmake    "$RMC_CMAKE"
 	package_spec rmc_dlib     "$RMC_DLIB"

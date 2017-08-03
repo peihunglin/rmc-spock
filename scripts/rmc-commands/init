@@ -127,6 +127,7 @@ config_property() {
     config_property rmc_languages     "${LANGUAGES:-all}"                "ROSE frontend languages, comma-separated"
     echo
     echo "# Software dependencies"
+    config_property rmc_binwalk       "${BINWALK:-none}"                 "Binwalk firmware extraction tool (optional)"
     config_property rmc_boost         "${BOOST:-1.57}"                   "Boost version number (required)"
     config_property rmc_cmake         "${CMAKE:-3}"                      "CMake version number (required)"
     config_property rmc_dlib          "${DLIB:-18.17}"                   "DLib version number (optional)"
