@@ -80,7 +80,7 @@ if [ "$COMPILER" = "" ]; then
     cxx_vendor=$(echo $cxx_quad |cut -d: -f1)
     cxx_lang=$(echo $cxx_quad |cut -d: -f3)
     cxx_version=$(echo $cxx_quad |cut -d: -f4)
-    COMPILER="${cxx_vendor}-${cxx_version}-${cxx_lang}"
+    COMPILER="${cxx_vendor}-${cxx_lang}-${cxx_version}"
 fi
 
 config_property() {

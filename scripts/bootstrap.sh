@@ -101,13 +101,13 @@ if [ "$cxx_quad" = "" ]; then
     exit 1
 fi
 cxx_vendor=$(echo "$cxx_quad" |cut -d: -f1)
-cxx_version=$(echo "$cxx_quad" |cut -d: -f4)
+cxx_version=$(echo "$cxx_quad" |cut -d: -f4 -s)
 
 # Check version number
 too_old=
 if [ "$cxx_vendor" = "gnu" ]; then
     cxx_version_major=$(echo "$cxx_version" |cut -d. -f1)
-    cxx_version_minor=$(echo "$cxx_version" |cut -d. -f2)
+    cxx_version_minor=$(echo "$cxx_version" |cut -d. -f2 -s)
     if [ "$cxx_version_major" -lt 4 ]; then
 	too_old=yes
     elif [ "$cxx_version_major" = "4" -a "$cxx_version_minor" -lt 8 ]; then

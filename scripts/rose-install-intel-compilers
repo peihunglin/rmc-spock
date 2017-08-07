@@ -74,7 +74,7 @@ for dir in /usr/apps/intel/{14,15,16}*; do
 	# C++
 	quad=$($SPOCK_SCRIPTS/impl/detect-compiler-characteristics --baselang c++ --quad icpc)
 	if [ "$quad" != "" ]; then
-	    version=$(echo "$quad" |cut -d: -f4)
+	    version=$(echo "$quad" |cut -d: -f4 -s)
 	    generate_wrapper "$dir/setup.sh" icpc >"$DESTINATION/icpc-$version"
 	    chmod 755 "$DESTINATION/icpc-$version"
 	fi
@@ -82,7 +82,7 @@ for dir in /usr/apps/intel/{14,15,16}*; do
 	# C
 	quad=$($SPOCK_SCRIPTS/impl/detect-compiler-characteristics --baselang c --quad icc)
 	if [ "$quad" != "" ]; then
-	    version=$(echo "$quad" |cut -d: -f4)
+	    version=$(echo "$quad" |cut -d: -f4 -s)
 	    generate_wrapper "$dir/setup.sh" icc >"$DESTINATION/icc-$version"
 	    chmod 755 "$DESTINATION/icc-$version"
 	fi
@@ -90,7 +90,7 @@ for dir in /usr/apps/intel/{14,15,16}*; do
 	# Fortran
 	quad=$($SPOCK_SCRIPTS/impl/detect-compiler-characteristics --baselang fortran --quad ifort)
 	if [ "$quad" != "" ]; then
-	    version=$(echo "$quad" |cut -d: -f4)
+	    version=$(echo "$quad" |cut -d: -f4 -s)
 	    generate_wrapper "$dir/setup.sh" ifort >"$DESTINATION/ifort-$version"
 	    chmod 755 "$DESTINATION/ifort-$version"
 	fi
