@@ -272,8 +272,9 @@ export SPOCK_HOSTNAME
 "$SPOCK_ROOT/bin/$SPOCK_HOSTNAME/spock-ls" --shellvars || exit 1
 eval $($SPOCK_ROOT/bin/$SPOCK_HOSTNAME/spock-ls --export --shellvars)
 
-echo "Note: you may see some errors while we detect your system compilers..."
-
+echo
+echo "Detecting system compilers"
+echo "Note: errors during this step are usually harmless."
 "$SPOCK_SCRIPTS/spock-install-system-compilers"
 
 echo
@@ -298,14 +299,13 @@ fi
 echo
 echo "  * Optionally set the SPOCK_BLDDIR to a fast, local filesystem. The"
 echo "    default is \"/tmp\"."
-
+echo
 echo "  * If during the bootstrap you overrode any of the other variables listed in"
 echo "    the output from \"spock-ls --shellvars\", then you should set those"
 echo "    values permanently as well."
-
 echo
 echo "All spock and rmc commands support \"--help\"."
-
+echo
 echo "Thank you for using rmc-spock. Questions/comments/bugs can be addressed"
 echo "to matzke@llnl.gov."
 echo
