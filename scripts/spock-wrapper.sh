@@ -31,4 +31,4 @@ fi
     echo "$arg0:   \$ rm -rf rmc-spock"
     echo "$arg0: or"
     echo "$arg0:   \$ $dir0/install-spock"
-)
+) >&2
