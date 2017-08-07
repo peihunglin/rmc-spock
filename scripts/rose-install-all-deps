@@ -52,7 +52,7 @@ source "$SPOCK_SCRIPTS/impl/basic-support.sh" || exit 1
 : ${DLIB_VERSIONS:="18.16 18.17 18.18"}
 
 # List of java versions.
-: ${JAVA_VERSIONS:="7 8"}
+: ${JAVA_VERSIONS:="oracle-java-7 oracle-java-8"}
 
 # List of python versions
 : ${PYTHON_VERSIONS:="2 3"}
@@ -333,7 +333,17 @@ if [ "$JAVA_VERSIONS" = "installed" ]; then
 else
     for java_version in $JAVA_VERSIONS; do
 	[ "$java_version" = "none" ] && continue
-	spec=$(install-package "" "oracle-java-$java_version")
+
+	case "$java_version" in
+	    oracle-java-*)
+		: good
+		;;
+	    *)
+		java_version="oracle-java-$java_version"
+		;;
+	esac
+	
+	spec=$(install-package "" "$java_version")
 	if [ "$spec" = "" ]; then
 	    cannot_install
 	else

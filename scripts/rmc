@@ -491,6 +491,18 @@ rmc_gcrypt() {
 rmc_java() {
     check_one_arg rmc_java "$@"
     RMC_JAVA="$1"
+
+    case "$RMC_JAVA" in
+	none|system)
+	    : good
+	    ;;
+	oracle-java-*)
+	    : good
+	    ;;
+	*)
+	    RMC_JAVA="oracle-java-$RMC_JAVA"
+	    ;;
+    esac
 }
 
 rmc_magic() {

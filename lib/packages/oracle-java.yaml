@@ -2,6 +2,9 @@ package:  oracle-java
 versions: [7.51, 8.121, 8.131, 8.144]
 
 variables:
+  - version: "=8.131"
+    url: "http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-linux-x64.tar.gz"
+
   - version: "=8.144"
     url: "http://download.oracle.com/otn-pub/java/jdk/8u144-b01/090f390dda5b47b9b721c7dfaa008135/jdk-8u144-linux-x64.tar.gz"
 
