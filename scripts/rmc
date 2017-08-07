@@ -186,7 +186,7 @@ package_spec() {
 	rmc_magic) pkgname="libmagic" ;;
 	rmc_pqxx) pkgname="libpqxx" ;;
 	rmc_yaml) pkgname="yamlcpp" ;;
-	rmc_java) pkgname="oracle-java" ;;
+	rmc_java) pkgspec="$pkgvers"; pkgvers= ;;
 	rmc_*) pkgname="${function#rmc_}" ;;
 	*) die "check_package fails for $function $1" ;;
     esac
