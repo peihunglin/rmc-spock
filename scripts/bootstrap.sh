@@ -268,6 +268,7 @@ fi
 export LD_LIBRARY_PATH="$boost_root/lib:$yamlcpp_root/lib:$sawyer_root/lib:$LD_LIBRARY_PATH"
 
 export SPOCK_ROOT="$prefix"
+export SPOCK_HOSTNAME
 "$SPOCK_ROOT/bin/$SPOCK_HOSTNAME/spock-ls" --shellvars || exit 1
 eval $($prefix/bin/$SPOCK_HOSTNAME/spock-ls --export --shellvars)
 "$SPOCK_SCRIPTS/spock-install-system-compilers"
