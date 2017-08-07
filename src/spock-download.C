@@ -15,13 +15,18 @@ using namespace Sawyer::Message::Common;
 namespace {
 
 Sawyer::Message::Facility mlog;
-bool verbose = false;
+bool keepGoing = false;
 
 std::vector<std::string>
 parseCommandLine(int argc, char *argv[]) {
     using namespace Sawyer::CommandLine;
     Parser p = commandLineParser(purpose, description, mlog);
     p.doc("Synopsis", "@prop{programName} [@v{patterns}]");
+
+    p.with(Switch("keep-going", 'k')
+           .intrinsicValue(true, keepGoing)
+           .doc("Don't stop if a download fails; try to download everything and report the number of failures at the end."));
+
     return p.parse(argc, argv).apply().unreachedArgs();
 }
 
@@ -36,14 +41,16 @@ main(int argc, char *argv[]) {
     if (patterns.empty())
         patterns.push_back("");                         // matches everything
 
-    int hadError = 0;
+    size_t nErrors = 0;
     Spock::Context ctx;
     try {
         BOOST_FOREACH (const std::string &pattern, patterns) {
             std::vector<Package::Ptr> packages = ctx.findGhosts(pattern);
             if (packages.empty()) {
+                ++nErrors;
                 mlog[ERROR] <<"not found: " <<pattern <<"\n";
-                ++hadError;
+                if (!keepGoing)
+                    break;
             } else {
                 BOOST_FOREACH (const Package::Ptr &package, ctx.findGhosts(pattern)) {
                     VersionNumbers versions = package->versions();
@@ -52,14 +59,24 @@ main(int argc, char *argv[]) {
                         dfSettings.version = version;
                         dfSettings.quiet = !globalVerbose;
                         dfSettings.keepTempFiles = globalKeepTempFiles;
-                        std::cout <<asGhost(package)->definition()->download(ctx, dfSettings).string() <<"\n";
+                        try {
+                            std::cout <<asGhost(package)->definition()->download(ctx, dfSettings).string() <<"\n";
+                        } catch (const Exception::SpockError &e) {
+                            ++nErrors;
+                            if (!keepGoing)
+                                throw;
+                        }
                     }
                 }
             }
         }
     } catch (const Exception::SpockError &e) {
         mlog[ERROR] <<e.what() <<"\n";
-        ++hadError;
+        ++nErrors;
     }
-    return hadError ? 1 : 0;
+
+    if (nErrors > 0 && keepGoing)
+        mlog[ERROR] <<"download failed for " <<nErrors <<(1==nErrors?" file":" files") <<"\n";
+
+    return nErrors ? 1 : 0;
 }
