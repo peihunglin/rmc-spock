@@ -179,14 +179,30 @@ package_spec() {
 
     local pkgname= pkgspec=
     case "$function" in
+	# The compiler spec is weird: the $pkgvers includes the compiler vendor and language in addition to the version.
 	rmc_compiler) pkgspec="$pkgvers"; pkgvers= ;;
+
 	rmc_dwarf) pkgname="libdwarf" ;;
 	rmc_elf) pkgname="libelf" ;;
 	rmc_gcrypt) pkgname="libgcrypt" ;;
 	rmc_magic) pkgname="libmagic" ;;
 	rmc_pqxx) pkgname="libpqxx" ;;
 	rmc_yaml) pkgname="yamlcpp" ;;
-	rmc_java) pkgspec="$pkgvers"; pkgvers= ;;
+
+	# rmc_java is a bit weird because a vendor such as "oracle-java-" can precede the version number. If the
+	# vendor is present, then it becomes the Spock package spec, otherwise we assume it should be "orical-java-".
+	rmc_java)
+	    case "$pkgvers" in
+		no|none|system|ambivalent)
+		    pkgname="oracle-java"
+		    ;;
+		*)
+		    pkgspec="$pkgvers"
+		    pkgvers=
+		    ;;
+	    esac
+	    ;;
+
 	rmc_*) pkgname="${function#rmc_}" ;;
 	*) die "check_package fails for $function $1" ;;
     esac
