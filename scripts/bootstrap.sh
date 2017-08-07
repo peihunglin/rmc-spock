@@ -270,8 +270,14 @@ export LD_LIBRARY_PATH="$boost_root/lib:$yamlcpp_root/lib:$sawyer_root/lib:$LD_L
 export SPOCK_ROOT="$prefix"
 export SPOCK_HOSTNAME
 "$SPOCK_ROOT/bin/$SPOCK_HOSTNAME/spock-ls" --shellvars || exit 1
-eval $($prefix/bin/$SPOCK_HOSTNAME/spock-ls --export --shellvars)
+eval $($SPOCK_ROOT/bin/$SPOCK_HOSTNAME/spock-ls --export --shellvars)
+
+echo "Note: you may see some errors while we detect your system compilers..."
+
 "$SPOCK_SCRIPTS/spock-install-system-compilers"
+
+echo
+echo "The following spock-managed software is installed:"
 "$SPOCK_BINDIR/$SPOCK_HOSTNAME/spock-ls"
 
 set +x
@@ -279,11 +285,29 @@ set +x
 echo
 echo "==== Spock has been installed ===="
 echo
-echo "Now be sure to make these changes to your environment. You can"
-echo "make these permanent by copying these commands to $HOME/.bashrc"
+echo "Permanently adjust your shell environment, perhaps by editing ~/.bashrc:"
 echo
-echo "export PATH=\"$SPOCK_BINDIR:\$PATH\""
-echo "export SPOCK_ROOT=\"$SPOCK_ROOT\" # A large filesystem"
-echo "export SPOCK_BLDDIR=/tmp # A fast filesystem"
+echo "  * Add $SPOCK_ROOT/bin to your \$PATH."
+
+if [ "$SPOCK_ROOT" != "$HOME/.spock" ]; then
+    echo
+    echo "  * Set the SPOCK_ROOT environment variable to"
+    echo "    \"$SPOCK_ROOT\","
+fi
+
 echo
-echo "You can check other directories by running \"spock-ls --shellvars\""
+echo "  * Optionally set the SPOCK_BLDDIR to a fast, local filesystem. The"
+echo "    default is \"/tmp\"."
+
+echo "  * If during the bootstrap you overrode any of the other variables listed in"
+echo "    the output from \"spock-ls --shellvars\", then you should set those"
+echo "    values permanently as well."
+
+echo
+echo "All spock and rmc commands support \"--help\"."
+
+echo "Thank you for using rmc-spock. Questions/comments/bugs can be addressed"
+echo "to matzke@llnl.gov."
+echo
+
+exit 0
