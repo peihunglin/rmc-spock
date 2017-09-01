@@ -11,6 +11,7 @@ dependencies:
 variables:
   - version: ">=3"
     url: "http://pqxx.org/download/software/libpqxx"
+    patches: config-sed
 
 download:
   - version: ">=3"
