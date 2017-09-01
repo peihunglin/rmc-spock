@@ -63,16 +63,6 @@ set(lib_src
   src/Spock/VersionNumber.C
 )
 
-add_library(spock SHARED ${lib_src})
-target_link_libraries(spock ${Sawyer_LIBRARY} ${YamlCpp_LIBRARY} ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-
-include_directories(
-  ${CMAKE_SOURCE_DIR}/src
-  ${YamlCpp_INCLUDE_DIR}
-  ${Sawyer_INCLUDE_DIRS}
-  ${Boost_INCLUDE_DIRS}
-)
-
 # The executables in the build tree should have an RPATH that points
 # to the build tree, and when we install those exectables we need to
 # relink them to point to the library installation directory.
@@ -85,6 +75,16 @@ list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib/
 if("${isSystemDir}" STREQUAL "-1")
    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib/${HOSTNAME}")
 endif()
+
+add_library(spock SHARED ${lib_src})
+target_link_libraries(spock ${Sawyer_LIBRARY} ${YamlCpp_LIBRARY} ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+
+include_directories(
+  ${CMAKE_SOURCE_DIR}/src
+  ${YamlCpp_INCLUDE_DIR}
+  ${Sawyer_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+)
 
 add_executable(spock-shell src/spock-shell.C)
 target_link_libraries(spock-shell spock)
