@@ -10,6 +10,7 @@ arg0="${0##*/}"
 
 prefix=
 downloads=
+upgrade=
 while [ "$#" -gt 0 ]; do
     case "$1" in
 	# If you already ran some other version of Spock, some things
@@ -32,6 +33,13 @@ while [ "$#" -gt 0 ]; do
 	--prefix)
 	    prefix="$2"
 	    shift 2
+	    ;;
+
+	# Upgrade to a new version of spock, such as when the OS is upgraded. This
+	# will try to re-use as much as possible of the original installation.
+	--upgrade)
+	    upgrade=yes
+	    shift
 	    ;;
 
 	--)
@@ -74,9 +82,13 @@ if ! mkdir _build; then
     exit 1
 fi
 [ "$SPOCK_HOSTNAME" = "" ] && SPOCK_HOSTNAME=$(hostname --short)
-if [ -x "$prefix/$SPOCK_HOSTNAME/bin/spock" ]; then
-    echo "$arg0: spock appears to be already installed in $prefix" >&2
-    exit 1
+
+if [ -n "$upgrade" ]; then
+    echo "$arg0: removing old installation for $SPOCK_HOSTNAME"
+    rm -rf "$prefix/bin/$SPOCK_HOSTNAME"
+    rm -rf "$prefix/lib/$SPOCK_HOSTNAME"
+    rm -rf "$prefix/dependencies/$SPOCK_HOSTNAME"
+    rm -rf "$prefix/var/installed/$SPOCK_HOSTNAME"
 fi
 
 
