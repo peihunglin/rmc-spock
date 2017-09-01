@@ -450,8 +450,6 @@ preinstall() {
     local cxx_lang=$(echo "$spec" |cut -d: -f2 -s)
     local cxx_version=$(echo "$spec" |cut -d: -f3 -s)
 
-    echo "ROBB: vendor=$cxx_vendor lang=$cxx_lang version='$cxx_version'" >&2
-
     env \
 	COMPILER_COLLECTIONS="$cxx_vendor$cxx_version" \
 	CXX_LANGUAGES="$cxx_lang" \
@@ -726,7 +724,7 @@ if [ "$command" = "init" -a -x "$SPOCK_SCRIPTS/rmc-commands/init" ]; then
 fi
 
 blddir=$(find_build_tree)
-[ -n "$blddir" ] || die "create a .rmc-main.cfg file at the top of your ROSE build tree"
+[ -n "$blddir" ] || die "you may need to run 'rmc init'; see 'rmc init --help'"
 
 
 # Figure out what environment to use

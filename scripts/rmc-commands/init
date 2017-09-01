@@ -7,7 +7,7 @@ source "$SPOCK_SCRIPTS/impl/basic-support.sh" || exit 1
 source "$SPOCK_SCRIPTS/impl/spock-realpath.sh" || exit 1
 
 # Check command-line arguments
-do_batch_mode= do_force= do_help=
+do_batch_mode= do_force= do_help= projects=
 while [ "$#" -gt 0 ]; do
     case "$1" in
 	--)
@@ -30,9 +30,26 @@ while [ "$#" -gt 0 ]; do
 	    shift
 	    ;;
 
+	--project=*)
+	    case "${1#--project=}" in
+		list)
+		    echo "Projects:"
+		    echo "  * estcp"
+		    echo "  * matrix"
+		    exit 0
+		    ;;
+		estcp|matrix)
+		    projects=("${projects[@]}" "${1#--project=}")
+		    ;;
+		*)
+		    die "'${1#--project=}' is not a valid project; see --project=list"
+		    ;;
+	    esac
+	    shift
+	    ;;
+
 	-*)
-	    echo "$arg0: unknown switch: $1" >&2
-	    exit 1
+	    die "unknown switch: $1; see '$arg0 --help'"
 	    ;;
 	*)
 	    break
@@ -53,6 +70,9 @@ if [ -n "$do_help" -o "$1" = "help" ]; then
     echo "     -f, --force"
     echo "       Force creation of a new .rmc-main.cfg file even if the current working directory is"
     echo "       not empty or it already contains a .rmc-main.cfg file."
+    echo "     --project=PROJ"
+    echo "       Initialize the configuration appropriate for the specified project. Use --project=list"
+    echo "       to get a list of defined projects."
     exit 0
 fi
 
@@ -83,9 +103,114 @@ if [ "$COMPILER" = "" ]; then
     COMPILER="${cxx_vendor}-${cxx_lang}-${cxx_version}"
 fi
 
+# Defaults if no --project (or --project=none) was specified
+project_none() {
+    local rmc_command="$1"
+    case "$rmc_command" in
+	rmc_rosesrc)       spock-realpath "$rose_srcdir" ;;
+	rmc_install) 	   echo yes      	      ;;
+	rmc_build)   	   echo autoconf 	      ;;
+	rmc_parallelism)   echo system   	      ;;
+	rmc_compiler)      echo no-compiler-specified ;;
+	rmc_debug)         echo yes        	      ;;
+	rmc_optimize)      echo ambivalent 	      ;;
+	rmc_warnings)      echo yes 		      ;;
+	rmc_code_coverage) echo no  		      ;;
+	rmc_assertions)    echo ambivalent            ;;
+	rmc_languages)     echo all  		      ;;
+	rmc_binwalk)       echo none 		      ;;
+	rmc_boost)         echo 1.62 		      ;;
+	rmc_cmake)         echo 3    		      ;;
+	rmc_dlib)          echo none 		      ;;
+	rmc_doxygen)       echo ambivalent 	      ;;
+	rmc_dwarf)         echo none       	      ;;
+	rmc_edg)           echo ambivalent 	      ;;
+	rmc_elf)           echo none 		      ;;
+	rmc_gcrypt)        echo none 		      ;;
+	rmc_java)          echo 8    		      ;;
+	rmc_magic)         echo none 		      ;;
+	rmc_pqxx)          echo none 		      ;;
+	rmc_python)        echo 3    		      ;;
+	rmc_qt)            echo none 		      ;;
+	rmc_readline)      echo none 		      ;;
+	rmc_spot)          echo none 		      ;;
+	rmc_sqlite)        echo none 		      ;;
+	rmc_wt)            echo none 		      ;;
+	rmc_yaml)          echo none 		      ;;
+	rmc_yices)         echo none 		      ;;
+    esac
+}
+
+# Defaults for --project=estcp (only those that differ from --project=none)
+project_estcp() {
+    local rmc_command="$1"
+    case "$rmc_command" in
+	rmc_languages)     echo binaries              ;;
+	rmc_binwalk)       echo 2                     ;;
+	rmc_dlib)          echo 18.17                 ;;
+	rmc_gcrypt)        echo 1.7                   ;;
+	rmc_wt)            echo 3.3.7                 ;;
+	rmc_yaml)          echo 0.5.3                 ;;
+    esac
+}
+
+# Defaults for --project=matrix (matrix testing tools)
+project_matrix() {
+    local rmc_command="$1"
+    case "$rmc_command" in
+	rmc_languages)     echo none                  ;;
+	rmc_pqxx)          echo 4                     ;;
+	rmc_wt)            echo 3.3.7                 ;;
+	rmc_yaml)          echo 0.5.3                 ;;
+    esac
+}
+
+# Defaults from the environment variables
+project_envars() {
+    local rmc_command="$1"
+    case "$rmc_command" in
+	rmc_build)         echo "$BUILD"              ;;
+	rmc_parallelism)   echo "$PARALLELISM"        ;;
+	rmc_compiler)      echo "$COMPILER"           ;;
+	rmc_debug)         echo "$DEBUG"              ;;
+	rmc_optimize)      echo "$OPTIMIZE"           ;;
+	rmc_warnings)      echo "$WARNINGS"           ;;
+	rmc_code_coverage) echo "$CODE_COVERAGE"      ;;
+	rmc_assertions)    echo "$ASSERTIONS"         ;;
+	rmc_languages)     echo "$LANGUAGES"          ;;
+	rmc_binwalk)       echo "$BINWALK"            ;;
+	rmc_boost)         echo "$BOOST"              ;;
+	rmc_cmake)         echo "$CMAKE"              ;;
+	rmc_dlib)          echo "$DLIB"               ;;
+	rmc_doxygen)       echo "$DOXYGEN"            ;;
+	rmc_dwarf)         echo "$DWARF"              ;;
+	rmc_edg)           echo "$EDG"                ;;
+	rmc_elf)           echo "$ELF"                ;;
+	rmc_gcrypt)        echo "$GCRYPT"             ;;
+	rmc_java)          echo "$JAVA"               ;;
+	rmc_magic)         echo "$MAGIC"              ;;
+	rmc_pqxx)          echo "$PQXX"               ;;
+	rmc_python)        echo "$PYTHON"             ;;
+	rmc_qt)            echo "$QT"                 ;;
+	rmc_readline)      echo "$READLINE"           ;;
+	rmc_spot)          echo "$SPOT"               ;;
+	rmc_sqlite)        echo "$SQLITE"             ;;
+	rmc_wt)            echo "$WT"                 ;;
+	rmc_yaml)          echo "$YAML"               ;;
+	rmc_yices)         echo "$YICES"              ;;
+    esac
+}
+
 config_property() {
-    local rmc_command="$1" value="$2" comment="$3"
+    local rmc_command="$1" comment="$3"
     [ -n "$comment" ] && comment="# $comment"
+
+    local value=
+    for project in envars ${projects[*]} none; do
+	value=$(eval "project_$project $rmc_command")
+	[ -n "$value" ] && break
+    done
+
     printf '%-23s %-23s %s\n' "$rmc_command" "$value" "$comment"
 }
 
@@ -110,43 +235,43 @@ config_property() {
     echo "# confluence pages. Find them using the search feature."
     echo
     echo "# Basic settings"
-    config_property rmc_rosesrc       "$(spock-realpath "$rose_srcdir")"
-    config_property rmc_install       "yes"                              "where to install ROSE ('yes' means default location)"
-    config_property rmc_build         "${BUILD:-autoconf}"               "build system: 'autoconf' or 'cmake'"
-    config_property rmc_parallelism   "${PARALLELISM:-system}"           "number or 'system'"
+    config_property rmc_rosesrc
+    config_property rmc_install       "where to install ROSE ('yes' means default location)"
+    config_property rmc_build         "build system: 'autoconf' or 'cmake'"
+    config_property rmc_parallelism   "number or 'system'"
     echo
     echo "# Compiler settings"
-    config_property rmc_compiler      "$COMPILER"                        "('gnu'|'llvm'|'intel')-version[-language]"
-    config_property rmc_debug         "${DEBUG:-yes}"                    "debug support: 'yes' or 'no'"
-    config_property rmc_optimize      "${OPTIMIZE:-ambivalent}"          "optimizations: 'yes', 'no', or 'ambivalent'"
-    config_property rmc_warnings      "${WARNINGS:-yes}"                 "compiler warnings: 'yes' or 'no'"
-    config_property rmc_code_coverage "${CODE_COVERAGE:-no}"             "generate code coverage stats: 'yes' or 'no'"
+    config_property rmc_compiler      "('gnu'|'llvm'|'intel')-version[-language]"
+    config_property rmc_debug         "debug support: 'yes' or 'no'"
+    config_property rmc_optimize      "optimizations: 'yes', 'no', or 'ambivalent'"
+    config_property rmc_warnings      "compiler warnings: 'yes' or 'no'"
+    config_property rmc_code_coverage "generate code coverage stats: 'yes' or 'no'"
     echo
     echo "# Configuration options"
-    config_property rmc_assertions    "${ASSERTIONS:-ambivalent}"        "the --enable-assertions value or 'ambivalent'"
-    config_property rmc_languages     "${LANGUAGES:-all}"                "ROSE frontend languages, comma-separated"
+    config_property rmc_assertions    "the --enable-assertions value or 'ambivalent'"
+    config_property rmc_languages     "ROSE frontend languages, comma-separated"
     echo
     echo "# Software dependencies"
-    config_property rmc_binwalk       "${BINWALK:-none}"                 "Binwalk firmware extraction tool (optional)"
-    config_property rmc_boost         "${BOOST:-1.57}"                   "Boost version number (required)"
-    config_property rmc_cmake         "${CMAKE:-3}"                      "CMake version number (required)"
-    config_property rmc_dlib          "${DLIB:-18.17}"                   "DLib version number (optional)"
-    config_property rmc_doxygen       "${DOXYGEN:-ambivalent}"           "Doxygen version number (optional)"
-    config_property rmc_dwarf         "${DWARF:-none}"                   "DWARF library version number (optional)"
-    config_property rmc_edg           "${EDG:-ambivalent}"               "EDG version number (optional)"
-    config_property rmc_elf           "${ELF:-none}"                     "ELF library version number (needed by dwarf)"
-    config_property rmc_gcrypt        "${GCRYPT:-1.7}"                   "GNU gcrypt library version number (optional)"
-    config_property rmc_java          "${JAVA:-8}"                       "Oracle JDK version number (optional)"
-    config_property rmc_magic         "${MAGIC:-none}"                   "libmagic version number (optional)"
-    config_property rmc_pqxx          "${PQXX:-none}"                    "PostgreSQL C++ library (optional)"
-    config_property rmc_python        "${PYTHON:-3}"                     "Python version number (required)"
-    config_property rmc_qt            "${QT:-none}"                      "Qt version number (optional)"
-    config_property rmc_readline      "${READLINE:-none}"                "libreadline version number (optional)"
-    config_property rmc_spot          "${SPOT:-1.2.6}"                   "Spot library version number (optional)"
-    config_property rmc_sqlite        "${SQLITE:-none}"                  "SQLite version number (optional)"
-    config_property rmc_wt            "${WT:-3.3.4}"                     "Wt version number (optional)"
-    config_property rmc_yaml          "${YAML:-0.5.1}"                   "Yaml-cpp version number (optional)"
-    config_property rmc_yices         "${YICES:-1.0.34}"                 "Yices version number (optional)"
+    config_property rmc_binwalk       "Binwalk firmware extraction tool (optional)"
+    config_property rmc_boost         "Boost version number (required)"
+    config_property rmc_cmake         "CMake version number (required)"
+    config_property rmc_dlib          "DLib version number (optional)"
+    config_property rmc_doxygen       "Doxygen version number (optional)"
+    config_property rmc_dwarf         "DWARF library version number (optional)"
+    config_property rmc_edg           "EDG version number (optional)"
+    config_property rmc_elf           "ELF library version number (needed by dwarf)"
+    config_property rmc_gcrypt        "GNU gcrypt library version number (optional)"
+    config_property rmc_java          "Oracle JDK version number (optional)"
+    config_property rmc_magic         "libmagic version number (optional)"
+    config_property rmc_pqxx          "PostgreSQL C++ library (optional)"
+    config_property rmc_python        "Python version number (required)"
+    config_property rmc_qt            "Qt version number (optional)"
+    config_property rmc_readline      "libreadline version number (optional)"
+    config_property rmc_spot          "Spot library version number (optional)"
+    config_property rmc_sqlite        "SQLite version number (optional)"
+    config_property rmc_wt            "Wt version number (optional)"
+    config_property rmc_yaml          "Yaml-cpp version number (optional)"
+    config_property rmc_yices         "Yices version number (optional)"
 ) >.rmc-main.cfg
 
 if [ "$do_batch_mode" = "" ]; then
