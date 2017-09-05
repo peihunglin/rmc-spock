@@ -39,7 +39,7 @@ while [ "$#" -gt 0 ]; do
 		    echo "  * matrix   -- matrix testing tools"
 		    exit 0
 		    ;;
-		estcp|matrix)
+		binaries|estcp|matrix)
 		    projects=("${projects[@]}" "${1#--project=}")
 		    ;;
 		*)

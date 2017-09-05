@@ -26,6 +26,10 @@ usage: $arg0 [SWITCHES] [COMMAND...]
         --cwd=DIR, -C DIR
             Change working directory to DIR before doing anything.
 
+        --blddir=DIR
+            Use the specified directory as the root of the ROSE build
+            tree without changing to that directory.
+
         --debug
             Prints lots of debugging information.
 
@@ -92,6 +96,11 @@ while [ "$#" -gt 0 ]; do
 	-C)
 	    cd "$2" || exit 1
 	    shift 2
+	    ;;
+
+	--blddir=*)
+	    RG_BLD="${1#--blddir=}"
+	    shift
 	    ;;
 
 	--debug)
