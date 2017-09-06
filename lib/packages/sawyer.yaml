@@ -1,0 +1,36 @@
+package:	sawyer
+
+versions:	[ 0.1.0 ]
+
+dependencies:
+  - version: ">=0.0.0"
+    install: [ boost ]
+    build: [ cmake ]
+
+variables:
+  - version: ">=0.0.0"
+    repo: https://github.com/matzke1/sawyer
+
+download:
+  - version: ">=0.0.0"
+    shell: |
+      git clone --branch release-"$PACKAGE_VERSION" "$repo" sawyer
+      cd sawyer
+      git archive --format=tar --prefix=download/ HEAD |gzip -9 >../download.tar.gz
+
+install:
+  - version: ">=0.0.0"
+    shell: |
+      cxx --spock-triplet
+
+      mkdir _build
+      cd _build
+      cmake ../download \
+          -DCMAKE_C_COMPILER=cc \
+          -DCMAKE_CXX_COMPILER=c++ \
+          -DCMAKE_INSTALL_PREFIX="$PACKAGE_ROOT" \
+          -DBOOST_ROOT=$BOOST_ROOT
+
+      make -j$PARALLELISM
+      make install
+

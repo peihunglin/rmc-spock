@@ -1,0 +1,40 @@
+package:        libpqxx
+
+versions:       [ 3.0, 3.0.1, 3.0.2, 3.0.3, 4.0, 4.0.1 ]
+
+dependencies:
+  - version: ">=3"
+    aliases: []
+    install: [ c++-compiler ]
+    build: [ default-c ]
+
+variables:
+  - version: ">=3"
+    url: "http://pqxx.org/download/software/libpqxx"
+    patches: config-sed
+
+download:
+  - version: ">=3"
+    shell: |
+      wget -O - "$url/libpqxx-$PACKAGE_VERSION.tar.gz" |tar xvzf -
+      mv libpqxx-$PACKAGE_VERSION download
+      tar cvf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=3"
+    shell: |
+      c++ --spock-triplet
+      cc --spock-triplet
+      cd download
+
+      env \
+        CC=cc \
+        CXX=c++ \
+        CPPFLAGS="$(spock-compiler-incdirs)" \
+        LDFLAGS="$(spock-compiler-libdirs) -lpq" \
+        ./configure \
+        --prefix="$PACKAGE_ROOT" \
+        --enable-shared
+
+        make -j$PARALLELISM
+        make install

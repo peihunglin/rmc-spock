@@ -1,0 +1,31 @@
+package:        binwalk
+
+versions:       [ 2.0.0, 2.0.1, 2.1.1 ]
+
+dependencies:
+  - version: ">=2"
+    aliases: []
+    install: [ 'python-3' ]
+    build: []
+
+variables:
+  - version: ">=2"
+    url: "https://github.com/devttys0/binwalk"
+
+download:
+  - version: ">=2"
+    shell: |
+        git clone $url download
+        (cd download && git reset --hard v$PACKAGE_VERSION)
+        (cd download && git archive --format=tar --prefix=download/ HEAD) |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=2"
+    shell: |
+        python --version
+
+        cd download
+        python setup.py install --prefix="$PACKAGE_ROOT"
+        $PACKAGE_ROOT/bin/binwalk --help # make sure it works
+
+        spock-export PATH "$PACKAGE_ROOT/bin"

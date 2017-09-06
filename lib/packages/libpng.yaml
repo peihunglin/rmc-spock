@@ -1,5 +1,7 @@
 package: libpng
-versions: [ 1.2.57, 1.4.20, 1.5.28, 1.6.28, 1.6.29 ]
+
+# WARNING: upstream aggressively removes old versions
+versions: [ 1.2.57, 1.4.20, 1.5.28, 1.6.29, 1.6.31, 1.6.32 ]
 
 dependencies:
   - version: '>=1.2'

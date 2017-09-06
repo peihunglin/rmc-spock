@@ -39,7 +39,7 @@ source "$SPOCK_SCRIPTS/impl/basic-support.sh" || exit 1
 # if COMPILER_SPECS is set then ignore COMPILER_COLLECTIONS and CXX_LANGUAGES.
 : ${COMPILER_COLLECTIONS:="gnu-4.8 gnu-4.9 gnu-5 gnu-6 llvm-3.5 llvm-3.6 llvm-3.7 llvm-3.8 llvm-3.9"}
 
-# C++ languages. These are languages accepted by Spock, but see COMPILER_COLLECTIONS
+# C++ languages. These are languages accepted by RMC, but see COMPILER_COLLECTIONS
 : ${CXX_LANGUAGES:="gnu++03 c++11"}
 
 # CMake versions
@@ -52,7 +52,7 @@ source "$SPOCK_SCRIPTS/impl/basic-support.sh" || exit 1
 : ${DLIB_VERSIONS:="18.16 18.17 18.18"}
 
 # List of java versions.
-: ${JAVA_VERSIONS:="7 8"}
+: ${JAVA_VERSIONS:="oracle-java-7 oracle-java-8"}
 
 # List of python versions
 : ${PYTHON_VERSIONS:="2 3"}
@@ -190,7 +190,7 @@ else
 	for vendor_version in $COMPILER_COLLECTIONS; do
 	    [ "$vendor_version" = "none" ] && continue
 	    vendor=$(echo "$vendor_version" |cut -d- -f1)
-	    version=$(echo "$vendor_version" |cut -d- -f2)
+	    version=$(echo "$vendor_version" |cut -d- -f2 -s)
 	    collection_name="${vendor}-compilers"
 	    collection_version=
 	    [ "$version" != "" ] && collection_version="-$version"
@@ -333,7 +333,17 @@ if [ "$JAVA_VERSIONS" = "installed" ]; then
 else
     for java_version in $JAVA_VERSIONS; do
 	[ "$java_version" = "none" ] && continue
-	spec=$(install-package "" "oracle-java-$java_version")
+
+	case "$java_version" in
+	    oracle-java-*)
+		: good
+		;;
+	    *)
+		java_version="oracle-java-$java_version"
+		;;
+	esac
+	
+	spec=$(install-package "" "$java_version")
 	if [ "$spec" = "" ]; then
 	    cannot_install
 	else

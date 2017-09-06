@@ -10,6 +10,7 @@ arg0="${0##*/}"
 
 prefix=
 downloads=
+upgrade=
 while [ "$#" -gt 0 ]; do
     case "$1" in
 	# If you already ran some other version of Spock, some things
@@ -32,6 +33,13 @@ while [ "$#" -gt 0 ]; do
 	--prefix)
 	    prefix="$2"
 	    shift 2
+	    ;;
+
+	# Upgrade to a new version of spock, such as when the OS is upgraded. This
+	# will try to re-use as much as possible of the original installation.
+	--upgrade)
+	    upgrade=yes
+	    shift
 	    ;;
 
 	--)
@@ -74,9 +82,13 @@ if ! mkdir _build; then
     exit 1
 fi
 [ "$SPOCK_HOSTNAME" = "" ] && SPOCK_HOSTNAME=$(hostname --short)
-if [ -x "$prefix/$SPOCK_HOSTNAME/bin/spock" ]; then
-    echo "$arg0: spock appears to be already installed in $prefix" >&2
-    exit 1
+
+if [ -n "$upgrade" ]; then
+    echo "$arg0: removing old installation for $SPOCK_HOSTNAME"
+    rm -rf "$prefix/bin/$SPOCK_HOSTNAME"
+    rm -rf "$prefix/lib/$SPOCK_HOSTNAME"
+    rm -rf "$prefix/dependencies/$SPOCK_HOSTNAME"
+    rm -rf "$prefix/var/installed/$SPOCK_HOSTNAME"
 fi
 
 
@@ -101,13 +113,13 @@ if [ "$cxx_quad" = "" ]; then
     exit 1
 fi
 cxx_vendor=$(echo "$cxx_quad" |cut -d: -f1)
-cxx_version=$(echo "$cxx_quad" |cut -d: -f4)
+cxx_version=$(echo "$cxx_quad" |cut -d: -f4 -s)
 
 # Check version number
 too_old=
 if [ "$cxx_vendor" = "gnu" ]; then
     cxx_version_major=$(echo "$cxx_version" |cut -d. -f1)
-    cxx_version_minor=$(echo "$cxx_version" |cut -d. -f2)
+    cxx_version_minor=$(echo "$cxx_version" |cut -d. -f2 -s)
     if [ "$cxx_version_major" -lt 4 ]; then
 	too_old=yes
     elif [ "$cxx_version_major" = "4" -a "$cxx_version_minor" -lt 8 ]; then
@@ -263,10 +275,22 @@ fi
 )
 
 #-------------------- Initial setup --------------------
+# make sure our own lib dirs are at the front in case the user has set this. Ideally, it shouldn't
+# be necessary to set LD_LIBRARY_PATH at all, but unfortunately it is required in some situations.
+export LD_LIBRARY_PATH="$boost_root/lib:$yamlcpp_root/lib:$sawyer_root/lib:$LD_LIBRARY_PATH"
+
 export SPOCK_ROOT="$prefix"
+export SPOCK_HOSTNAME
 "$SPOCK_ROOT/bin/$SPOCK_HOSTNAME/spock-ls" --shellvars || exit 1
-eval $($prefix/bin/$SPOCK_HOSTNAME/spock-ls --export --shellvars)
+eval $($SPOCK_ROOT/bin/$SPOCK_HOSTNAME/spock-ls --export --shellvars)
+
+echo
+echo "Detecting system compilers"
+echo "Note: errors during this step are usually harmless."
 "$SPOCK_SCRIPTS/spock-install-system-compilers"
+
+echo
+echo "The following spock-managed software is installed:"
 "$SPOCK_BINDIR/$SPOCK_HOSTNAME/spock-ls"
 
 set +x
@@ -274,11 +298,28 @@ set +x
 echo
 echo "==== Spock has been installed ===="
 echo
-echo "Now be sure to make these changes to your environment. You can"
-echo "make these permanent by copying these commands to $HOME/.bashrc"
+echo "Permanently adjust your shell environment, perhaps by editing ~/.bashrc:"
 echo
-echo "export PATH=\"$SPOCK_BINDIR:\$PATH\""
-echo "export SPOCK_ROOT=\"$SPOCK_ROOT\" # A large filesystem"
-echo "export SPOCK_BLDDIR=/tmp # A fast filesystem"
+echo "  * Add $SPOCK_ROOT/bin to your \$PATH."
+
+if [ "$SPOCK_ROOT" != "$HOME/.spock" ]; then
+    echo
+    echo "  * Set the SPOCK_ROOT environment variable to"
+    echo "    \"$SPOCK_ROOT\","
+fi
+
 echo
-echo "You can check other directories by running \"spock-ls --shellvars\""
+echo "  * Optionally set the SPOCK_BLDDIR to a fast, local filesystem. The"
+echo "    default is \"/tmp\"."
+echo
+echo "  * If during the bootstrap you overrode any of the other variables listed in"
+echo "    the output from \"spock-ls --shellvars\", then you should set those"
+echo "    values permanently as well."
+echo
+echo "All spock and rmc commands support \"--help\"."
+echo
+echo "Thank you for using rmc-spock. Questions/comments/bugs can be addressed"
+echo "to matzke@llnl.gov."
+echo
+
+exit 0

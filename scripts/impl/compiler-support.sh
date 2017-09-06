@@ -32,9 +32,9 @@ spock-compiler-install() {
     local compiler_quad="$1" collection_spec="$2" executable="$3"; shift 3 # compiler args
 
     local compiler_vendor=$(echo "$compiler_quad" |cut -d: -f1)
-    local compiler_baselang=$(echo "$compiler_quad" |cut -d: -f2)
-    local compiler_lang=$(echo "$compiler_quad" |cut -d: -f3)
-    local compiler_version=$(echo "$compiler_quad" |cut -d: -f4)
+    local compiler_baselang=$(echo "$compiler_quad" |cut -d: -f2 -s)
+    local compiler_lang=$(echo "$compiler_quad" |cut -d: -f3 -s)
+    local compiler_version=$(echo "$compiler_quad" |cut -d: -f4 -s)
 
     [ -n "$compiler_quad"     ] || die "no compiler quad"
     [ -n "$compiler_vendor"   ] || die "no compiler vendor in quad $compiler_quad"
@@ -162,9 +162,9 @@ spock-compiler-conditional-install() {
     local compiler_quad="$1" collection_spec="$2" executable="$3"; shift 3 # compiler args
 
     local compiler_vendor=$(echo "$compiler_quad" |cut -d: -f1)
-    local compiler_baselang=$(echo "$compiler_quad" |cut -d: -f2)
-    local compiler_lang=$(echo "$compiler_quad" |cut -d: -f3)
-    local compiler_version=$(echo "$compiler_quad" |cut -d: -f4)
+    local compiler_baselang=$(echo "$compiler_quad" |cut -d: -f2 -s)
+    local compiler_lang=$(echo "$compiler_quad" |cut -d: -f3 -s)
+    local compiler_version=$(echo "$compiler_quad" |cut -d: -f4 -s)
 
     [ -n "$compiler_quad"     ] || die "no compiler quad"
     [ -n "$compiler_vendor"   ] || die "no compiler vendor in quad $compiler_quad"
@@ -255,9 +255,9 @@ spock-compiler-install-program() {
 		     --quad --baselang="$compiler_baselang" "$exe" 2>/dev/null)
     [ "$quad" = "" ] && return 1
     local compiler_vendor=$(echo "$quad"   |cut -d: -f1)
-    local compiler_baselang=$(echo "$quad" |cut -d: -f2)
-    local compiler_lang=$(echo "$quad"     |cut -d: -f3)
-    local compiler_version=$(echo "$quad"  |cut -d: -f4)
+    local compiler_baselang=$(echo "$quad" |cut -d: -f2 -s)
+    local compiler_lang=$(echo "$quad"     |cut -d: -f3 -s)
+    local compiler_version=$(echo "$quad"  |cut -d: -f4 -s)
 
     # Figure out which collection it belongs to and create that collection if necessary.
     local collection_spec

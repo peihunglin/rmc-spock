@@ -15,6 +15,8 @@ using namespace Sawyer::Message::Common;
 namespace Spock {
 
 const char *VERSION = "2.1.2";
+bool globalVerbose = false;                             // be extra verbose?
+bool globalKeepTempFiles = false;                       // avoid deleting temporary files?
 
 Sawyer::Message::PrefixPtr mprefix;
 Sawyer::Message::DestinationPtr mdestination;
@@ -99,6 +101,14 @@ commandLineParser(const std::string &purpose, const std::string &description, Sa
                .argument("config")
                .whichValue(SAVE_ALL)
                .doc("Configures diagnostics.  Use \"@s{log}=help\" and \"@s{log}=list\" to get started."));
+
+    gen.insert(Switch("verbose", 'v')
+               .intrinsicValue(true, globalVerbose)
+               .doc("Make commands more verbose, mostly for debugging."));
+
+    gen.insert(Switch("keep-temp")
+               .intrinsicValue(true, globalKeepTempFiles)
+               .doc("Keep temporary files, mostly for debugging."));
 
     p.with(gen);
     return p;

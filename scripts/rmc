@@ -26,6 +26,10 @@ usage: $arg0 [SWITCHES] [COMMAND...]
         --cwd=DIR, -C DIR
             Change working directory to DIR before doing anything.
 
+        --blddir=DIR
+            Use the specified directory as the root of the ROSE build
+            tree without changing to that directory.
+
         --debug
             Prints lots of debugging information.
 
@@ -92,6 +96,11 @@ while [ "$#" -gt 0 ]; do
 	-C)
 	    cd "$2" || exit 1
 	    shift 2
+	    ;;
+
+	--blddir=*)
+	    RG_BLD="${1#--blddir=}"
+	    shift
 	    ;;
 
 	--debug)
@@ -179,13 +188,30 @@ package_spec() {
 
     local pkgname= pkgspec=
     case "$function" in
+	# The compiler spec is weird: the $pkgvers includes the compiler vendor and language in addition to the version.
 	rmc_compiler) pkgspec="$pkgvers"; pkgvers= ;;
+
 	rmc_dwarf) pkgname="libdwarf" ;;
 	rmc_elf) pkgname="libelf" ;;
 	rmc_gcrypt) pkgname="libgcrypt" ;;
 	rmc_magic) pkgname="libmagic" ;;
+	rmc_pqxx) pkgname="libpqxx" ;;
 	rmc_yaml) pkgname="yamlcpp" ;;
-	rmc_java) pkgname="oracle-java" ;;
+
+	# rmc_java is a bit weird because a vendor such as "oracle-java-" can precede the version number. If the
+	# vendor is present, then it becomes the Spock package spec, otherwise we assume it should be "orical-java-".
+	rmc_java)
+	    case "$pkgvers" in
+		no|none|system|ambivalent)
+		    pkgname="oracle-java"
+		    ;;
+		*)
+		    pkgspec="$pkgvers"
+		    pkgvers=
+		    ;;
+	    esac
+	    ;;
+
 	rmc_*) pkgname="${function#rmc_}" ;;
 	*) die "check_package fails for $function $1" ;;
     esac
@@ -236,6 +262,8 @@ read_config_file() {
     export RMC_WARNINGS=ambivalent
     export RMC_CODE_COVERAGE=ambivalent
     export RMC_ASSERTIONS=ambivalent
+
+    export RMC_BINWALK=none
     export RMC_BOOST=
     export RMC_CMAKE=3
     export RMC_DLIB=none
@@ -246,6 +274,7 @@ read_config_file() {
     export RMC_GCRYPT=none
     export RMC_JAVA=none
     export RMC_MAGIC=none
+    export RMC_PQXX=none
     export RMC_PYTHON=3
     export RMC_QT=none
     export RMC_READLINE=none
@@ -263,7 +292,7 @@ read_config_file() {
     # Make sure some basic things are set. If they're set, then they've already been validated.
     [ ! -d "$RMC_ROSESRC" -o ! -e "$RMC_ROSESRC/config/support-rose.m4" ] &&
 	die "$config_file: missing or incorrect rmc_rosesrc (use \"rmc_rosesrc /path/to/ROSE/source/tree\")"
-    [ "$RMC_CXX_COMPILER" = "" ] &&
+    [ "$RMC_COMPILER" = "" ] &&
 	die "$config_file: missing rmc_compiler specification (try \"rmc_compiler gnu-4-default\")"
     [ -n "$RMC_BOOST" ] ||
 	die "$config_file: missing rmc_boost specification (try \"rmc_boost 1.62\")"
@@ -296,17 +325,142 @@ read_config_file() {
     esac
 }
 
+# Returns true if $1 is a valid RMC compiler spec of the form, VENDOR-VERSION[-LANG].
+is_rmc_compiler_spec() {
+    local spec="$1"
+
+    local cxx_vendor=$(echo "$spec" |cut -d- -f1)
+    local cxx_version=$(echo "$spec" |cut -d- -f2 -s)
+    local cxx_lang=$(echo "$spec" |cut -d- -f3 -s)
+
+    case "$cxx_vendor" in
+	gcc|llvm|intel)
+	    :
+	    ;;
+	*)
+	    return 1
+	    ;;
+    esac
+
+    case "$cxx_lang" in
+	""|default|c++03|c++11|c++14|c++17|gnu++03|gnu++11|gnu++14|gnu++17)
+	    :
+	    ;;
+	*)
+	    return 1
+	    ;;
+    esac
+
+    return 0
+}
+
+# Split an RMC or Spock compiler spec into vendor, language, and version and return a colon-separated list in that
+# order.  The version number will be a Spock version specification that starts with a version comparison operator. The
+# vendor and language will always be non-empty, but the version could be empty.
+parse_cxx_spec() {
+    local rmc_or_spock_spec="$1"
+
+    if is_rmc_compiler_spec "$rmc_or_spock_spec"; then
+	# RMC compiler names were like VENDOR-VERS-LANG with "-LANG" defaulting to "default".
+	local cxx_vendor=$(echo "$rmc_or_spock_spec" |cut -d- -f1)
+	local cxx_version=$(echo "$rmc_or_spock_spec" |cut -d- -f2 -s)
+	local cxx_language=$(echo "$rmc_or_spock_spec" |cut -d- -f3 -s)
+	[ "$cxx_vendor" = "" -o "$cxx_version" = "" ] && die "rmc_compiler $rmc_or_spock_spec is not proper format"
+	[ "$cxx_language" = "" ] && cxx_language=default
+
+	# Spock vendor names are different
+	[ "$cxx_vendor" = "gcc" ] && cxx_vendor="gnu"
+
+	# Spock includes the LANG as part of the package name, like gnu-c++11. RMC's "default" meant no language was
+	# specified and therefore the actual language varies by compiler vendor and version.  Spock installs such compilers
+	# with an alias. For instance, the "gnu-c++-4.8" is an alias for "gnu-gnu++03-4.8" since the default
+	# language for GCC-4.8.4's g++ command is gnu++03.
+	[ "$cxx_language" = "default" ] && cxx_language=default-c++
+
+	# Spock specs need a version operator
+	[ -n "$cxx_version" ] && cxx_version="-$cxx_version"
+
+    else
+	# Spock specs are VENDOR-LANG-VERS for specific compilers where "-VERS" is optional and its leading "-" can be
+	# any Spock version comparison operator.
+	case "$rmc_or_spock_spec" in
+	    gnu*)
+		local cxx_vendor=gnu
+		local langvers="${rmc_or_spock_spec#gnu}"
+		;;
+	    llvm*)
+		local cxx_vendor=llvm
+		local langvers="${rmc_or_spock_spec#llvm}"
+		;;
+	    intel*)
+		local cxx_vendor=intel
+		local langvers="${rmc_or_spock_spec#intel}"
+		;;
+	    *)
+		die "malformed compiler spec: unknown vendor field in \"$rmc_or_spock_spec\""
+		;;
+	esac
+
+	case "$langvers" in
+	    -gnu++03*)
+		local cxx_language=gnu++03
+		local cxx_version="${langvers#-gnu++03}"
+		;;
+	    -gnu++11*)
+		local cxx_language=gnu++11
+		local cxx_version="${langvers#-gnu++11}"
+		;;
+	    -gnu++14*)
+		local cxx_language=gnu++14
+		local cxx_version="${langvers#-gnu++14}"
+		;;
+	    -gnu++17*)
+		local cxx_language=gnu++17
+		local cxx_version="${langvers#-gnu++17}"
+		;;
+	    -c++03*)
+		local cxx_language=c++03
+		local cxx_version="${langvers#-c++03}"
+		;;
+	    -c++11*)
+		local cxx_language=c++11
+		local cxx_version="${langvers#-c++11}"
+		;;
+	    -c++14*)
+		local cxx_language=c++14
+		local cxx_version="${langvers#-c++14}"
+		;;
+	    -c++17*)
+		local cxx_language=c++17
+		local cxx_version="${langvers#-c++17}";
+		;;
+	    -default)
+		local cxx_language="default-c++"
+		local cxx_version="${langvers#-default}"
+		;;
+	    *)
+		local cxx_language="default-c++"
+		local cxx_version="$langvers"
+		;;
+	    esac
+    fi
+
+    echo "$cxx_vendor:$cxx_language:$cxx_version"
+}
+
 # Runs the rose-install-all-deps. Needed because Spock's --install is not fully implemented yet. Once it's implemented
 # we can remove this function and its call.
 preinstall() {
-    # RMC_CXX_COMPILER is the Spock specification for the compiler, such as gnu-default-c++-5.4, or gnu-c++11-5.4.  We
-    # need to break this into a compiler collection and a language, as in "gnu-5.4" and "default" or "c++11".
-    local cxx_vendor="${RMC_CXX_COMPILER%%-*}"
-    local cxx_version="${RMC_CXX_COMPILER##*-}"
-    local cxx_lang="${RMC_CXX_COMPILER#$cxx_vendor-}"; cxx_lang="${cxx_lang%-$cxx_version}"
+    # RMC_CXX_COMPILER is the Spock specification for the compiler, such as gnu-default-c++-5.4, or gnu-c++11-5.4. The
+    # language is optional, so gnu-5.4 is the same as gnu-default-5.4.  On the other hand, the user could have given us
+    # a Spock spec instead of an RMC spec.
+    local spec=$(parse_cxx_spec "$RMC_COMPILER")
+    local cxx_vendor=$(echo "$spec" |cut -d: -f1)
+    local cxx_lang=$(echo "$spec" |cut -d: -f2 -s)
+    local cxx_version=$(echo "$spec" |cut -d: -f3 -s)
 
     env \
-	COMPILER_COLLECTIONS="$cxx_vendor-$cxx_version" \
+	COMPILER_COLLECTIONS="$cxx_vendor$cxx_version" \
 	CXX_LANGUAGES="$cxx_lang" \
 	CMAKE_VERSIONS=$(echo "$RMC_CMAKE" |sed 's/system/installed/') \
 	BOOST_VERSIONS="$RMC_BOOST" \
@@ -384,29 +538,25 @@ rmc_languages() {
 }
 
 rmc_compiler() {
+    # The argument is rather compilicated, but in short, rmc_compiler defines three variables:
+    #    1. RMC_COMPILER is the argument as given by the user.
+    #    2. RMC_CXX_COMPILER is a Spock spec for the C++ compiler
+    #    3. RMC_C_COMPILER is the Spock spec for the C compiler
+
     check_one_arg rmc_compiler "$@"
+    RMC_COMPILER="$1"
 
-    # RMC compiler names where like VENDOR-VERS-LANG with "-LANG" defaulting to "default"
-    local cxx_vendor=$(echo "$1" |cut -d- -f1)
-    local cxx_version=$(echo "$1" |cut -d- -f2)
-    local cxx_language=$(echo "$1" |cut -d- -f3)
-    [ "$cxx_vendor" = "" -o "$cxx_version" = "" ] && die "rmc_compiler $1 is not proper format"
-    [ "$cxx_language" = "" ] && cxx_language=default
-
-    # Spock vendor names are different
-    [ "$cxx_vendor" = "gcc" ] && cxx_vendor="gnu"
-
-    # Spock includes the LANG as part of the package name, like gnu-c++11. RMC's "default" meant no language was
-    # specified and therefore the actual language varies by compiler vendor and version.  Spock installs such compilers
-    # with an alias. For instance, the "gnu-c++-4.8" is an alias for "gnu-gnu++03-4.8" since the default
-    # language for GCC-4.8.4's g++ command is gnu++03.
-    [ "$cxx_language" = "default" ] && cxx_language=default-c++
+    local spec=$(parse_cxx_spec "$RMC_COMPILER")
+    local cxx_vendor=$(echo "$spec" |cut -d: -f1)
+    local cxx_language=$(echo "$spec" |cut -d: -f2 -s)
+    local cxx_version=$(echo "$spec" |cut -d: -f3 -s)
+    [ "$cxx_vendor" = "" -o "$cxx_language" = "" ] && exit 1 # error already printed
 
     # The Spock specification for the compiler
-    RMC_CXX_COMPILER="$cxx_vendor-$cxx_language-$cxx_version"
+    RMC_CXX_COMPILER="$cxx_vendor-$cxx_language$cxx_version"
 
     # ROSE also needs a C compiler, but it assumes the compiler's default language, whatever that might be.
-    RMC_C_COMPILER="$cxx_vendor-default-c-$cxx_version"
+    RMC_C_COMPILER="$cxx_vendor-default-c$cxx_version"
 }
 
 rmc_debug() {
@@ -437,6 +587,11 @@ rmc_assertions() {
     check_one_arg rmc_assertions "$@"
     check_arg_in rmc_assertions "$1" abort exit throw ambivalent
     RMC_ASSERTIONS="$1"
+}
+
+rmc_binwalk() {
+    check_one_arg rmc_binwalk "$@"
+    RMC_BINWALK="$1"
 }
 
 rmc_boost() {
@@ -482,11 +637,28 @@ rmc_gcrypt() {
 rmc_java() {
     check_one_arg rmc_java "$@"
     RMC_JAVA="$1"
+
+    case "$RMC_JAVA" in
+	none|system)
+	    : good
+	    ;;
+	oracle-java-*)
+	    : good
+	    ;;
+	*)
+	    RMC_JAVA="oracle-java-$RMC_JAVA"
+	    ;;
+    esac
 }
 
 rmc_magic() {
     check_one_arg rmc_magic "$@"
     RMC_MAGIC="$1"
+}
+
+rmc_pqxx() {
+    check_one_arg rmc_pqxx "$@"
+    RMC_PQXX="$1"
 }
 
 rmc_python() {
@@ -561,7 +733,7 @@ if [ "$command" = "init" -a -x "$SPOCK_SCRIPTS/rmc-commands/init" ]; then
 fi
 
 blddir=$(find_build_tree)
-[ -n "$blddir" ] || die "create a .rmc-main.cfg file at the top of your ROSE build tree"
+[ -n "$blddir" ] || die "you may need to run 'rmc init'; see 'rmc init --help'"
 
 
 # Figure out what environment to use
@@ -577,6 +749,7 @@ if [ "$RMC_HASH" = "" ]; then
     (
 	package_spec rmc_compiler "$RMC_CXX_COMPILER"
 	package_spec rmc_compiler "$RMC_C_COMPILER"
+	package_spec rmc_binwalk  "$RMC_BINWALK"
 	package_spec rmc_boost    "$RMC_BOOST"
 	package_spec rmc_cmake    "$RMC_CMAKE"
 	package_spec rmc_dlib     "$RMC_DLIB"
@@ -586,6 +759,7 @@ if [ "$RMC_HASH" = "" ]; then
 	package_spec rmc_gcrypt   "$RMC_GCRYPT"
 	package_spec rmc_java     "$RMC_JAVA"
 	package_spec rmc_magic    "$RMC_MAGIC"
+	package_spec rmc_pqxx     "$RMC_PQXX"
 	package_spec rmc_python   "$RMC_PYTHON"
 	package_spec rmc_qt       "$RMC_QT"
 	package_spec rmc_readline "$RMC_READLINE"

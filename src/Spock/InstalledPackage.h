@@ -16,7 +16,8 @@ class InstalledPackage: public Package {
     VersionNumber version_;
     std::vector<PackagePattern> dependencyPatterns_;
     std::vector<GlobalFlagPtr> flags_;
-    boost::posix_time::ptime timestamp_;
+    boost::posix_time::ptime installedTimeStamp_;       // time package was installed
+    boost::posix_time::ptime usedTimeStamp_;            // last time package was used by spock-shell
     Environment environmentSearchPaths_;
 
 protected:
@@ -60,9 +61,18 @@ public:
      *  The time stamp represents when the package was installed.
      *
      *  @{ */
-    const boost::posix_time::ptime& timestamp() const { return timestamp_; }
-    void timestamp(const boost::posix_time::ptime&);
+    const boost::posix_time::ptime& installedTimeStamp() const { return installedTimeStamp_; }
+    void installedTimeStamp(const boost::posix_time::ptime&);
     /** @} */
+
+    /** Time stamp for last time this package was used by spock-shell.
+     *
+     * @{ */
+    const boost::posix_time::ptime& usedTimeStamp() const { return usedTimeStamp_; }
+    void usedTimeStamp(const Context&, const boost::posix_time::ptime&);
+    void stampUsedTime(const Context&);
+    /** @} */
+    
 
     /** Environment variable search paths.
      *
@@ -81,6 +91,9 @@ public:
      *
      *  The package object itself will still exist while there are references to it. */
     void remove(Context&);
+
+private:
+    boost::filesystem::path usedTimeStampFile(const Context&) const;
 };
 
 } // namespace
