@@ -35,7 +35,7 @@ public:
      *  will also match version numbers that have additional parts. For example, "-2.5" will not only match "2.5" but also
      *  "2.5.0", "2.5.1", etc.
      *
-     *  The {HASH} is an eight-character hexadecimal number introduced with an "@9cb9b45d".
+     *  The {HASH} is an eight-character hexadecimal number introduced with an "@"-sign, as in "@9cb9b45d".
      *
      * @{ */
     PackagePattern(const std::string&) /*implicit*/;
