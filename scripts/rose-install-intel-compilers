@@ -65,7 +65,7 @@ generate_wrapper() {
 # This script searches for Intel compilers (like "icpc") in common places and installs a shell script (like
 # "icpc-16.0.3") that's a wrapper around each compiler. This allows us to invoke specific versions of the compilers, and
 # to be able to invoke multiple versions in a single shell environment.
-for dir in /usr/apps/intel/{14,15,16}*; do
+for dir in /usr/apps/intel/{14,15,16,2017}*; do
     [ -r "$dir/setup.sh" ] || continue
     (
 	echo "installing $dir"
