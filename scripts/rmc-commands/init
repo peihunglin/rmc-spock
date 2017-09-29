@@ -131,7 +131,7 @@ project_none() {
 	rmc_java)          echo 8    		      ;;
 	rmc_magic)         echo none 		      ;;
 	rmc_pqxx)          echo none 		      ;;
-	rmc_python)        echo 3    		      ;;
+	rmc_python)        echo none   		      ;;
 	rmc_qt)            echo none 		      ;;
 	rmc_readline)      echo none 		      ;;
 	rmc_spot)          echo none 		      ;;
@@ -280,7 +280,7 @@ config_property() {
     config_property rmc_java          "Oracle JDK version number (optional)"
     config_property rmc_magic         "libmagic version number (optional)"
     config_property rmc_pqxx          "PostgreSQL C++ library (optional)"
-    config_property rmc_python        "Python version number (required)"
+    config_property rmc_python        "Python version number (optional)"
     config_property rmc_qt            "Qt version number (optional)"
     config_property rmc_readline      "libreadline version number (optional)"
     config_property rmc_spot          "Spot library version number (optional)"
