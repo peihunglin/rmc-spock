@@ -1,5 +1,5 @@
 package:        wt
-versions:       [ 3.3.3, 3.3.4, 3.3.5, 3.3.6, 3.3.7 ]
+versions:       [ 3.3.3, 3.3.4, 3.3.5, 3.3.6, 3.3.7, 3.3.8 ]
 
 dependencies:
   - version: "=3.3.3"
@@ -39,6 +39,10 @@ variables:
 
   - version: ">=3.3.4"
     download_url: "https://github.com/kdeforche/wt/archive/$PACKAGE_VERSION.tar.gz"
+    patches: rpaths
+
+  - version: ">=3.3.8"
+    download_url: "https://github.com/emweb/wt/archive/$PACKAGE_VERSION.tar.gz"
     patches: rpaths
 
 download:

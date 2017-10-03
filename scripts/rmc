@@ -275,7 +275,7 @@ read_config_file() {
     export RMC_JAVA=none
     export RMC_MAGIC=none
     export RMC_PQXX=none
-    export RMC_PYTHON=3
+    export RMC_PYTHON=none
     export RMC_QT=none
     export RMC_READLINE=none
     export RMC_SPOT=none
@@ -675,10 +675,6 @@ rmc_python() {
     case "$RMC_PYTHON" in
 	2|*python2*) RMC_PYTHON=2 ;;
 	3|*python3*) RMC_PYTHON=3 ;;
-	none)
-	    echo "$arg0: python is a ROSE requirement but you specified \"$RMC_PYTHON\"" >&2
-	    exit 1
-	    ;;
     esac
 }
 

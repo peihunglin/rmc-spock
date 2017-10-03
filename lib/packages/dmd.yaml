@@ -1,0 +1,38 @@
+package:        dmd
+versions:       [ 2.073.2, 2.074.0, 2.074.1, 2.075.1, 2.076.0 ]
+
+dependencies:
+  - version: ">=2.073"
+    install: []
+    build: []
+
+download:
+  - version: ">=2.073"
+    shell: |
+        wget -O install.sh https://dlang.org/install.sh
+
+        # The install.sh script has multiple bugs regarding it's "--path" switch:
+        #   1. During parsing, it fails to remove it's argument from $ARGV, resulting in trying to reparse the arg as a switch
+        #   2. It creates ~/dlang even if --path is set to something else
+        sed 's/^path=.*/path=$(pwd)\/download/' < install.sh > install-fixed.sh
+
+        bash ./install-fixed.sh dmd-$PACKAGE_VERSION
+
+        # We don't want users using this! It would interfere with how Spock manages packages.  Also, its method of
+        # indicating the package in the Bash prompt is not scalable (not to mention, ugly).
+        rm download/install.sh
+        rm download/dmd-$PACKAGE_VERSION/activate
+
+        tar cf download.tar download
+        gzip -9 download.tar
+
+install:
+  - version: ">=2.073"
+    shell: |
+        cp -pdr download/* $PACKAGE_ROOT/.
+
+        spock-export PATH "$PACKAGE_ROOT/dmd-$PACKAGE_VERSION/linux/bin64"
+
+        # The original "activate" script also added dmd-$PACKAGE_VERSION/linux/lib64 to LD_LIBRARY_PATH,
+        # but we omit that here because LD_LIBRARY_PATH is broken by design. It is better to encode the
+        # library search paths into the executables.
