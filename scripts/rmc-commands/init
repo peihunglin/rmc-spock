@@ -133,6 +133,7 @@ project_none() {
 	rmc_pqxx)          echo none 		      ;;
 	rmc_python)        echo none   		      ;;
 	rmc_qt)            echo none 		      ;;
+	rmc_raja)          echo none                  ;;
 	rmc_readline)      echo none 		      ;;
 	rmc_spot)          echo none 		      ;;
 	rmc_sqlite)        echo none 		      ;;
@@ -208,6 +209,7 @@ project_envars() {
 	rmc_pqxx)          echo "$PQXX"               ;;
 	rmc_python)        echo "$PYTHON"             ;;
 	rmc_qt)            echo "$QT"                 ;;
+	rmc_raja)          echo "$RAJA"               ;;
 	rmc_readline)      echo "$READLINE"           ;;
 	rmc_spot)          echo "$SPOT"               ;;
 	rmc_sqlite)        echo "$SQLITE"             ;;
@@ -282,6 +284,7 @@ config_property() {
     config_property rmc_pqxx          "PostgreSQL C++ library (optional)"
     config_property rmc_python        "Python version number (optional)"
     config_property rmc_qt            "Qt version number (optional)"
+    config_property rmc_raja          "performance portability layer (optional)"
     config_property rmc_readline      "libreadline version number (optional)"
     config_property rmc_spot          "Spot library version number (optional)"
     config_property rmc_sqlite        "SQLite version number (optional)"

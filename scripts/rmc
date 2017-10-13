@@ -277,6 +277,7 @@ read_config_file() {
     export RMC_PQXX=none
     export RMC_PYTHON=none
     export RMC_QT=none
+    export RMC_RAJA=none
     export RMC_READLINE=none
     export RMC_SPOT=none
     export RMC_SQLITE=none
@@ -683,6 +684,11 @@ rmc_qt() {
     RMC_QT="$1"
 }
 
+rmc_raja() {
+    check_one_arg rmc_raja "$@"
+    RMC_RAJA="$1"
+}
+
 rmc_readline() {
     check_one_arg rmc_readline "$@"
     RMC_READLINE="$1"
@@ -758,6 +764,7 @@ if [ "$RMC_HASH" = "" ]; then
 	package_spec rmc_pqxx     "$RMC_PQXX"
 	package_spec rmc_python   "$RMC_PYTHON"
 	package_spec rmc_qt       "$RMC_QT"
+	package_spec rmc_raja     "$RMC_RAJA"
 	package_spec rmc_readline "$RMC_READLINE"
 	package_spec rmc_spot     "$RMC_SPOT"
 	package_spec rmc_sqlite   "$RMC_SQLITE"
