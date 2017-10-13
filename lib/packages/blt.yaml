@@ -1,0 +1,25 @@
+package:	blt
+
+versions:	[ 0.1 ]
+
+dependencies:
+  - version: ">=0.1"
+    install: [ ]
+    build: [ ]
+
+variables:
+  - version: ">=0.1"
+    repo: https://github.com/llnl/blt
+
+download:
+  - version: ">=0.1"
+    shell: |
+      git clone "$repo" blt
+      cd blt
+      git archive --format=tar --prefix=download/ HEAD |gzip -9 >../download.tar.gz
+
+install:
+  - version: ">=0.1"
+    shell: |
+
+      cp -r download/* "$PACKAGE_ROOT"/
