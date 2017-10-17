@@ -1,0 +1,33 @@
+package: z3
+
+versions: ["4.5.0"]
+
+dependencies:
+  - version: ">=4.5.0"
+    aliases: []
+    install: [ python, c++-compiler, c-compiler ]
+    build: [ default-c ]
+
+variables:
+  - version: ">=4.5.0"
+    url: https://github.com/Z3Prover/z3
+
+download:
+  - version: ">=4.5.0"
+    shell: |
+      git clone "$url" download
+      (cd download && git checkout -b spock "z3-$PACKAGE_VERSION")
+      (cd download && git archive --format=tar --prefix=download/ HEAD) >download.tar
+      gzip -9 download.tar
+
+install:
+  - version: ">=4.5.0"
+    shell: |
+      cc --spock-triplet
+      python --version
+
+      cd download
+      CXX=c++ CC=cc python scripts/mk_make.py --prefix="$PACKAGE_ROOT"
+      cd build
+      make -j$PARALLELISM
+      make install
