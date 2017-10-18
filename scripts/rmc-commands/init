@@ -140,6 +140,7 @@ project_none() {
 	rmc_wt)            echo none 		      ;;
 	rmc_yaml)          echo none 		      ;;
 	rmc_yices)         echo none 		      ;;
+	rmc_z3)            echo none                  ;;
     esac
 }
 
@@ -216,6 +217,7 @@ project_envars() {
 	rmc_wt)            echo "$WT"                 ;;
 	rmc_yaml)          echo "$YAML"               ;;
 	rmc_yices)         echo "$YICES"              ;;
+	rmc_z3)            echo "$Z3"                 ;;
     esac
 }
 
@@ -291,6 +293,7 @@ config_property() {
     config_property rmc_wt            "Wt version number (optional)"
     config_property rmc_yaml          "Yaml-cpp version number (optional)"
     config_property rmc_yices         "Yices version number (optional)"
+    config_property rmc_z3            "Z3 SMT solver version number (optional)"
 ) >.rmc-main.cfg
 
 if [ "$do_batch_mode" = "" ]; then

@@ -284,6 +284,8 @@ read_config_file() {
     export RMC_WT=none
     export RMC_YAML=none
     export RMC_YICES=none
+    export RMC_Z3=none
+
     export RMC_INSTALLED=yes
 
     # Read config file to override the defaults
@@ -719,6 +721,11 @@ rmc_yices() {
     RMC_YICES="$1"
 }
 
+rmc_z3() {
+    check_one_arg rmc_z3 "$@"
+    RMC_Z3="$1"
+}
+
 
 ########################################################################################################################
 #                        __  __       _
@@ -771,6 +778,7 @@ if [ "$RMC_HASH" = "" ]; then
 	package_spec rmc_wt       "$RMC_WT"
 	package_spec rmc_yaml     "$RMC_YAML"
 	package_spec rmc_yices    "$RMC_YICES"
+	package_spec rmc_z3       "$RMC_Z3"
     ) |sed '/^$/d' >"$depfile"
 
     # DEBUGGING
