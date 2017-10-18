@@ -1,0 +1,27 @@
+package: libtool
+versions: [ 1.5.10, 1.5.12, 1.5.16,
+            2.4.4,  2.4.5,  2.4.6]
+
+dependencies:
+  - version: ">=1"
+    install: [c-compiler]
+    build: []
+
+download:
+  - version: ">=1"
+    shell: |
+      wget -O -  http://ftpmirror.gnu.org/libtool/libtool-$PACKAGE_VERSION.tar.gz |tar xzf -
+      mv libtool-$PACKAGE_VERSION download
+      tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=1"
+    shell: |
+      cc --spock-triplet
+
+      cd download
+      CC=cc CPPFLAGS="-I. $(spock-compiler-incdirs)" LDFLAGS="$(spock-compiler-libdirs)" \
+        ./configure --prefix="$PACKAGE_ROOT"
+
+      make -j$PARALLELISM
+      make install -j$PARALLELISM
