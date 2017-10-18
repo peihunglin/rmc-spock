@@ -46,8 +46,15 @@ InstalledPackage::instance(const Context &ctx, const std::string &hash, const bo
     // File must be a YAML file
     if (!boost::filesystem::exists(configFile))
         throw Exception::NotFound("package " + hash + " does not seem to be installed");
-    YAML::Node config = YAML::LoadFile(configFile.string());
-
+    YAML::Node config;
+    try {
+        config = YAML::LoadFile(configFile.string());
+    } catch (const YAML::BadFile &e) {
+        throw Exception::SyntaxError("yaml parser failed in file " + configFile.string());
+    } catch (const YAML::ParserException &e) {
+        throw YAML::ParserException(e.mark, e.msg + " in " + configFile.string());
+    }
+    
     // Create the object and initialize it
     InstalledPackage *self = new InstalledPackage;
     self->hash(hash);
