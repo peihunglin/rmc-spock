@@ -25,3 +25,5 @@ install:
 
       make -j$PARALLELISM
       make install -j$PARALLELISM
+
+      spock-export PATH "$PACKAGE_ROOT/bin"
