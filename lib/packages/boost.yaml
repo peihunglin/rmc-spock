@@ -137,8 +137,8 @@ install:
         cc --spock-triplet
         c++ --spock-triplet
 
-        # Initialization. Boost's bjam gives an error if parallelism is
-        # larger than 64.
+        # Initialization. Boost's bjam gives an error if parallelism is larger than 64.
+        
         [ "$PARALLELISM" -gt 64 ] && PARALLELISM=64
         libraries_commas=$(echo "$libraries" |sed 's/  */,/g')
 
@@ -150,6 +150,7 @@ install:
         # Configuration.  It's unfortunate that boost uses a custom build script instead of something more popular like
         # cmake or autoconf. Therefore, I'm not quite sure that these commands are actually building what I expect them
         # to be building.
+        
         cxx_vendor=$(c++ --spock-triplet |cut -d: -f1)
         cxx_version=$(c++ --spock-triplet |cut -d: -f3)
         boost_toolset=
@@ -158,15 +159,28 @@ install:
             llvm) boost_toolset=clang ;;
             intel) boost_toolset=intel-linux ;;
         esac
+        cxx_version=$(c++ --spock-triplet |cut -d: -f3)
         (
             echo "# Warning!!! Spaces are significant in the following strings."
-            echo "using $boost_toolset : : $(which c++) ;"
+            echo "using $boost_toolset : $cxx_version : $(which c++) ;"
             echo "using zlib : $ZLIB_VERSION : <include>$ZLIB_INCDIRS <search>$ZLIB_LIBDIRS ;"
         ) >"user-config.jam"
-        export BOOST_BUILD_PATH="$(pwd)"
-        
-        ./bootstrap.sh --prefix="$PACKAGE_ROOT" --with-libraries=$libraries_commas --with-toolset=$boost_toolset
 
+        # The BOOST_BUILD_PATH env. var must be set in order for boost to find "user-config.jam". We set it for each
+        # command to help people that cut-n-paste these commands not forget about it and then spend hours trying to
+        # figure out why b2 is running "icpc" instead of the specified compiler.
+        #
+        # I am unable to get bootstrap to compile b2 using the compiler specified in user-config.jam, but that's
+        # probably okay for two reasons: (1) the "icc" that it uses is the one matched by the dependencies.install above
+        # in this YAML file since Spock put it in the front of $PATH, and (2) we only use b2 to compile the rest of boost.
+        
+        BOOST_BUILD_PATH=$(pwd) ./bootstrap.sh --prefix="$PACKAGE_ROOT" --with-libraries=$libraries_commas --with-toolset=$boost_toolset
+
+        # bootstrap.sh creates a project-config.jam file that contains a duplicate "using intel-linux" line. I'm not a
+        # boost build expert (nor do I know anyone who actually is), and I'm not sure why it causes a problem since it's
+        # protected with an "if" statement, but if we remove the entire "if" then ./b2 works correctly.
+        
+        sed --in-place '/^if/,/^}/ d' project-config.jam
 
         # Our scripts customarily build, then install as two separate steps.  This is sometimes more efficient if the
         # installation directory is an NFS mount.  Also, be liberal about turning on debugging output during the build,
@@ -179,8 +193,9 @@ install:
         # I could not find documentation about whether adding the "using zlib" to user-config.jam is sufficient to cause
         # that configuration of zlib to be used, or whether adding it only to b2 is sufficient (does bootstrap.sh need to
         # know about zlib when building b2?). Therefore, I'm adding it in both places.
-        ./b2 --prefix="$PACKAGE_ROOT" $iostream_flags toolset=$boost_toolset -d+2 -s ZLIB_INCLUDE=$ZLIB_INCDIRS -s ZLIB_LIBPATH=$ZLIB_LIBDIRS -j$PARALLELISM
-        ./b2 --prefix="$PACKAGE_ROOT" $iostream_flags toolset=$boost_toolset -d+2 -s ZLIB_INCLUDE=$ZLIB_INCDIRS -s ZLIB_LIBPATH=$ZLIB_LIBDIRS install
+        
+        BOOST_BUILD_PATH=$(pwd) ./b2 --prefix="$PACKAGE_ROOT" $iostream_flags toolset=$boost_toolset -d+2 -s ZLIB_INCLUDE=$ZLIB_INCDIRS -s ZLIB_LIBPATH=$ZLIB_LIBDIRS -j$PARALLELISM
+        BOOST_BUILD_PATH=$(pwd) ./b2 --prefix="$PACKAGE_ROOT" $iostream_flags toolset=$boost_toolset -d+2 -s ZLIB_INCLUDE=$ZLIB_INCDIRS -s ZLIB_LIBPATH=$ZLIB_LIBDIRS install
 
         # Finally, describe the variables that should be adjusted or
         # created when this package is employed by a user.  These
