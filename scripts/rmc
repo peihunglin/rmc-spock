@@ -285,7 +285,7 @@ read_config_file() {
     export RMC_YAML=none
     export RMC_YICES=none
     export RMC_Z3=none
-
+    export RMC_LIBTOOL=none
     export RMC_INSTALLED=yes
 
     # Read config file to override the defaults
@@ -472,6 +472,7 @@ preinstall() {
 	PYTHON_VERSIONS=$(echo "$RMC_PYTHON" |sed 's/system/installed/') \
 	SPOT_VERSIONS=$(echo "$RMC_SPOT" |sed 's/system/installed/') \
 	YICES_VERSIONS=$(echo "$RMC_YICES" |sed 's/system/installed/') \
+	LIBTOOL_VERSIONS=$(echo "$RMC_LIBTOOL" |sed 's/system/installed/') \
 	YAMLCPP_VERSIONS=$(echo "$RMC_YAML" |sed 's/system/installed/') \
 	IGNORE_FAILURES=no \
 	$SPOCK_SCRIPTS/rose-install-all-deps
@@ -726,6 +727,10 @@ rmc_z3() {
     RMC_Z3="$1"
 }
 
+rmc_libtool() {
+    check_one_arg rmc_libtool "$@"
+    RMC_LIBTOOL="$1"
+}
 
 ########################################################################################################################
 #                        __  __       _
@@ -779,6 +784,7 @@ if [ "$RMC_HASH" = "" ]; then
 	package_spec rmc_yaml     "$RMC_YAML"
 	package_spec rmc_yices    "$RMC_YICES"
 	package_spec rmc_z3       "$RMC_Z3"
+	package_spec rmc_libtool  "$RMC_LIBTOOL"
     ) |sed '/^$/d' >"$depfile"
 
     # DEBUGGING
