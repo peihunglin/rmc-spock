@@ -273,6 +273,7 @@ read_config_file() {
     export RMC_ELF=none
     export RMC_GCRYPT=none
     export RMC_JAVA=none
+    export RMC_LIBTOOL=none
     export RMC_MAGIC=none
     export RMC_PQXX=none
     export RMC_PYTHON=none
@@ -285,7 +286,6 @@ read_config_file() {
     export RMC_YAML=none
     export RMC_YICES=none
     export RMC_Z3=none
-    export RMC_LIBTOOL=none
     export RMC_INSTALLED=yes
 
     # Read config file to override the defaults
@@ -772,6 +772,7 @@ if [ "$RMC_HASH" = "" ]; then
 	package_spec rmc_elf      "$RMC_ELF"
 	package_spec rmc_gcrypt   "$RMC_GCRYPT"
 	package_spec rmc_java     "$RMC_JAVA"
+	package_spec rmc_libtool  "$RMC_LIBTOOL"
 	package_spec rmc_magic    "$RMC_MAGIC"
 	package_spec rmc_pqxx     "$RMC_PQXX"
 	package_spec rmc_python   "$RMC_PYTHON"
@@ -784,7 +785,6 @@ if [ "$RMC_HASH" = "" ]; then
 	package_spec rmc_yaml     "$RMC_YAML"
 	package_spec rmc_yices    "$RMC_YICES"
 	package_spec rmc_z3       "$RMC_Z3"
-	package_spec rmc_libtool  "$RMC_LIBTOOL"
     ) |sed '/^$/d' >"$depfile"
 
     # DEBUGGING

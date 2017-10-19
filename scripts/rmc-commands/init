@@ -129,6 +129,7 @@ project_none() {
 	rmc_elf)           echo none 		      ;;
 	rmc_gcrypt)        echo none 		      ;;
 	rmc_java)          echo 8    		      ;;
+	rmc_libtool)       echo ambivalent            ;;
 	rmc_magic)         echo none 		      ;;
 	rmc_pqxx)          echo none 		      ;;
 	rmc_python)        echo none   		      ;;
@@ -206,6 +207,7 @@ project_envars() {
 	rmc_elf)           echo "$ELF"                ;;
 	rmc_gcrypt)        echo "$GCRYPT"             ;;
 	rmc_java)          echo "$JAVA"               ;;
+	rmc_libtool)       echo "$LIBTOOL"            ;;
 	rmc_magic)         echo "$MAGIC"              ;;
 	rmc_pqxx)          echo "$PQXX"               ;;
 	rmc_python)        echo "$PYTHON"             ;;
@@ -282,6 +284,7 @@ config_property() {
     config_property rmc_elf           "ELF library version number (needed by dwarf)"
     config_property rmc_gcrypt        "GNU gcrypt library version number (optional)"
     config_property rmc_java          "Oracle JDK version number (optional)"
+    config_property rmc_libtool       "GNU libtool version number (optional)"
     config_property rmc_magic         "libmagic version number (optional)"
     config_property rmc_pqxx          "PostgreSQL C++ library (optional)"
     config_property rmc_python        "Python version number (optional)"
