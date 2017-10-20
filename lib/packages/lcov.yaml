@@ -1,0 +1,27 @@
+package:	lcov
+
+versions:	[ 1.13 ]
+
+dependencies:
+  - version: ">=0.0.0"
+    install: []
+    build: []
+
+variables:
+  - version: ">=0.0.0"
+    repo: https://github.com/linux-test-project/lcov.git
+
+download:
+  - version: ">=0.0.0"
+    shell: |
+      git clone "$repo" lcov
+      cd lcov
+      git archive --format=tar --prefix=download/ HEAD |gzip -9 >../download.tar.gz
+
+install:
+  - version: ">=0.0.0"
+    shell: |
+      cxx --spock-triplet
+      cp -r download/* "$PACKAGE_ROOT"
+ 
+      spock-export PATH "$PACKAGE_ROOT/bin"
