@@ -128,7 +128,7 @@ project_none() {
 	rmc_edg)           echo ambivalent 	      ;;
 	rmc_elf)           echo none 		      ;;
 	rmc_gcrypt)        echo none 		      ;;
-	rmc_java)          echo 8    		      ;;
+	rmc_java)          echo none   		      ;;
 	rmc_libtool)       echo ambivalent            ;;
 	rmc_magic)         echo none 		      ;;
 	rmc_pqxx)          echo none 		      ;;
