@@ -1,0 +1,41 @@
+# D wrapper for capstone
+package:        capstone-d
+versions:       [ "3.0.5-rc3", "4.0-alpha5" ]
+
+dependencies:
+  - version:    "=3.0.5-rc3"
+    install:    ["capstone=3.0.5-rc3", dstep]
+    build:      []
+
+  - version:    "=4.0-alpha5"
+    install:    ["capstone=4.0-alpha5", dstep]
+    build:      []
+
+download:
+  - version:    ">=0.0.0"
+    shell: |
+      # There's nothing to download
+      mkdir download
+      tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version:    ">=0.0.0"
+    shell: |
+      dmd --version
+      dstep --version
+      cd download
+
+      #==== Build ====
+      # Even with "-o ./" dstep writes .d files to the same directory as the *.h files.
+      # Therefore, we need to copy all the *.h files here first and then remove them afterward.
+      mkdir capstone
+      cp $CAPSTONE_INCDIRS/capstone/*.h capstone
+      dstep -Dbool=int -o ./ --package capstone --alias-enum-members=true capstone/*.h
+      rm capstone/*.h
+
+      # Some post-dstep fixups
+      sed --in-place 's/va_list/void*/g' capstone/capstone.d
+
+      #==== Installation ====
+      mkdir -p $PACKAGE_ROOT/include/capstone
+      mv capstone/*.d $PACKAGE_ROOT/include/capstone

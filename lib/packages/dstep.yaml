@@ -1,0 +1,38 @@
+package:         dstep
+
+# The latest tag "v0.2.2" is from Jan 2016 and doesn't compile with more recent versions of DMD. Therefore,
+# use specific git commit hashes.
+versions:
+  - "c8fc7a3a" # 2017-10-21
+
+dependencies:
+  - version:     ">=0.0.0"
+    install:     [dmd]
+    build:       []
+
+variables:
+  - version:     ">=0.0.0"
+    repo:        https://github.com/jacob-carlborg/dstep
+
+download:
+  - version:     ">=0.0.0"
+    shell: |
+      git clone "$repo" download
+      (cd download && git checkout -b "v-$PACKAGE_VERSION" "$PACKAGE_VERSION")
+
+      # Installation actually needs a git repository, so just tar up the whole repo
+      tar cvf download.tar download
+      gzip -9 download.tar
+
+install:
+  - version:     ">=0.0.0"
+    shell: |
+      dub --version
+      cd download
+      dub build
+
+      # There doesn't appear to be an install target
+      mkdir $PACKAGE_ROOT/bin
+      cp bin/dstep $PACKAGE_ROOT/bin
+
+      spock-export PATH "$PACKAGE_ROOT/bin"
