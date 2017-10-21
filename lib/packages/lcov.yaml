@@ -21,7 +21,7 @@ download:
 install:
   - version: ">=0.0.0"
     shell: |
-      cxx --spock-triplet
+      # This is perl, so nothing to compile
       cp -r download/* "$PACKAGE_ROOT"
  
       spock-export PATH "$PACKAGE_ROOT/bin"

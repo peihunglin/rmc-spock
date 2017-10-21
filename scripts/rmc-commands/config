@@ -41,8 +41,11 @@ cxx_flags() {
 
 # Flags for code coverage
 code_coverage_flags() {
-    case "$RMC_CODE_COVERAGE" in
-	yes)
+    case "$RMC_LCOV" in
+	""|no|ambivalent)
+	    : nothing to do
+	    ;;
+	*)
 	    case "$CXX_VENDOR" in
 		gnu|llvm)
 		    echo "-fprofile-arcs -ftest-coverage"
@@ -51,12 +54,6 @@ code_coverage_flags() {
 		    die "cannot generate code coverage results for $CXX_VENDOR compilers"
 		    ;;
 	    esac
-	    ;;
-	""|no|ambivalent)
-	    : nothing to do
-	    ;;
-	*)
-	    die "unrecognized code coverage mode: $RMC_CODE_COVERAGE"
 	    ;;
     esac
 }

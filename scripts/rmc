@@ -260,7 +260,6 @@ read_config_file() {
     export RMC_DEBUG=ambivalent
     export RMC_OPTIMIZE=ambivalent
     export RMC_WARNINGS=ambivalent
-    export RMC_CODE_COVERAGE=ambivalent
     export RMC_ASSERTIONS=ambivalent
 
     export RMC_BINWALK=none
@@ -583,12 +582,6 @@ rmc_warnings() {
     RMC_WARNINGS="$1"
 }
 
-rmc_code_coverage() {
-    check_one_arg rmc_code_coverage "$@"
-    check_arg_in rmc_code_coverage "$1" yes no ambivalent
-    RMC_CODE_COVERAGE="$1"
-}
-
 rmc_assertions() {
     check_one_arg rmc_assertions "$@"
     check_arg_in rmc_assertions "$1" abort exit throw ambivalent
@@ -655,6 +648,16 @@ rmc_java() {
 	    RMC_JAVA="oracle-java-$RMC_JAVA"
 	    ;;
     esac
+}
+
+rmc_libtool() {
+    check_one_arg rmc_libtool "$@"
+    RMC_LIBTOOL="$1"
+}
+
+rmc_lcov() {
+    check_one_arg rmc_lcov "$@"
+    RMC_LCOV="$1"
 }
 
 rmc_magic() {
@@ -729,15 +732,6 @@ rmc_z3() {
     RMC_Z3="$1"
 }
 
-rmc_libtool() {
-    check_one_arg rmc_libtool "$@"
-    RMC_LIBTOOL="$1"
-}
-
-rmc_lcov() {
-    check_one_arg rmc_lcov "$@"
-    RMC_LCOV="$1"
-}
 ########################################################################################################################
 #                        __  __       _
 #                       |  \/  | __ _(_)_ __

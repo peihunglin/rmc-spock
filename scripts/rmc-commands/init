@@ -116,7 +116,6 @@ project_none() {
 	rmc_debug)         echo yes        	      ;;
 	rmc_optimize)      echo ambivalent 	      ;;
 	rmc_warnings)      echo yes 		      ;;
-	rmc_code_coverage) echo no  		      ;;
 	rmc_assertions)    echo ambivalent            ;;
 	rmc_languages)     echo all  		      ;;
 	rmc_binwalk)       echo none 		      ;;
@@ -129,6 +128,7 @@ project_none() {
 	rmc_elf)           echo none 		      ;;
 	rmc_gcrypt)        echo none 		      ;;
 	rmc_java)          echo none   		      ;;
+	rmc_lcov)          echo none                  ;;
 	rmc_libtool)       echo ambivalent            ;;
 	rmc_magic)         echo none 		      ;;
 	rmc_pqxx)          echo none 		      ;;
@@ -194,7 +194,6 @@ project_envars() {
 	rmc_debug)         echo "$DEBUG"              ;;
 	rmc_optimize)      echo "$OPTIMIZE"           ;;
 	rmc_warnings)      echo "$WARNINGS"           ;;
-	rmc_code_coverage) echo "$CODE_COVERAGE"      ;;
 	rmc_assertions)    echo "$ASSERTIONS"         ;;
 	rmc_languages)     echo "$LANGUAGES"          ;;
 	rmc_binwalk)       echo "$BINWALK"            ;;
@@ -207,6 +206,7 @@ project_envars() {
 	rmc_elf)           echo "$ELF"                ;;
 	rmc_gcrypt)        echo "$GCRYPT"             ;;
 	rmc_java)          echo "$JAVA"               ;;
+	rmc_lcov)          echo "$LCOV"               ;;
 	rmc_libtool)       echo "$LIBTOOL"            ;;
 	rmc_magic)         echo "$MAGIC"              ;;
 	rmc_pqxx)          echo "$PQXX"               ;;
@@ -267,7 +267,6 @@ config_property() {
     config_property rmc_debug         "debug support: 'yes' or 'no'"
     config_property rmc_optimize      "optimizations: 'yes', 'no', or 'ambivalent'"
     config_property rmc_warnings      "compiler warnings: 'yes' or 'no'"
-    config_property rmc_code_coverage "generate code coverage stats: 'yes' or 'no'"
     echo
     echo "# Configuration options"
     config_property rmc_assertions    "the --enable-assertions value or 'ambivalent'"
@@ -284,6 +283,7 @@ config_property() {
     config_property rmc_elf           "ELF library version number (needed by dwarf)"
     config_property rmc_gcrypt        "GNU gcrypt library version number (optional)"
     config_property rmc_java          "Oracle JDK version number (optional)"
+    config_property rmc_lcov          "Lcov version, and turns on coverage analysis (optional)"
     config_property rmc_libtool       "GNU libtool version number (optional)"
     config_property rmc_magic         "libmagic version number (optional)"
     config_property rmc_pqxx          "PostgreSQL C++ library (optional)"
