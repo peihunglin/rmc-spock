@@ -1,0 +1,33 @@
+package:        capstone
+versions:       [3.0.5-rc3, 4.0-alpha5]
+
+dependencies:
+  - version:    ">=0.0.0"
+    install:    [c-compiler]
+    build:      []
+
+variables:
+  - version:    ">=0.0.0"
+    repo:       https://github.com/aquynh/capstone
+
+download:
+  - version:    ">=0.0.0"
+    shell: |
+      git clone "$repo" capstone
+      cd capstone
+      git checkout -b "v$PACKAGE_VERSION" "$PACKAGE_VERSION"
+      git archive --format=tar --prefix=download/ HEAD > ../download.tar
+      gzip -9 ../download.tar
+
+install:
+  - version:    ">=0.0.0"
+    shell: |
+      cc --spock-triplet
+
+      cd download
+      ./make.sh
+      PREFIX="$PACKAGE_ROOT" ./make.sh install
+
+      # Capstone has a "cstool" that it installs in $PACKAGE_ROOT/bin, but it doesn't use rpaths to
+      # specify the directory for the shared library. Therefore, if you want to use it, you'll need
+      # to use the broken-by-design LD_LIBRARY_PATH. For this reason, I'm not adding it to $PATH.
