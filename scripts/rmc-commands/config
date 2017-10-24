@@ -42,7 +42,7 @@ cxx_flags() {
 # Flags for code coverage
 code_coverage_flags() {
     case "$RMC_LCOV" in
-	""|no|ambivalent)
+	""|no|none|ambivalent)
 	    : nothing to do
 	    ;;
 	*)
