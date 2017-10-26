@@ -22,6 +22,8 @@ install:
   - version: ">=0.0.0"
     shell: |
       # This is perl, so nothing to compile
-      cp -r download/* "$PACKAGE_ROOT"
+      cd download
+      sed --in-place "s%^[ \t]*PREFIX  :=[ \t].*%PREFIX  := $PACKAGE_ROOT%" Makefile
+      make install
  
       spock-export PATH "$PACKAGE_ROOT/bin"
