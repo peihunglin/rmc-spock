@@ -177,14 +177,14 @@ fi
 if [ "${#CXX_COMPILER_SPECS[*]}" -gt 0 ]; then
     specs=()
     for pattern in "${CXX_COMPILER_SPECS[@]}"; do
-	specs=("${specs[@]}" $($SPOCK_BINDIR/spock-ls -1 "$pattern"))
+	specs=("${specs[@]}" $($SPOCK_BINDIR/spock-ls --usable -1 "$pattern"))
     done
     CXX_COMPILER_SPECS=("${specs[@]}")
 else
     # Install missing compiler collections and accumulate names of all in using_collections
     using_collections=()
     if [ "$COMPILER_COLLECTIONS" = "installed" ]; then
-	using_collections=($($SPOCK_BINDIR/spock-ls -1 compiler-collection))
+	using_collections=($($SPOCK_BINDIR/spock-ls --usable -1 compiler-collection))
     elif [ "$COMPILER_COLLECTIONS" != "none" ]; then
 	echo "*** Installing compiler collections: $COMPILER_COLLECTIONS"
 	for vendor_version in $COMPILER_COLLECTIONS; do
@@ -227,7 +227,7 @@ else
 		default-*) lang_spec="$lang" ;;
 		*) lang_spec="${lang}-compiler" ;;
 	    esac
-	    cxx_spec="$($SPOCK_BINDIR/spock-ls "$lang_spec" |grep "$collection" |cut -d' ' -f1)"
+	    cxx_spec="$($SPOCK_BINDIR/spock-ls --usable "$lang_spec" |grep "$collection" |cut -d' ' -f1)"
 	    if [ "$cxx_spec" = "" ]; then
 		echo "warning: $collection has no $lang compiler (skipping)" >&2
 	    else
@@ -253,7 +253,7 @@ fi
 echo "*** Installing CMake versions (per compiler): $CMAKE_VERSIONS"
 CMAKE_SPECS=()
 if [ "$CMAKE_VERSIONS" = "installed" ]; then
-    CMAKE_SPECS=($($SPOCK_BINDIR/spock-ls -1 cmake))
+    CMAKE_SPECS=($($SPOCK_BINDIR/spock-ls --usable -1 cmake))
 else
     for cmake_version in $CMAKE_VERSIONS; do
 	[ "$cmake_version" = "none" ] && continue
@@ -305,7 +305,7 @@ using-these Boost "${BOOST_SPECS[@]}"
 echo "*** Installing DLib versions: $DLIB_VERSIONS"
 DLIB_SPECS=()
 if [ "$DLIB_VERSIONS" = "installed" ]; then
-    DLIB_SPECS=($($SPOCK_BINDIR/spock-ls -1 dlib))
+    DLIB_SPECS=($($SPOCK_BINDIR/spock-ls --usable -1 dlib))
 else
     for dlib_version in $DLIB_VERSIONS; do
 	[ "$dlib_version" = "none" ] && continue
@@ -329,7 +329,7 @@ using-these DLib "${DLIB_SPECS[@]}"
 echo "*** Installing Java versions: $JAVA_VERSIONS"
 JAVA_SPECS=()
 if [ "$JAVA_VERSIONS" = "installed" ]; then
-    JAVA_SPECS=($($SPOCK_BINDIR/spock-ls -1 oracle-java))
+    JAVA_SPECS=($($SPOCK_BINDIR/spock-ls --usable -1 oracle-java))
 else
     for java_version in $JAVA_VERSIONS; do
 	[ "$java_version" = "none" ] && continue
@@ -390,7 +390,7 @@ using-these Python "${PYTHON_SPECS[@]}"
 echo "*** Installing Yices versions: $YICES_VERSIONS"
 YICES_SPECS=()
 if [ "$YICES_VERSIONS" = "installed" ]; then
-    YICES_SPECS=($($SPOCK_BINDIR/spock-ls -1 yices))
+    YICES_SPECS=($($SPOCK_BINDIR/spock-ls --usable -1 yices))
 else
     for yices_version in $YICES_VERSIONS; do
 	[ "$yices_version" = "none" ] && continue
