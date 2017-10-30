@@ -48,7 +48,9 @@ code_coverage_flags() {
 	*)
 	    case "$CXX_VENDOR" in
 		gnu|llvm)
-		    echo "-fprofile-arcs -ftest-coverage"
+		    # Pei-Hung reports that we should be using "--coverage" instead of "-fprofile-arcs -ftest-coverage"
+		    # echo "-fprofile-arcs -ftest-coverage"
+		    echo "--coverage"
 		    ;;
 		*)
 		    die "cannot generate code coverage results for $CXX_VENDOR compilers"
@@ -110,11 +112,13 @@ cmake_warning_flags() {
 }
 
 # Flags for controlling debugability
+#   Pei-Hung reports that code coverage flags need to go into --with-C_DEBUG and --with-CXX_DEBUG switches in order
+#   to avoid linking problems, and should not be in CFLAGS and CXXFLAGS.
 autoconf_debug_flags() {
     local switch="$1"
     case "$RMC_DEBUG" in
-	yes) echo -n " $switch=-g" ;;
-	no)  echo -n " $switch=-fomit-frame-pointer" ;;
+	yes) echo -n " $switch='-g $(code_coverage_flags)'" ;;
+	no)  echo -n " $switch='-fomit-frame-pointer $(code_coverage_flags)'" ;;
     esac
 }
 
@@ -248,7 +252,7 @@ cmake_frontend_languages() {
 # Echo the autoconf "configure" command-line to standard output
 autoconf_command() {
     echo -n "env CC='$C_COMPILER' CXX='$CXX_COMPILER' FC='$FORTRAN_COMPILER'"
-    echo -n " CFLAGS='$(cc_flags) $(code_coverage_flags)' CXXFLAGS='$(cxx_flags) $(code_coverage_flags)'"
+    echo -n " CFLAGS='$(cc_flags)' CXXFLAGS='$(cxx_flags)'"
     echo -n " LDFLAGS='-Wall $(code_coverage_flags)'"
     echo -n " $ROSE_SOURCE/configure"
     autoconf_optimize_flags --with-C_OPTIMIZE
