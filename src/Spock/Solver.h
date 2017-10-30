@@ -34,7 +34,7 @@ public:
     void maxSolutions(size_t n) { maxSolutions_ = n; }
     /** @} */
 
-    /** Whether to report all dependencies are only top-level.
+    /** Whether to report all dependencies or only top-level.
      *
      *  This does not affect the solving, only the reported results.
      *

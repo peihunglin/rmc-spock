@@ -14,7 +14,7 @@ using namespace Sawyer::Message::Common;
 
 namespace Spock {
 
-const char *VERSION = "2.1.2";
+const char *VERSION = "2.2.0";
 bool globalVerbose = false;                             // be extra verbose?
 bool globalKeepTempFiles = false;                       // avoid deleting temporary files?
 

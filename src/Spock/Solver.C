@@ -59,6 +59,18 @@ Solver::solve(const std::vector<PackagePattern> &patterns) {
     }
 
     PackageLists plists;
+
+    // If there's any packages installed for "code-generation" (usually "default-generation" and "m32-generation" at the time
+    // of this writing) then add "code-generation" as a pattern. The reason for employing it up front is we want the solver to
+    // see it right away and therefore prefer "default-generation" over "m32-generation". For instance, if the user requests a
+    // C++ compiler with "spock-shell --with c++-compiler" and doesn't have any other packages currently employed, we want the
+    // solver to first find C++ compilers that depend on "default-generation" and only after all those possibilities are tried
+    // should it start looking at other code generators.
+    Packages codeGenerators = ctx_.findInstalled("code-generation");
+    if (codeGenerators.size() > 0)
+        extendLists(constraints, plists /*in,out*/, std::vector<PackagePattern>(1, "code-generation"));
+
+    // Add the requested package patterns
     extendLists(constraints, plists /*in,out*/, patterns);
     if (mlog[DEBUG]) {
         if (plists.size() > 0) {
@@ -74,6 +86,7 @@ Solver::solve(const std::vector<PackagePattern> &patterns) {
         }
     }
 
+    // Solve
     if (!plists.isAnyListEmpty()) {
         std::vector<size_t> plistIndexes;
         solve(constraints, plists, plistIndexes);
@@ -81,7 +94,7 @@ Solver::solve(const std::vector<PackagePattern> &patterns) {
     return solutions_.size();
 }
 
-// For each pattern, find a list matching packages and conditionally append it to plists.  The list is appended only if it
+// For each pattern, find a list of matching packages and conditionally append it to plists.  The list is appended only if it
 // doesn't already exist in plists.
 void
 Solver::extendLists(const Constraints &constraints, PackageLists &plists /*in,out*/,
@@ -203,7 +216,7 @@ Solver::solve(const Constraints &constraints, PackageLists &plists, std::vector<
             mlog[DEBUG] <<" " <<constraint->toString();
         mlog[DEBUG] <<"\n";
     }
-    
+
     if (solutions_.size() >= maxSolutions_) {
         SAWYER_MESG(mlog[DEBUG]) <<indent(callDepth) <<"enough solutions already\n";
         return;

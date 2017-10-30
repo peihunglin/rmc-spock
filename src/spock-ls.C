@@ -8,6 +8,7 @@ static const char *description =
 #include <Spock/InstalledPackage.h>
 #include <Spock/Package.h>
 #include <Spock/PackagePattern.h>
+#include <Spock/Solver.h>
 #include <boost/date_time/posix_time/time_formatters.hpp>
 
 using namespace Spock;
@@ -23,6 +24,7 @@ bool showDeps = true;                                   // show direct dependenc
 bool showComments = false;                              // adds comments in parentheses
 bool showUsedTime = false;                              // show time of last use
 bool findingGhosts = false;                             // find installable packages rather than installed packages?
+bool excludeUnusable = false;                           // exclude installed packages that can't be used in current environment
 boost::filesystem::path showGraph;                      // generate a dependency graph
 
 std::vector<std::string>
@@ -62,6 +64,14 @@ parseCommandLine(int argc, char *argv[]) {
     p.with(Switch("used")
            .intrinsicValue(true, showUsedTime)
            .doc("Sort installed packages by the time they were last used by spock-shell, and emit this time in the listing."));
+
+    p.with(Switch("usable")
+           .intrinsicValue(true, excludeUnusable)
+           .doc("When listing installed packages, exclude those which cannot be used due to the environment already having "
+                "conflicting packages. For instance, to get a list of only those compilers that run in m32 mode you can "
+                "bring into service the m32-generator (via \"spock-shell --with m32-generator\") and then restrict the "
+                "compiler listing to those that don't conflict with m32-generator (e.g., \"@prop{programName} --usable "
+                "c++-compiler\")."));
     
     return p.parse(argc, argv).apply().unreachedArgs();
 }
@@ -158,7 +168,14 @@ main(int argc, char *argv[]) {
             std::sort(packages.begin(), packages.end(), sortByLastUsed);
 
         BOOST_FOREACH (const Package::Ptr &pkg, packages) {
+            if (excludeUnusable) {
+                Solver solver(ctx);
+                if (solver.solve(pkg->toString()) == 0)
+                    continue;
+            }
+            
             std::cout <<pkg->toString();
+
             if (showComments) {
                 if (pkg->isInstalled()) {
                     if (!pkg->aliases().isEmpty())

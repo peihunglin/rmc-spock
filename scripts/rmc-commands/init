@@ -112,6 +112,7 @@ project_none() {
 	rmc_install) 	   echo yes      	      ;;
 	rmc_build)   	   echo autoconf 	      ;;
 	rmc_parallelism)   echo system   	      ;;
+	rmc_codegen)       echo default               ;;
 	rmc_compiler)      echo no-compiler-specified ;;
 	rmc_debug)         echo yes        	      ;;
 	rmc_optimize)      echo ambivalent 	      ;;
@@ -190,6 +191,7 @@ project_envars() {
     case "$rmc_command" in
 	rmc_build)         echo "$BUILD"              ;;
 	rmc_parallelism)   echo "$PARALLELISM"        ;;
+	rmc_codegen)       echo "$CODEGEN"            ;;
 	rmc_compiler)      echo "$COMPILER"           ;;
 	rmc_debug)         echo "$DEBUG"              ;;
 	rmc_optimize)      echo "$OPTIMIZE"           ;;
@@ -263,6 +265,7 @@ config_property() {
     config_property rmc_parallelism   "number or 'system'"
     echo
     echo "# Compiler settings"
+    config_property rmc_codegen       "default|m32"
     config_property rmc_compiler      "('gnu'|'llvm'|'intel')-version[-language]"
     config_property rmc_debug         "debug support: 'yes' or 'no'"
     config_property rmc_optimize      "optimizations: 'yes', 'no', or 'ambivalent'"

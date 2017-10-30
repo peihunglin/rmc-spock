@@ -212,6 +212,10 @@ package_spec() {
 	    esac
 	    ;;
 
+	rmc_codegen)
+	    pkgspec="${RMC_CODEGEN}-generation"
+	    ;;
+	    
 	rmc_*) pkgname="${function#rmc_}" ;;
 	*) die "check_package fails for $function $1" ;;
     esac
@@ -261,6 +265,7 @@ read_config_file() {
     export RMC_OPTIMIZE=ambivalent
     export RMC_WARNINGS=ambivalent
     export RMC_ASSERTIONS=ambivalent
+    export RMC_CODEGEN=default
 
     export RMC_BINWALK=none
     export RMC_BOOST=
@@ -461,6 +466,7 @@ preinstall() {
     local cxx_vendor=$(echo "$spec" |cut -d: -f1)
     local cxx_lang=$(echo "$spec" |cut -d: -f2 -s)
     local cxx_version=$(echo "$spec" |cut -d: -f3 -s)
+    local cxx_codegen=$(package_spec rmc_codegen "$RMC_CODEGEN")
 
     env \
 	COMPILER_COLLECTIONS="$cxx_vendor$cxx_version" \
@@ -476,6 +482,7 @@ preinstall() {
 	LIBTOOL_VERSIONS=$(echo "$RMC_LIBTOOL" |sed 's/system/installed/') \
 	YAMLCPP_VERSIONS=$(echo "$RMC_YAML" |sed 's/system/installed/') \
 	IGNORE_FAILURES=no \
+	$SPOCK_BINDIR/spock-shell --with "$cxx_codegen" \
 	$SPOCK_SCRIPTS/rose-install-all-deps
 }
 
@@ -562,6 +569,11 @@ rmc_compiler() {
 
     # ROSE also needs a C compiler, but it assumes the compiler's default language, whatever that might be.
     RMC_C_COMPILER="$cxx_vendor-default-c$cxx_version"
+}
+
+rmc_codegen() {
+    check_one_arg rmc_codegen "$@"
+    RMC_CODEGEN="$1"
 }
 
 rmc_debug() {
@@ -761,6 +773,7 @@ if [ "$RMC_HASH" = "" ]; then
     # Convert RMC-style software dependencies to Spock-style in a temporary file
     depfile=$(tempfile)
     (
+	package_spec rmc_codegen  "$RMC_CODEGEN"
 	package_spec rmc_compiler "$RMC_CXX_COMPILER"
 	package_spec rmc_compiler "$RMC_C_COMPILER"
 	package_spec rmc_binwalk  "$RMC_BINWALK"
@@ -793,7 +806,7 @@ if [ "$RMC_HASH" = "" ]; then
 
     # The Spock --install switch doesn't quite work yet due to its build dependency resolution not being
     # implemented. Therefore, if installation is requested and packages are missing, run the rose-install-all-deps script
-    # to install them before continuing.
+    # to install some of them (the problematic ones) before continuing.
     if [ -n "$do_install" -a "$do_install" != "--install=no" ]; then
 	if ! "$SPOCK_BINDIR/spock-shell" --with-file "$depfile" --log none true; then
 	    preinstall || exit 1
