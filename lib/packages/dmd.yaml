@@ -3,7 +3,8 @@ versions:       [ 2.073.2, 2.074.0, 2.074.1, 2.075.1, 2.076.0 ]
 
 dependencies:
   - version: ">=2.073"
-    install: []
+    aliases: []
+    install: [ default-generation ]
     build: []
 
 download:
