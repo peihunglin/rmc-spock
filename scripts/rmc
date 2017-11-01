@@ -291,6 +291,7 @@ read_config_file() {
     export RMC_YAML=none
     export RMC_YICES=none
     export RMC_Z3=none
+    export RMC_OTHER=
     export RMC_INSTALLED=yes
 
     # Read config file to override the defaults
@@ -744,6 +745,10 @@ rmc_z3() {
     RMC_Z3="$1"
 }
 
+rmc_other() {
+    check_one_arg rmc_other "$@"
+    RMC_OTHER="$1"
+}
 ########################################################################################################################
 #                        __  __       _
 #                       |  \/  | __ _(_)_ __
