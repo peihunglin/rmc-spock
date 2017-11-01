@@ -286,6 +286,7 @@ autoconf_command() {
     autoconf_optional_with yaml "$RMC_YAML" "$YAMLCPP_ROOT"
     autoconf_optional_with yices "$RMC_YICES" "$YICES_ROOT"
     autoconf_optional_with z3 "$RMC_Z3" "$Z3_ROOT"
+    echo -n " $RMC_OTHER"
     echo
 }
 
