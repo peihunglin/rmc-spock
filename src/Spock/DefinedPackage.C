@@ -696,6 +696,7 @@ DefinedPackage::postInstall(Context &ctx, Settings &settings,
         // installed parasites.
         std::vector<Aliases> aliases;
         std::vector<PackagePattern> pps = parasitePatterns(settings.version, aliases /*out*/);
+        std::vector<bool> parasitePatternAliasesSatisfied(pps.size(), false);
         if (!pps.empty()) {
 
             // Read parasite names from "parasites" file and make sure Spock knows about them
@@ -718,24 +719,16 @@ DefinedPackage::postInstall(Context &ctx, Settings &settings,
                 Package::Ptr installed = ctx.scanInstalledPackage(pattern);
                 settings.parasites.push_back(installed);
 
-                // The parasite we just installed should have been listed in the definition file
+                // The parasite we just installed should have a matching pattern listed in the definition file, and the aliases
+                // for each definition pattern must exactly match one of the packages that was installed for it.
                 bool found = false;
                 for (size_t i=0; i<pps.size(); ++i) {
                     const PackagePattern &p = pps[i];
                     if (p.matches(installed)) {
                         found = true;
                         Aliases installedAliases = installed->aliases();
-                        if (installedAliases != aliases[i]) {
-                            mlog[WARN] <<mySpec(settings) <<" installed parasite " <<installed->toString()
-                                       <<" has incorrect aliases\n";
-                            mlog[WARN] <<mySpec(settings) <<" specified {";
-                            BOOST_FOREACH (const std::string &s, aliases[i].values())
-                                mlog[WARN] <<" " <<s;
-                            mlog[WARN] <<" } but installed package defines {";
-                            BOOST_FOREACH (const std::string &s, installedAliases.values())
-                                mlog[WARN] <<" " <<s;
-                            mlog[WARN] <<" }\n";
-                        }
+                        if (installedAliases == aliases[i])
+                            parasitePatternAliasesSatisfied[i] = true;
                         break;
                     }
                 }
@@ -747,7 +740,8 @@ DefinedPackage::postInstall(Context &ctx, Settings &settings,
             parasitesFile.close();
 
             // All the parasites defined in the file should have been installed
-            BOOST_FOREACH (const PackagePattern &pattern, pps) {
+            for (size_t i=0; i<pps.size(); ++i) {
+                const PackagePattern &pattern = pps[i];
                 bool found = false;
                 BOOST_FOREACH (const Package::Ptr &installed, settings.parasites) {
                     if (pattern.matches(installed)) {
@@ -755,8 +749,33 @@ DefinedPackage::postInstall(Context &ctx, Settings &settings,
                         break;
                     }
                 }
-                if (!found)
+                if (!found) {
                     mlog[ERROR] <<mySpec(settings) <<" failed to install parasite " <<pattern.toString() <<"\n";
+                    parasitePatternAliasesSatisfied[i] = true; // to prevent more diagnostics below
+                }
+            }
+
+            // Report warnings for any parasite pattern that matches one or more installed packages (otherwise an error above)
+            // but none of those packages has the exact same set of aliases as listed for the parasite pattern in the config
+            // file.
+            ASSERT_require(pps.size() == parasitePatternAliasesSatisfied.size());
+            for (size_t i=0; i<pps.size(); ++i) {
+                if (!parasitePatternAliasesSatisfied[i]) {
+                    mlog[WARN] <<mySpec(settings) <<" parasite pattern " <<pps[i].toString()
+                               <<" aliases";
+                    BOOST_FOREACH (const std::string &s, aliases[i].values())
+                        mlog[WARN] <<" " <<s;
+                    mlog[WARN] <<" are not exactly matched by any installed parasite:\n";
+                    BOOST_FOREACH (const Package::Ptr &installedParasite, settings.parasites) {
+                        if (pps[i].matches(installedParasite)) {
+                            mlog[WARN] <<"  " <<installedParasite->toString() <<":";
+                            Aliases installedAliases = installedParasite->aliases();
+                            BOOST_FOREACH (const std::string &alias, installedAliases.values())
+                                mlog[WARN] <<" " <<alias;
+                            mlog[WARN] <<"\n";
+                        }
+                    }
+                }
             }
         }
     }
