@@ -420,7 +420,8 @@ spock-compiler-install-program() {
             ;;
 
         *)
-            spock-compiler-conditional-install-language "$collection_spec" fortran "" "$exe"
+            spock-compiler-conditional-install-language "$collection_spec" fortran ""     "$exe"
+            spock-compiler-conditional-install-language "$collection_spec" fortran "-m32" "$exe"
             ;;
     esac
     return 0
