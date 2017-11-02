@@ -72,7 +72,68 @@ parseCommandLine(int argc, char *argv[]) {
                 "bring into service the m32-generator (via \"spock-shell --with m32-generator\") and then restrict the "
                 "compiler listing to those that don't conflict with m32-generator (e.g., \"@prop{programName} --usable "
                 "c++-compiler\")."));
-    
+
+    p.doc("Compiler Names",
+          "The following compiler names are generally available:"
+
+          "@named{@v{vendor}-@v{language}[@v{version-spec}]}"
+          "{These are the actual compilers and are what you should normally use. The @v{vendor} is one of \"gnu\", \"llvm\", "
+          "or \"intel\".  The @v{language} is usually the name of the standard or pseudo-standard that defines the language "
+          "such as \"c89\", \"gnu89\", \"c99\", \"gnu99\", \"c11\", \"gnu11\" for C compilers; \"c++03\", \"gnu++03\", \"c++11\", "
+          "\"gnu++11\", \"c++14\", \"gnu++14\" for C++ compilers; \"fortran\" for Fortran compilers (we don't support various "
+          "Fortran language standards yet).}"
+
+          "@named{@v{language}-compiler[@v{version-spec}]}"
+          "{These are virtual packages which serve as sets of compilers for a specific language. The @v{language} is the same "
+          "as the previous bullet. For instance, \"c++11-compiler\" is a virtual package to which all C++11 compilers belong.}"
+
+          "@named{@v{baselang}-compiler[@v{version-spec}]}"
+          "{These are virtual package which serve as sets of compilers. The @v{baselang} is the basic language rather than a "
+          "standard, such as \"c\", \"c++\", or \"fortran\".  Base languages are ambiguous; e.g., if you ask for \"c++-compiler\" "
+          "you're going to get any C++ language that satisfies all other requirements that you might have specified.}"
+
+          "@named{default-@v{baselang}[@v{version-spec}]}"
+          "{Within a collection of compilers, say GCC-6.3, there is an executable that represents the C++ compilers and can "
+          "handle C++89, C++11, C++14, and GNU variants thereof. If you execute this compiler with no arguments it will parse "
+          "a particular C++ language. The particular default language various from version to version and vendor to vendor. "
+          "For instance, \"default-c++\" for the GCC-4 collections is GNU++03, while the default C++ for GCC-6 collections is "
+          "GNU++14. Therefore, these virtual \"default-@v{baselang}\" packages are aliases for whatever is the default language "
+          "standard.}"
+
+          "@named{@v{vendor}-compilers[@v{version-spec}]}"
+          "{These are the compiler collections (thus the plural \"compilers\"). These packages don't actually cause any "
+          "particular compiler to be used, rather they serve as a container for a bunch of compilers for usually a quite "
+          "large number of languages.  For instance, \"gnu-compilers-6.3.0\" is the container that holds all the GCC-6.3.0 "
+          "compilers, but if you say \"spock-shell --with gnu-compilers-6.3.0\" your environment won't actually contain any "
+          "specific compilers -- you also need to select a compiler using one of the packages documented above. Furthermore, "
+          "@v{vendor}-system-compilers is similar, but represents compilers that are already installed in your operating "
+          "system rather than compilers that spock installed.}"
+
+          "Here are some examples:"
+          "@named{gnu-c++11-6.3}{Any GNU C++11 compiler from any GCC 6.3.x version. This might include those compilers that "
+          "generate 32-bit code on a 64-bit platform (although spock-shell will prefer to use those that generate 64-bit code). "
+          "Within a spock-shell environment, C++ compiler executables are always named \"c++\", C compilers are always named "
+          "\"cc\", and fortran compilers are always named \"fc\". There might be other names in $PATH for these compilers too, "
+          "but don't depend on that.}"
+
+          "@named{intel-compilers-17,default-c++}{This pair of constraints means that \"c++\" in the spock-shell environment "
+          "should invoke a compiler for whatever language is the default for the Intel version 17.x.y compiler collection.}"
+
+          "@named{m32-generation,c89-compiler}{This pair of constraints will cause \"cc\" to be a C89 compiler that "
+          "generates 32-bit code even on a 64-bit platform. It does not constrain the vendor or compiler version. "
+          "In order for m32-generation compilers to be available, your system generally needs \"multilib\" support "
+          "appropriate for particular compiler versions.}");
+
+    p.doc("System Compilers",
+          "If your operating system has compilers already installed, then spock can find and use them. In fact, you need "
+          "to have at least one set of compilers installed because you need a C++ compiler to compile spock itself. When "
+          "spock is installed with the \"./scripts/bootstrap.sh --upgrade\" script it will search for the system-installed "
+          "compilers and add them to spock's package list.  If a system compiler is upgraded, then spock will refuse to "
+          "run the new version even if it has the same command name as the old version. In order to find new system "
+          "compilers, run \"$SPOCK_ROOT/scripts/spock-install-system-compilers\" with no arguments. In order to delete "
+          "a compiler or a compiler collection (names are defined in the \"Compiler Names\" section) use the \"spock-rm\" "
+          "tool, which will also delete all package that depend on the compiler(s) being deleted.");
+
     return p.parse(argc, argv).apply().unreachedArgs();
 }
 
