@@ -95,7 +95,7 @@ parseCommandLine(int argc, char *argv[]) {
           "@named{default-@v{baselang}[@v{version-spec}]}"
           "{Within a collection of compilers, say GCC-6.3, there is an executable that represents the C++ compilers and can "
           "handle C++89, C++11, C++14, and GNU variants thereof. If you execute this compiler with no arguments it will parse "
-          "a particular C++ language. The particular default language various from version to version and vendor to vendor. "
+          "a particular C++ language. The particular default language varies from version to version and vendor to vendor. "
           "For instance, \"default-c++\" for the GCC-4 collections is GNU++03, while the default C++ for GCC-6 collections is "
           "GNU++14. Therefore, these virtual \"default-@v{baselang}\" packages are aliases for whatever is the default language "
           "standard.}"
