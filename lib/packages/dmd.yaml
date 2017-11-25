@@ -12,7 +12,8 @@ download:
     shell: |
         wget -O install.sh https://dlang.org/install.sh
 
-        bash ./install.sh --path $(pwd)/download dmd-$PACKAGE_VERSION
+        # Verification doesn't always work (gpg2 issue?) so disable it
+        GPG=x bash ./install.sh --path $(pwd)/download dmd-$PACKAGE_VERSION
 
         # We don't want users using this! It would interfere with how Spock manages packages.  Also, its method of
         # indicating the package in the Bash prompt is not scalable (not to mention, ugly).
