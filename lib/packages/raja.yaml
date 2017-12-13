@@ -29,6 +29,7 @@ install:
       cmake ../download \
           -DCMAKE_C_COMPILER=cc \
           -DCMAKE_CXX_COMPILER=c++ \
+          -DENABLE_OPENMP -DENABLE_CUDA \
           -DCMAKE_INSTALL_PREFIX="$PACKAGE_ROOT" 
 
       make -j$PARALLELISM
