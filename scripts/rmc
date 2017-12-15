@@ -217,6 +217,8 @@ package_spec() {
 	    ;;
 
 	rmc_cuda)
+	    # This is a special case because we want the user to be able to specify a specific specification
+	    # in addition to just a version number.
 	    case "$pkgvers" in
 		no|none|ambivalent)
 		    pkgspec=
@@ -226,6 +228,29 @@ package_spec() {
 		    ;;
 		[0-9]*)
 		    pkgspec="nvidia-cuda-$pkgvers"
+		    ;;
+		*)
+		    pkgspec="$pkgvers"
+		    ;;
+	    esac
+	    ;;
+
+	rmc_raja)
+	    # If RAJA is desired, it should be either "raja-nocuda" or "raja-cuda" depending on whether CUDA
+	    # support is also desired.
+	    case "$pkgvers" in
+		no|none|ambivalent|system)
+		    pkgspec=
+		    ;;
+		*)
+		    case "$RMC_CUDA" in
+			no|none|ambivalent)
+			    pkgspec="raja-nocuda-$pkgvers"
+			    ;;
+			*)
+			    pkgspec="raja-cuda-$pkgvers"
+			    ;;
+		    esac
 		    ;;
 	    esac
 	    ;;

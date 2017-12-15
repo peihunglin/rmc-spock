@@ -36,10 +36,11 @@ while [ "$#" -gt 0 ]; do
                     echo "Projects:"
                     echo "  * binaries -- binary analysis tools"
                     echo "  * estcp    -- projects/ESTCP tools"
+                    echo "  * gpu      -- working with GPUs"
                     echo "  * matrix   -- matrix testing tools"
                     exit 0
                     ;;
-                binaries|estcp|matrix)
+                binaries|estcp|gpu|matrix)
                     projects=("${projects[@]}" "${1#--project=}")
                     ;;
                 *)
@@ -183,6 +184,16 @@ project_binaries() {
         rmc_pqxx)          echo 4                     ;;
         rmc_wt)            echo 3.3.7                 ;;
         rmc_yaml)          echo 0.5.3                 ;;
+    esac
+}
+
+# Defaults for supporting GPUs
+project_gpu() {
+    local rmc_command="$1"
+    case "$rmc_command" in
+        rmc_languages)     echo "c,c++"               ;;
+        rmc_cuda)          echo "nvidia-cuda-8"       ;;
+        rmc_raja)          echo "0.4"                 ;;
     esac
 }
 
