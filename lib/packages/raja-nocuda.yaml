@@ -1,4 +1,7 @@
-package:	raja
+# RAJA compiled without CUDA support
+# See also, raja-cuda.yaml
+
+package:	raja-nocuda
 
 versions:	[ 0.3.0,0.4.0 ]
 
@@ -6,6 +9,7 @@ dependencies:
   - version: ">=0.0.0"
     install: [ "c++-compiler", blt ]
     build: [ default-c, cmake ]
+    aliases: [ "raja" ]
 
 variables:
   - version: ">=0.0.0"
@@ -33,4 +37,3 @@ install:
 
       make -j$PARALLELISM
       make install
-

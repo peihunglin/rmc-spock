@@ -30,6 +30,7 @@ fi
 input_cxx="$(tempfile).C"
 input_c="$(tempfile).c"
 input_f="$(tempfile).f"
+input_cuda="$(tempfile).c"
 
 #------------------------------------------------------------------------------------------------------------------------
 # Compiler and default switches
@@ -121,14 +122,33 @@ c234567
       end program conftest
 EOF
 
+cat >"$input_cuda" <<EOF
+int main() {
+#if defined(__CUDACC__) || defined(__NVCC__)
+    return 0;
+#else
+    return 1;
+#endif
+}
+EOF
+
 # We have to be careful with "gcc" and "gfortran" compilers because either compiler will accept input in either C or Fortran.
 # However, the "gcc" command will fail to link a Fortran program (although gfortran will link a C program).
 
 compiler_lang=
 
-if [ "$compiler_baselang" = "" -o "$compiler_baselang" = "c++" ]; then
-    "$compiler_exe" $compiler_flags -o "$conftest" "$input_cxx" </dev/null >/dev/null 2>&1 && compiler_lang=$("$conftest")
-    [ "$compiler_lang" = "" ] || compiler_baselang=c++
+if [ "$compiler_lang" = "" ]; then
+    if [ "$compiler_baselang" = "" -o "$compiler_baselang" = "cuda" ]; then
+	"$compiler_exe" $compiler_flags -o "$conftest" "$input_cuda" </dev/null >/dev/null 2>&1 && compiler_lang=cuda
+	[ "$compiler_lang" = "" ] || compiler_baselang=cuda
+    fi
+fi
+
+if [ "$compiler_lang" = "" ]; then
+    if [ "$compiler_baselang" = "" -o "$compiler_baselang" = "c++" ]; then
+	"$compiler_exe" $compiler_flags -o "$conftest" "$input_cxx" </dev/null >/dev/null 2>&1 && compiler_lang=$("$conftest")
+	[ "$compiler_lang" = "" ] || compiler_baselang=c++
+    fi
 fi
 
 if [ "$compiler_lang" = "" ]; then
@@ -156,7 +176,9 @@ fi
 cat >"$input_c" <<EOF
 #include <stdio.h>
 int main() {
-#if defined(__ICC) || defined(__ECC) || defined(__INTEL_COMPILER)
+#if defined(__CUDACC__) || defined(__NVCC__)
+    printf("nvidia\n");
+#elif defined(__ICC) || defined(__ECC) || defined(__INTEL_COMPILER)
     printf("intel\n");
 #elif defined(__xlc__) || defined(__xlC__) || defined(__IBMC__) || defined(__IBMCPP__)
     printf("ibm\n");
@@ -181,7 +203,7 @@ case "$compiler_baselang" in
 	"$compiler_exe" $compiler_flags -o "$conftest" "$input_cxx" || exit 1
 	compiler_vendor=$("$conftest")
 	;;
-    c)
+    c|cuda)
 	"$compiler_exe" $compiler_flags -o "$conftest" "$input_c" || exit 1
 	compiler_vendor=$("$conftest")
 	;;
@@ -268,6 +290,17 @@ EOF
 	# Seems the only way to get version is by asking the compiler and parsing its output.
 	compiler_version=$("$compiler_exe" $compiler_flags --version |sed -n '1 s/^.*) *\([0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/p')
 	;;
+
+    *:cuda)
+	cat >"$input_c" <<EOF
+	    #include <stdio.h>
+	    int main() {
+	        printf("%d.%d.%d\n", __CUDACC_VER_MAJOR__, __CUDACC_VER_MINOR__, __CUDACC_VER_BUILD__);
+		return 0;
+	    }
+EOF
+	"$compiler_exe" $compiler_flags -o "$conftest" "$input_c" && compiler_version=$("$conftest")
+	;;
 esac
     
 [ "$compiler_version" = "" ] && die "cannot determine version number for $compiler_exe $compiler_flags"
@@ -280,7 +313,7 @@ esac
 version_output=$(tempfile)
 (
     case "$compiler_vendor:$compiler_baselang" in
-	gnu:*|intel*|llvm:*)
+	gnu:*|intel*|llvm:*|nvidia:*)
 	    "$compiler_exe" $compiler_flags --version
 	    ;;
 	*)
