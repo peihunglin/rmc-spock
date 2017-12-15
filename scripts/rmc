@@ -215,6 +215,20 @@ package_spec() {
 	rmc_codegen)
 	    pkgspec="${RMC_CODEGEN}-generation"
 	    ;;
+
+	rmc_cuda)
+	    case "$pkgvers" in
+		no|none|ambivalent)
+		    pkgspec=
+		    ;;
+		system)
+		    pkgspec="cuda-compiler"
+		    ;;
+		[0-9]*)
+		    pkgspec="nvidia-cuda-$pkgvers"
+		    ;;
+	    esac
+	    ;;
 	    
 	rmc_*) pkgname="${function#rmc_}" ;;
 	*) die "check_package fails for $function $1" ;;
@@ -270,6 +284,7 @@ read_config_file() {
     export RMC_BINWALK=none
     export RMC_BOOST=
     export RMC_CMAKE=3
+    export RMC_CUDA=none
     export RMC_DLIB=none
     export RMC_DOXYGEN=none
     export RMC_DWARF=none
@@ -616,6 +631,11 @@ rmc_cmake() {
     RMC_CMAKE="$1"
 }
 
+rmc_cuda() {
+    check_one_arg rmc_cuda "$@"
+    RMC_CUDA="$1"
+}
+
 rmc_dlib() {
     check_one_arg rmc_dlib "$@"
     RMC_DLIB="$1"
@@ -784,6 +804,7 @@ if [ "$RMC_HASH" = "" ]; then
 	package_spec rmc_binwalk  "$RMC_BINWALK"
 	package_spec rmc_boost    "$RMC_BOOST"
 	package_spec rmc_cmake    "$RMC_CMAKE"
+	package_spec rmc_cuda     "$RMC_CUDA"
 	package_spec rmc_dlib     "$RMC_DLIB"
 	package_spec rmc_doxygen  "$RMC_DOXYGEN"
 	package_spec rmc_dwarf    "$RMC_DWARF"

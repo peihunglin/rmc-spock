@@ -10,51 +10,51 @@ source "$SPOCK_SCRIPTS/impl/spock-realpath.sh" || exit 1
 do_batch_mode= do_force= do_help= projects=
 while [ "$#" -gt 0 ]; do
     case "$1" in
-	--)
-	    shift
-	    break
-	    ;;
+        --)
+            shift
+            break
+            ;;
 
-	--batch)
-	    do_batch_mode=yes
-	    shift
-	    ;;
+        --batch)
+            do_batch_mode=yes
+            shift
+            ;;
 
-	-f|--force)
-	    do_force=yes
-	    shift
-	    ;;
+        -f|--force)
+            do_force=yes
+            shift
+            ;;
 
-	-h|--help)
-	    do_help=yes
-	    shift
-	    ;;
+        -h|--help)
+            do_help=yes
+            shift
+            ;;
 
-	--project=*)
-	    case "${1#--project=}" in
-		list)
-		    echo "Projects:"
-		    echo "  * binaries -- binary analysis tools"
-		    echo "  * estcp    -- projects/ESTCP tools"
-		    echo "  * matrix   -- matrix testing tools"
-		    exit 0
-		    ;;
-		binaries|estcp|matrix)
-		    projects=("${projects[@]}" "${1#--project=}")
-		    ;;
-		*)
-		    die "'${1#--project=}' is not a valid project; see --project=list"
-		    ;;
-	    esac
-	    shift
-	    ;;
+        --project=*)
+            case "${1#--project=}" in
+                list)
+                    echo "Projects:"
+                    echo "  * binaries -- binary analysis tools"
+                    echo "  * estcp    -- projects/ESTCP tools"
+                    echo "  * matrix   -- matrix testing tools"
+                    exit 0
+                    ;;
+                binaries|estcp|matrix)
+                    projects=("${projects[@]}" "${1#--project=}")
+                    ;;
+                *)
+                    die "'${1#--project=}' is not a valid project; see --project=list"
+                    ;;
+            esac
+            shift
+            ;;
 
-	-*)
-	    die "unknown switch: $1; see '$arg0 --help'"
-	    ;;
-	*)
-	    break
-	    ;;
+        -*)
+            die "unknown switch: $1; see '$arg0 --help'"
+            ;;
+        *)
+            break
+            ;;
     esac
 done
 
@@ -108,41 +108,42 @@ fi
 project_none() {
     local rmc_command="$1"
     case "$rmc_command" in
-	rmc_rosesrc)       spock-realpath "$rose_srcdir" ;;
-	rmc_install) 	   echo yes      	      ;;
-	rmc_build)   	   echo autoconf 	      ;;
-	rmc_parallelism)   echo system   	      ;;
-	rmc_codegen)       echo default               ;;
-	rmc_compiler)      echo no-compiler-specified ;;
-	rmc_debug)         echo yes        	      ;;
-	rmc_optimize)      echo ambivalent 	      ;;
-	rmc_warnings)      echo yes 		      ;;
-	rmc_assertions)    echo ambivalent            ;;
-	rmc_languages)     echo all  		      ;;
-	rmc_binwalk)       echo none 		      ;;
-	rmc_boost)         echo 1.62 		      ;;
-	rmc_cmake)         echo 3    		      ;;
-	rmc_dlib)          echo none 		      ;;
-	rmc_doxygen)       echo ambivalent 	      ;;
-	rmc_dwarf)         echo none       	      ;;
-	rmc_edg)           echo ambivalent 	      ;;
-	rmc_elf)           echo none 		      ;;
-	rmc_gcrypt)        echo none 		      ;;
-	rmc_java)          echo none   		      ;;
-	rmc_lcov)          echo none                  ;;
-	rmc_libtool)       echo ambivalent            ;;
-	rmc_magic)         echo none 		      ;;
-	rmc_pqxx)          echo none 		      ;;
-	rmc_python)        echo none   		      ;;
-	rmc_qt)            echo none 		      ;;
-	rmc_raja)          echo none                  ;;
-	rmc_readline)      echo none 		      ;;
-	rmc_spot)          echo none 		      ;;
-	rmc_sqlite)        echo none 		      ;;
-	rmc_wt)            echo none 		      ;;
-	rmc_yaml)          echo none 		      ;;
-	rmc_yices)         echo none 		      ;;
-	rmc_z3)            echo none                  ;;
+        rmc_rosesrc)       spock-realpath "$rose_srcdir" ;;
+        rmc_install)       echo yes                   ;;
+        rmc_build)         echo autoconf              ;;
+        rmc_parallelism)   echo system                ;;
+        rmc_codegen)       echo default               ;;
+        rmc_compiler)      echo no-compiler-specified ;;
+        rmc_debug)         echo yes                   ;;
+        rmc_optimize)      echo ambivalent            ;;
+        rmc_warnings)      echo yes                   ;;
+        rmc_assertions)    echo ambivalent            ;;
+        rmc_languages)     echo all                   ;;
+        rmc_binwalk)       echo none                  ;;
+        rmc_boost)         echo 1.62                  ;;
+        rmc_cmake)         echo 3                     ;;
+        rmc_cuda)          echo none                  ;;
+        rmc_dlib)          echo none                  ;;
+        rmc_doxygen)       echo ambivalent            ;;
+        rmc_dwarf)         echo none                  ;;
+        rmc_edg)           echo ambivalent            ;;
+        rmc_elf)           echo none                  ;;
+        rmc_gcrypt)        echo none                  ;;
+        rmc_java)          echo none                  ;;
+        rmc_lcov)          echo none                  ;;
+        rmc_libtool)       echo ambivalent            ;;
+        rmc_magic)         echo none                  ;;
+        rmc_pqxx)          echo none                  ;;
+        rmc_python)        echo none                  ;;
+        rmc_qt)            echo none                  ;;
+        rmc_raja)          echo none                  ;;
+        rmc_readline)      echo none                  ;;
+        rmc_spot)          echo none                  ;;
+        rmc_sqlite)        echo none                  ;;
+        rmc_wt)            echo none                  ;;
+        rmc_yaml)          echo none                  ;;
+        rmc_yices)         echo none                  ;;
+        rmc_z3)            echo none                  ;;
     esac
 }
 
@@ -150,12 +151,12 @@ project_none() {
 project_estcp() {
     local rmc_command="$1"
     case "$rmc_command" in
-	rmc_languages)     echo binaries              ;;
-	rmc_binwalk)       echo 2                     ;;
-	rmc_dlib)          echo 18.17                 ;;
-	rmc_gcrypt)        echo 1.7                   ;;
-	rmc_wt)            echo 3.3.7                 ;;
-	rmc_yaml)          echo 0.5.3                 ;;
+        rmc_languages)     echo binaries              ;;
+        rmc_binwalk)       echo 2                     ;;
+        rmc_dlib)          echo 18.17                 ;;
+        rmc_gcrypt)        echo 1.7                   ;;
+        rmc_wt)            echo 3.3.7                 ;;
+        rmc_yaml)          echo 0.5.3                 ;;
     esac
 }
 
@@ -163,10 +164,10 @@ project_estcp() {
 project_matrix() {
     local rmc_command="$1"
     case "$rmc_command" in
-	rmc_languages)     echo none                  ;;
-	rmc_pqxx)          echo 4                     ;;
-	rmc_wt)            echo 3.3.7                 ;;
-	rmc_yaml)          echo 0.5.3                 ;;
+        rmc_languages)     echo none                  ;;
+        rmc_pqxx)          echo 4                     ;;
+        rmc_wt)            echo 3.3.7                 ;;
+        rmc_yaml)          echo 0.5.3                 ;;
     esac
 }
 
@@ -174,14 +175,14 @@ project_matrix() {
 project_binaries() {
     local rmc_command="$1"
     case "$rmc_command" in
-	rmc_languages)     echo binaries              ;;
-	rmc_binwalk)       echo 2                     ;;
-	rmc_dlib)          echo 18.17                 ;;
-	rmc_gcrypt)        echo 1.7                   ;;
-	rmc_magic)         echo 5                     ;;
-	rmc_pqxx)          echo 4                     ;;
-	rmc_wt)            echo 3.3.7                 ;;
-	rmc_yaml)          echo 0.5.3                 ;;
+        rmc_languages)     echo binaries              ;;
+        rmc_binwalk)       echo 2                     ;;
+        rmc_dlib)          echo 18.17                 ;;
+        rmc_gcrypt)        echo 1.7                   ;;
+        rmc_magic)         echo 5                     ;;
+        rmc_pqxx)          echo 4                     ;;
+        rmc_wt)            echo 3.3.7                 ;;
+        rmc_yaml)          echo 0.5.3                 ;;
     esac
 }
 
@@ -189,39 +190,40 @@ project_binaries() {
 project_envars() {
     local rmc_command="$1"
     case "$rmc_command" in
-	rmc_build)         echo "$BUILD"              ;;
-	rmc_parallelism)   echo "$PARALLELISM"        ;;
-	rmc_codegen)       echo "$CODEGEN"            ;;
-	rmc_compiler)      echo "$COMPILER"           ;;
-	rmc_debug)         echo "$DEBUG"              ;;
-	rmc_optimize)      echo "$OPTIMIZE"           ;;
-	rmc_warnings)      echo "$WARNINGS"           ;;
-	rmc_assertions)    echo "$ASSERTIONS"         ;;
-	rmc_languages)     echo "$LANGUAGES"          ;;
-	rmc_binwalk)       echo "$BINWALK"            ;;
-	rmc_boost)         echo "$BOOST"              ;;
-	rmc_cmake)         echo "$CMAKE"              ;;
-	rmc_dlib)          echo "$DLIB"               ;;
-	rmc_doxygen)       echo "$DOXYGEN"            ;;
-	rmc_dwarf)         echo "$DWARF"              ;;
-	rmc_edg)           echo "$EDG"                ;;
-	rmc_elf)           echo "$ELF"                ;;
-	rmc_gcrypt)        echo "$GCRYPT"             ;;
-	rmc_java)          echo "$JAVA"               ;;
-	rmc_lcov)          echo "$LCOV"               ;;
-	rmc_libtool)       echo "$LIBTOOL"            ;;
-	rmc_magic)         echo "$MAGIC"              ;;
-	rmc_pqxx)          echo "$PQXX"               ;;
-	rmc_python)        echo "$PYTHON"             ;;
-	rmc_qt)            echo "$QT"                 ;;
-	rmc_raja)          echo "$RAJA"               ;;
-	rmc_readline)      echo "$READLINE"           ;;
-	rmc_spot)          echo "$SPOT"               ;;
-	rmc_sqlite)        echo "$SQLITE"             ;;
-	rmc_wt)            echo "$WT"                 ;;
-	rmc_yaml)          echo "$YAML"               ;;
-	rmc_yices)         echo "$YICES"              ;;
-	rmc_z3)            echo "$Z3"                 ;;
+        rmc_build)         echo "$BUILD"              ;;
+        rmc_parallelism)   echo "$PARALLELISM"        ;;
+        rmc_codegen)       echo "$CODEGEN"            ;;
+        rmc_compiler)      echo "$COMPILER"           ;;
+        rmc_debug)         echo "$DEBUG"              ;;
+        rmc_optimize)      echo "$OPTIMIZE"           ;;
+        rmc_warnings)      echo "$WARNINGS"           ;;
+        rmc_assertions)    echo "$ASSERTIONS"         ;;
+        rmc_languages)     echo "$LANGUAGES"          ;;
+        rmc_binwalk)       echo "$BINWALK"            ;;
+        rmc_boost)         echo "$BOOST"              ;;
+        rmc_cmake)         echo "$CMAKE"              ;;
+        rmc_cuda)          echo "$CUDA"               ;;
+        rmc_dlib)          echo "$DLIB"               ;;
+        rmc_doxygen)       echo "$DOXYGEN"            ;;
+        rmc_dwarf)         echo "$DWARF"              ;;
+        rmc_edg)           echo "$EDG"                ;;
+        rmc_elf)           echo "$ELF"                ;;
+        rmc_gcrypt)        echo "$GCRYPT"             ;;
+        rmc_java)          echo "$JAVA"               ;;
+        rmc_lcov)          echo "$LCOV"               ;;
+        rmc_libtool)       echo "$LIBTOOL"            ;;
+        rmc_magic)         echo "$MAGIC"              ;;
+        rmc_pqxx)          echo "$PQXX"               ;;
+        rmc_python)        echo "$PYTHON"             ;;
+        rmc_qt)            echo "$QT"                 ;;
+        rmc_raja)          echo "$RAJA"               ;;
+        rmc_readline)      echo "$READLINE"           ;;
+        rmc_spot)          echo "$SPOT"               ;;
+        rmc_sqlite)        echo "$SQLITE"             ;;
+        rmc_wt)            echo "$WT"                 ;;
+        rmc_yaml)          echo "$YAML"               ;;
+        rmc_yices)         echo "$YICES"              ;;
+        rmc_z3)            echo "$Z3"                 ;;
     esac
 }
 
@@ -231,8 +233,8 @@ config_property() {
 
     local value=
     for project in envars ${projects[*]} none; do
-	value=$(eval "project_$project $rmc_command")
-	[ -n "$value" ] && break
+        value=$(eval "project_$project $rmc_command")
+        [ -n "$value" ] && break
     done
 
     printf '%-23s %-23s %s\n' "$rmc_command" "$value" "$comment"
@@ -279,6 +281,7 @@ config_property() {
     config_property rmc_binwalk       "Binwalk firmware extraction tool (optional)"
     config_property rmc_boost         "Boost version number (required)"
     config_property rmc_cmake         "CMake version number (required)"
+    config_property rmc_cuda          "CUDA compiler version (optional)"
     config_property rmc_dlib          "DLib version number (optional)"
     config_property rmc_doxygen       "Doxygen version number (optional)"
     config_property rmc_dwarf         "DWARF library version number (optional)"

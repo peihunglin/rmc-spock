@@ -267,11 +267,18 @@ spock-compiler-conditional-install-collection() {
             local collection_spec="${collection_name}=${collection_version}@${collection_hash}"
             [ ! -e "$collection_yaml" -a ! -e "$collection_root" ] && break
         done
+
         mkdir -p "$collection_root" || exit 1
         (
             echo "package:      '$collection_name'"
             echo "version:      '$collection_version'"
-            echo "aliases:      [ '$collection_vendor-compilers', compiler-collection ]"
+
+	    # nVidia CUDA compilers don't belong to "compiler-collection" because we need to be
+	    # able to use CUDA compilers in concert with other possibly incompatible compilers.
+            echo -n "aliases:      [ '$collection_vendor-compilers'"
+	    [ "$collection_vendor" != "nvidia" ] && echo -n ", compiler-collection"
+	    echo "]"
+
             echo "dependencies: [ '$SPOCK_SPEC' ]"
             echo "timestamp: '$(date --utc '+%Y-%m-%d %H:%M:%S')'"
         ) >"$collection_yaml"
