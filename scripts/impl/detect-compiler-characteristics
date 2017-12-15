@@ -123,8 +123,10 @@ c234567
 EOF
 
 cat >"$input_cuda" <<EOF
+#include <stdio.h>
 int main() {
 #if defined(__CUDACC__) || defined(__NVCC__)
+    fputs("cuda\n", stdout);
     return 0;
 #else
     return 1;
@@ -139,7 +141,7 @@ compiler_lang=
 
 if [ "$compiler_lang" = "" ]; then
     if [ "$compiler_baselang" = "" -o "$compiler_baselang" = "cuda" ]; then
-	"$compiler_exe" $compiler_flags -o "$conftest" "$input_cuda" </dev/null >/dev/null 2>&1 && compiler_lang=cuda
+	"$compiler_exe" $compiler_flags -o "$conftest" "$input_cuda" </dev/null >/dev/null 2>&1 && compiler_lang=$("$conftest")
 	[ "$compiler_lang" = "" ] || compiler_baselang=cuda
     fi
 fi
