@@ -33,7 +33,7 @@ install:
       cmake ../download \
           -DCMAKE_C_COMPILER=cc \
           -DCMAKE_CXX_COMPILER=c++ \
-          -RAJA_ENABLE_OPENMP=On -DRAJA_ENABLE_CUDA=Off \
+          -DRAJA_ENABLE_OPENMP=On -DRAJA_ENABLE_CUDA=Off \
           -DCMAKE_INSTALL_PREFIX="$PACKAGE_ROOT" 
 
       make -j$PARALLELISM
