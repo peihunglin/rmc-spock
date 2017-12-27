@@ -35,7 +35,13 @@ install:
 
       # Some post-dstep fixups
       sed --in-place 's/va_list/void*/g' capstone/capstone.d
+      sed --in-place 's/1ULL/1UL/g' capstone/x86.d
+
+      dmd -g -O -shared -of=libcapstone-d.so capstone/*.d
 
       #==== Installation ====
       mkdir -p $PACKAGE_ROOT/include/capstone
-      mv capstone/*.d $PACKAGE_ROOT/include/capstone
+      mv capstone/*.d $PACKAGE_ROOT/include/capstone/.
+
+      mkdir -p $PACKAGE_ROOT/lib
+      mv libcapstone-d.so $PACKAGE_ROOT/lib/.
