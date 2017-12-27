@@ -121,6 +121,7 @@ project_none() {
         rmc_assertions)    echo ambivalent            ;;
         rmc_languages)     echo all                   ;;
         rmc_binwalk)       echo none                  ;;
+        rmc_bison)         echo 3                     ;;
         rmc_boost)         echo 1.62                  ;;
         rmc_cmake)         echo 3                     ;;
         rmc_cuda)          echo none                  ;;
@@ -211,6 +212,7 @@ project_envars() {
         rmc_assertions)    echo "$ASSERTIONS"         ;;
         rmc_languages)     echo "$LANGUAGES"          ;;
         rmc_binwalk)       echo "$BINWALK"            ;;
+        rmc_bison)         echo "$BISON"              ;;
         rmc_boost)         echo "$BOOST"              ;;
         rmc_cmake)         echo "$CMAKE"              ;;
         rmc_cuda)          echo "$CUDA"               ;;
