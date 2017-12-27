@@ -1,0 +1,46 @@
+package: tup
+versions:
+  - 0.7
+  - 0.7.1
+  - 0.7.2
+  - 0.7.3
+  - 0.7.4
+  - 0.7.5
+  - 49fc3ff5 # 2017-12-19 master branch
+
+dependencies:
+  - version: ">=0"
+    aliases: []
+    install: []
+    build: default-c
+
+download:
+  - version: ">=0"
+    shell: |
+      if [ "${#PACKAGE_VERSION}" -eq 8 ]; then
+        committish="$PACKAGE_VERSION"
+      else
+        committish="v${PACKAGE_VERSION}"
+      fi
+
+      git clone https://github.com/gittup/tup download
+      (cd download && git checkout -b download $committish)
+
+      tar cvf - download |gzip -9 >download.tar.gz
+      
+install:
+  - version: ">=0"
+    shell: |
+      cc --spock-triplet
+
+      cd download
+      CC=cc ./bootstrap.sh
+      
+      ./tup # make sure it works
+
+      # Install
+      mkdir -p "$PACKAGE_ROOT/bin"
+      cp -p tup "$PACKAGE_ROOT/bin/."
+      mkdir -p "$PACKAGE_ROOT/man/man1"
+      cp -p tup.1 "$PACKAGE_ROOT/man/man1/."
+      spock-export MANPATH "$PACKAGE_ROOT/man"

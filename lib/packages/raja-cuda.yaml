@@ -1,4 +1,7 @@
-package:	raja
+# RAJA compiled with CUDA support
+# See also, raja-nocuda.yaml
+
+package:	raja-cuda
 
 versions:	[ 0.3.0,0.4.0 ]
 
@@ -6,6 +9,7 @@ dependencies:
   - version: ">=0.0.0"
     install: [ "c++-compiler", blt ]
     build: [ default-c, cmake ]
+    aliases: [ "raja" ]
 
 variables:
   - version: ">=0.0.0"
@@ -29,6 +33,7 @@ install:
       cmake ../download \
           -DCMAKE_C_COMPILER=cc \
           -DCMAKE_CXX_COMPILER=c++ \
+          -DRAJA_ENABLE_OPENMP=On -DRAJA_ENABLE_CUDA=Off \
           -DCMAKE_INSTALL_PREFIX="$PACKAGE_ROOT" 
 
       make -j$PARALLELISM

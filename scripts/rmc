@@ -215,6 +215,45 @@ package_spec() {
 	rmc_codegen)
 	    pkgspec="${RMC_CODEGEN}-generation"
 	    ;;
+
+	rmc_cuda)
+	    # This is a special case because we want the user to be able to specify a specific specification
+	    # in addition to just a version number.
+	    case "$pkgvers" in
+		no|none|ambivalent)
+		    pkgspec=
+		    ;;
+		system)
+		    pkgspec="cuda-compiler"
+		    ;;
+		[0-9]*)
+		    pkgspec="nvidia-cuda-$pkgvers"
+		    ;;
+		*)
+		    pkgspec="$pkgvers"
+		    ;;
+	    esac
+	    ;;
+
+	rmc_raja)
+	    # If RAJA is desired, it should be either "raja-nocuda" or "raja-cuda" depending on whether CUDA
+	    # support is also desired.
+	    case "$pkgvers" in
+		no|none|ambivalent|system)
+		    pkgspec=
+		    ;;
+		*)
+		    case "$RMC_CUDA" in
+			no|none|ambivalent)
+			    pkgspec="raja-nocuda-$pkgvers"
+			    ;;
+			*)
+			    pkgspec="raja-cuda-$pkgvers"
+			    ;;
+		    esac
+		    ;;
+	    esac
+	    ;;
 	    
 	rmc_*) pkgname="${function#rmc_}" ;;
 	*) die "check_package fails for $function $1" ;;
@@ -268,8 +307,10 @@ read_config_file() {
     export RMC_CODEGEN=default
 
     export RMC_BINWALK=none
+    export RMC_BISON=3
     export RMC_BOOST=
     export RMC_CMAKE=3
+    export RMC_CUDA=none
     export RMC_DLIB=none
     export RMC_DOXYGEN=none
     export RMC_DWARF=none
@@ -606,6 +647,11 @@ rmc_binwalk() {
     RMC_BINWALK="$1"
 }
 
+rmc_bison() {
+    check_one_arg rmc_bison "$@"
+    RMC_BINWALK="$1"
+}
+
 rmc_boost() {
     check_one_arg rmc_boost "$@"
     RMC_BOOST="$1"
@@ -614,6 +660,11 @@ rmc_boost() {
 rmc_cmake() {
     check_one_arg rmc_cmake "$@"
     RMC_CMAKE="$1"
+}
+
+rmc_cuda() {
+    check_one_arg rmc_cuda "$@"
+    RMC_CUDA="$1"
 }
 
 rmc_dlib() {
@@ -782,8 +833,10 @@ if [ "$RMC_HASH" = "" ]; then
 	package_spec rmc_compiler "$RMC_CXX_COMPILER"
 	package_spec rmc_compiler "$RMC_C_COMPILER"
 	package_spec rmc_binwalk  "$RMC_BINWALK"
+	package_spec rmc_bison    "$RMC_BISON"
 	package_spec rmc_boost    "$RMC_BOOST"
 	package_spec rmc_cmake    "$RMC_CMAKE"
+	package_spec rmc_cuda     "$RMC_CUDA"
 	package_spec rmc_dlib     "$RMC_DLIB"
 	package_spec rmc_doxygen  "$RMC_DOXYGEN"
 	package_spec rmc_dwarf    "$RMC_DWARF"

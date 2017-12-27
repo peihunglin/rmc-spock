@@ -1,0 +1,50 @@
+package: bison
+versions:
+  - 2.4.1 # 2008-12-11
+  - 2.4.2 # 2010-03-20
+  - 2.4.3 # 2010-08-05
+  - 2.5   # 2011-05-14
+  - 2.5.1 # 2012-06-05
+  - 2.6   # 2012-07-19
+  - 2.6.1 # 2012-07-30
+  - 2.6.2 # 2012-08-03
+  - 2.6.3 # 2012-10-22
+  - 2.6.4 # 2012-10-23
+  - 2.6.5 # 2012-11-07
+  - 2.7   # 2012-12-12
+  - 2.7.1 # 2013-04-15
+  - 3.0   # 2013-07-25
+  - 3.0.1 # 2013-11-12
+  - 3.0.2 # 2013-12-05
+  - 3.0.3 # 2015-01-15
+  - 3.0.4 # 2015-01-23
+
+dependencies:
+  - version: ">=2"
+    install: c-compiler
+    build: []
+
+download:
+  - version: ">=2"
+    shell: |
+      wget -O - https://ftp.gnu.org/gnu/bison/bison-$PACKAGE_VERSION.tar.gz |tar xzf -
+      mv bison-$PACKAGE_VERSION download
+      tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=2"
+    shell: |
+      cc --spock-triplet
+
+      cd download
+
+      env \
+          CC=cc \
+          LDFLAGS="$(spock-compiler-libdirs)" \
+          CPPFLAGS="$(spock-compiler-incdirs)" \
+          ./configure \
+          --prefix="$PACKAGE_ROOT"
+
+      make -j$PARALLELISM
+      make check
+      make install

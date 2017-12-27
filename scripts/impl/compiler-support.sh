@@ -25,6 +25,7 @@ spock-compiler-base-language-var() {
         c) echo "C" ;;
         fortran) echo "FORTRAN" ;;
         java) echo "JAVA" ;;
+	cuda) echo "CUDA" ;;
         *) die "unknown base language: $base_language" ;;
     esac
 }
@@ -128,14 +129,18 @@ spock-compiler-install() {
 
                 spock-compiler-onoff x                  x     fc
                 ;;
+
+	    cuda)
+		spock-compiler-onoff "$compiler_vendor" nvidia nvcc
         esac
     ) || exit 1
 
     local compiler_cmd=
     case "$compiler_baselang" in
-        c++)     compiler_cmd=c++ ;;
-        c)       compiler_cmd=cc  ;;
-        fortran) compiler_cmd=fc  ;;
+        c++)     compiler_cmd=c++  ;;
+        c)       compiler_cmd=cc   ;;
+        fortran) compiler_cmd=fc   ;;
+	cuda)    compiler_cmd=nvcc ;;
         *)       die "baselang $compiler_baselang not supported yet (spock-compiler-install)"
     esac
 
@@ -262,11 +267,18 @@ spock-compiler-conditional-install-collection() {
             local collection_spec="${collection_name}=${collection_version}@${collection_hash}"
             [ ! -e "$collection_yaml" -a ! -e "$collection_root" ] && break
         done
+
         mkdir -p "$collection_root" || exit 1
         (
             echo "package:      '$collection_name'"
             echo "version:      '$collection_version'"
-            echo "aliases:      [ '$collection_vendor-compilers', compiler-collection ]"
+
+	    # nVidia CUDA compilers don't belong to "compiler-collection" because we need to be
+	    # able to use CUDA compilers in concert with other possibly incompatible compilers.
+            echo -n "aliases:      [ '$collection_vendor-compilers'"
+	    [ "$collection_vendor" != "nvidia" ] && echo -n ", compiler-collection"
+	    echo "]"
+
             echo "dependencies: [ '$SPOCK_SPEC' ]"
             echo "timestamp: '$(date --utc '+%Y-%m-%d %H:%M:%S')'"
         ) >"$collection_yaml"
@@ -394,6 +406,10 @@ spock-compiler-install-program() {
             spock-compiler-conditional-install-language "$collection_spec" c ""     "$exe" -std=gnu11
             spock-compiler-conditional-install-language "$collection_spec" c "-m32" "$exe" -std=gnu11
             ;;
+
+	nvidia:cuda)
+	    spock-compiler-conditional-install-language "$collection_spec" cuda "" "$exe"
+	    ;;
 
         *:c++)
             spock-compiler-conditional-install-language "$collection_spec" c++ ""     "$exe"

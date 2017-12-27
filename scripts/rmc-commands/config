@@ -272,6 +272,7 @@ autoconf_command() {
     autoconf_optional_with dlib "$RMC_DLIB" "$DLIB_INCDIRS"
     autoconf_optional_with doxygen "$RMC_DOXYGEN" "$DOXYGEN"
     autoconf_optional_with dwarf "$RMC_DWARF" "$LIBDWARF_ROOT"
+    autoconf_optional_with cuda "$RMC_CUDA" "$CUDA_ROOT/bin"
     autoconf_optional_with elf "$RMC_ELF" "$LIBELF_ROOT"
     autoconf_optional_with gcrypt "$RMC_GCRYPT" "$LIBGCRYPT_ROOT"
     autoconf_optional_with gfortran "$FORTRAN_COMPILER"

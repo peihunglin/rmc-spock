@@ -71,6 +71,8 @@ elif [ "$#" -eq 0 ]; then
 
     scan fortran gfortran
     scan fortran ifort
+
+    scan cuda nvcc
 else
     usage
 fi

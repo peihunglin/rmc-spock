@@ -1,0 +1,40 @@
+# RAJA compiled without CUDA support
+# See also, raja-cuda.yaml
+
+package:	raja-nocuda
+
+versions:	[ 0.3.0,0.4.0 ]
+
+dependencies:
+  - version: ">=0.0.0"
+    install: [ "c++-compiler", blt ]
+    build: [ default-c, cmake ]
+    aliases: [ "raja" ]
+
+variables:
+  - version: ">=0.0.0"
+    repo: https://github.com/llnl/RAJA
+
+download:
+  - version: ">=0.0.0"
+    shell: |
+      git clone "$repo" raja
+      cd raja
+      git reset --hard "v$PACKAGE_VERSION"
+      git archive --format=tar --prefix=download/ HEAD |gzip -9 >../download.tar.gz
+
+install:
+  - version: ">=0.0.0"
+    shell: |
+      cxx --spock-triplet
+      cp -r "$BLT_ROOT" download
+      mkdir _build
+      cd _build
+      cmake ../download \
+          -DCMAKE_C_COMPILER=cc \
+          -DCMAKE_CXX_COMPILER=c++ \
+          -DRAJA_ENABLE_OPENMP=On \
+          -DCMAKE_INSTALL_PREFIX="$PACKAGE_ROOT" 
+
+      make -j$PARALLELISM
+      make install
