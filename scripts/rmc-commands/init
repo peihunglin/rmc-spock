@@ -142,6 +142,7 @@ project_none() {
         rmc_readline)      echo none                  ;;
         rmc_spot)          echo none                  ;;
         rmc_sqlite)        echo none                  ;;
+	rmc_tup)           echo ambivalent            ;;
         rmc_wt)            echo none                  ;;
         rmc_yaml)          echo none                  ;;
         rmc_yices)         echo none                  ;;
@@ -233,6 +234,7 @@ project_envars() {
         rmc_readline)      echo "$READLINE"           ;;
         rmc_spot)          echo "$SPOT"               ;;
         rmc_sqlite)        echo "$SQLITE"             ;;
+	rmc_tup)           echo "$TUP"                ;;
         rmc_wt)            echo "$WT"                 ;;
         rmc_yaml)          echo "$YAML"               ;;
         rmc_yices)         echo "$YICES"              ;;
@@ -276,7 +278,7 @@ config_property() {
     echo "# Basic settings"
     config_property rmc_rosesrc
     config_property rmc_install       "where to install ROSE ('yes' means default location)"
-    config_property rmc_build         "build system: 'autoconf' or 'cmake'"
+    config_property rmc_build         "build system: 'autoconf', 'cmake', or 'tup'"
     config_property rmc_parallelism   "number or 'system'"
     echo
     echo "# Compiler settings"
@@ -312,6 +314,7 @@ config_property() {
     config_property rmc_readline      "libreadline version number (optional)"
     config_property rmc_spot          "Spot library version number (optional)"
     config_property rmc_sqlite        "SQLite version number (optional)"
+    config_property rmc_tup           "Tup version used if rmc_build is 'tup'"
     config_property rmc_wt            "Wt version number (optional)"
     config_property rmc_yaml          "Yaml-cpp version number (optional)"
     config_property rmc_yices         "Yices version number (optional)"

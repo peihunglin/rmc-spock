@@ -254,6 +254,12 @@ package_spec() {
 		    ;;
 	    esac
 	    ;;
+
+	rmc_tup)
+	    if [ "$RMC_BUILD" = "tup" -a "$pkgvers" = "ambivalent" ]; then
+		pkgspec="tup=49fc3ff5" # 2017-12-19 version of git HEAD
+	    fi
+	    ;;
 	    
 	rmc_*) pkgname="${function#rmc_}" ;;
 	*) die "check_package fails for $function $1" ;;
@@ -328,6 +334,7 @@ read_config_file() {
     export RMC_READLINE=none
     export RMC_SPOT=none
     export RMC_SQLITE=none
+    export RMC_TUP=ambivalent
     export RMC_WT=none
     export RMC_YAML=none
     export RMC_YICES=none
@@ -558,7 +565,7 @@ rmc_toolchain() {
 
 rmc_build() {
     check_one_arg rmc_build "$@"
-    check_arg_in rmc_build "$1" cmake autoconf
+    check_arg_in rmc_build "$1" cmake autoconf tup
     RMC_BUILD="$1"
 }
 
@@ -776,6 +783,11 @@ rmc_sqlite() {
     RMC_SQLITE="$1"
 }
 
+rmc_tup() {
+    check_one_arg rmc_tup "$@"
+    RMC_TUP="$1"
+}
+
 rmc_wt() {
     check_one_arg rmc_wt "$@"
     RMC_WT="$1"
@@ -853,6 +865,7 @@ if [ "$RMC_HASH" = "" ]; then
 	package_spec rmc_readline "$RMC_READLINE"
 	package_spec rmc_spot     "$RMC_SPOT"
 	package_spec rmc_sqlite   "$RMC_SQLITE"
+	package_spec rmc_tup      "$RMC_TUP"
 	package_spec rmc_wt       "$RMC_WT"
 	package_spec rmc_yaml     "$RMC_YAML"
 	package_spec rmc_yices    "$RMC_YICES"
