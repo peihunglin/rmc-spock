@@ -656,7 +656,7 @@ rmc_binwalk() {
 
 rmc_bison() {
     check_one_arg rmc_bison "$@"
-    RMC_BINWALK="$1"
+    RMC_BISON="$1"
 }
 
 rmc_boost() {
