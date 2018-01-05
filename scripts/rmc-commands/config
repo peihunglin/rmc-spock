@@ -379,9 +379,9 @@ cmake_command() {
     local cxx_flags="$(cxx_flags) $(cmake_optimize_flags) $(cmake_cxx_warning_flags) $(cmake_debug_flags) $(code_coverage_flags)"
 
     echo -n "$CMAKE_ROOT/bin/cmake"
-    echo -n " -DCMAKE_C_COMPILER=cc"
+    echo -n " -DCMAKE_C_COMPILER='$C_COMPILER'"
     echo -n " -DCMAKE_C_FLAGS='$cc_flags'"
-    echo -n " -DCMAKE_CXX_COMPILER=c++"
+    echo -n " -DCMAKE_CXX_COMPILER='$CXX_COMPILER'"
     echo -n " -DCMAKE_CXX_FLAGS='$cxx_flags'"
     echo -n " -DCMAKE_INSTALL_PREFIX='$ROSE_INSTALLED'"
     echo -n " -DBOOST_ROOT='$BOOST_ROOT'"
@@ -403,40 +403,64 @@ cmake_command() {
 
 # Echo the tup commands to standard output
 tup_command() {
-    # Tup builds can only be configured in empty directories (although dot files seem to be allowed)
-    echo 'if [ -n "$(ls)" ]; then'
-    echo "    echo '$arg0: tup-based builds can only be configured in empty build trees'"
-    echo "    exit 1"
-    echo "fi"
+    # We have to do slighly different things depending on whether tup was previously configured.
+    local stash_file=".autotools-stash.tar"
+    local time_stamp=.configure_time_stamp
+    local first_time=yes
+    [ -s tup.debug ] && first_time=
+    if [ -n "$first_time" ]; then
+	echo "if [ -s tup.debug ]; then"
+	echo "    echo \"$arg0: hey, you can't just reuse this old script. Rerun $arg0 instead.\" >&2"
+	echo "    exit 1"
+	echo "fi"
+    else
+	echo "if [ ! -s tup.debug ]; then"
+	echo "    echo \"$arg0: hey, you can't just reuse this old script. Rerun $arg0 instead.\" >&2"
+	echo "    exit 1"
+	echo "fi"
+	echo "touch $time_stamp" #used by tar, below
+
+	# We need to make sure that all the files touched by configure actually have their modification times
+	# updated. Unfortunately the configure script tries hard to not modify mtimes, so we need to help it along by
+	# untarring what we saved last time (tar, like most programs, updates mtimes for the files it modifies).
+	echo "tar xf $stash_file"
+    fi
     echo
 
     # Command to run the GNU configure script, which will build some files needed during compilation. We must run
     # "configure" at the top of tup's eventual build tree (the "variant directory") because some of the files it
     # produces have hard-coded paths (this occurs mostly in documentation and projects).
     autoconf_command
+    echo "tup_config_vars=\$(${RG_SRC}/scripts/tup/vars-from-configure)"
     echo
 
     # We're not interested in all the files produced by "configure", so delete some of the noise.
     echo "echo '$arg0: removing unnecessary configure artifacts...'"
-    echo "rm -rf config.log config.status libltdl libtool stamp-h stamp-h1"
-    echo "rm -f src/3rdPartyLibraries/libharu-2.1.0/{config.log,config.status,libtool}"
+    #echo "rm -rf config.status libltdl libtool stamp-h stamp-h1"
+    #echo "rm -f src/3rdPartyLibraries/libharu-2.1.0/{config.status,libtool}"
     echo "find . -name Makefile -print0 |xargs -0 rm"
-    echo "find . -depth -type d -print0 |xargs -0 rmdir 2>/dev/null || true"
+    #echo "find . -depth -type d -print0 |xargs -0 rmdir 2>/dev/null || true"
 
-    # When initializing tup, we can't have anything in the variant directory, but yet the variant directory needs to be
-    # a subdirectory of the ROSE source tree, and (see above) it needs to also be where we run "configure". Therefore,
-    # package up everything configure produced and squirrel it away.
-    local stash_file=".autotools-stash.tar"
     echo "echo '$arg0: stashing remaining GNU configure artifacts in $stash_file...'"
-    echo "tar cf - --exclude=$stash_file . >$stash_file" # create file before starting tar
-    echo "rm -rf *" # don't remove dot files (.rmc-main.cfg, .spock, $stash_file, etc)
+    if [ -n "$first_time" ]; then
+	# When initializing tup the first time, we can't have anything in the variant directory, but yet the variant
+	# directory needs to be a subdirectory of the ROSE source tree, and (see above) it needs to also be where we run
+	# "configure". Therefore, package up everything configure produced and squirrel it away.
+	echo "tar cf - --exclude=$stash_file . >$stash_file" # create file before starting tar
+	echo 'rm -rf *' # don't remove dot files (.rmc-main.cfg, .spock, $stash_file, etc)
+    else
+	# When initializing tup the next time, we need to have certain things in the stash file because we need them
+	# for a couple Tupfile rules. Unfortunately, configure doesn't update mtimes for some files if they didn't
+	# change.
+        echo "tar cf - --exclude=$stash_file --newer-mtime=$time_stamp . >$stash_file"
+    fi
     echo
 
     # Command to build the initial tup.config file in the build (variant) directory by
     # merging the tup.congif file from the source tree with the settings determined by
     # RMC and Spock.
     echo -n "${RG_SRC}/scripts/tup/merge-configs"
-    echo -n " CC=cc CXX=c++"
+    echo -n " CC='${C_COMPILER}' CXX='${CXX_COMPILER}'"
     echo -n " C_CXX_DEBUG='$(tup_debug_flags)'"
     echo -n " C_CXX_OPTIM='$(tup_optimize_flags)'"
     echo -n " C_CXX_WARN="
@@ -445,7 +469,7 @@ tup_command() {
     echo -n " C_CXX_MISC='-pthread $(code_coverage_flags)'"
     echo -n " C_MISC='$(cc_flags)'"
     echo -n " CXX_MISC='$(cxx_flags)'"
-
+    echo -n " INSTALLATION_PREFIX='$ROSE_INSTALLED'"
 
     declare -A languages
     for lang in $(normalize_languages "$RMC_LANGUAGES"); do
@@ -461,33 +485,45 @@ tup_command() {
 	fi
     done
 
-    tup_value_or_no WITH_BINWALK    "$BINWALK_ROOT"
-    tup_value_or_no WITH_BOOST      "$BOOST_ROOT"
-    tup_value_or_no WITH_DLIB       "$DLIB_ROOT"
-    tup_value_or_no WITH_DOXYGEN    "$DOXYGEN_ROOT"
-    tup_value_or_no WITH_DWARF      "$LIBDWARF_ROOT"
-    tup_value_or_no WITH_ELF        "$LIBELF_ROOT"
-    tup_value_or_no WITH_GCRYPT     "$LIBGCRYPT_ROOT"
-    tup_value_or_no WITH_MAGIC      "$LIBMAGIC_ROOT"
-    tup_value_or_no WITH_PQXX       "$LIBPQXX_ROOT"
-    tup_value_or_no WITH_READLINE   "$READLINE_ROOT"
-    tup_value_or_no WITH_WT         "$WT_ROOT"
-    tup_value_or_no WITH_YAMLCPP    "$YAMLCPP_ROOT"
-    tup_value_or_no WITH_YICES      "$YICES_ROOT"
-    tup_value_or_no WITH_Z3         "$Z3_ROOT"
-    tup_value_or_no AUTOTOOLS_STASH "$RG_BLD/$stash_file"
-    echo " <${RG_SRC}/tup.config >${RG_BLD}/tup.config"
+    tup_value_or_no WITH_BINWALK    	"$BINWALK_ROOT"
+    tup_value_or_no WITH_BOOST      	"$BOOST_ROOT"
+    tup_value_or_no WITH_BZIP2      	"$LIBBZ2_ROOT"
+    tup_value_or_no WITH_DLIB       	"$DLIB_ROOT"
+    tup_value_or_no WITH_DOXYGEN    	"$DOXYGEN_ROOT"
+    tup_value_or_no WITH_DWARF      	"$LIBDWARF_ROOT"
+    tup_value_or_no WITH_ELF        	"$LIBELF_ROOT"
+    tup_value_or_no WITH_GCRYPT     	"$LIBGCRYPT_ROOT"
+    tup_value_or_no WITH_GPG_ERROR  	"$LIBGPG_ERROR_ROOT"
+    tup_value_or_no WITH_GRAPHICSMAGICK "$LIBGRAPHICSMAGICK"
+    tup_value_or_no WITH_JPEG       	"$LIBJPEG_ROOT"
+    tup_value_or_no WITH_LCMS       	"$LIBLCMS_ROOT"
+    tup_value_or_no WITH_LZMA       	"$LIBLZMA_ROOT"
+    tup_value_or_no WITH_MAGIC      	"$LIBMAGIC_ROOT"
+    tup_value_or_no WITH_PNG        	"$LIBPNG_ROOT"
+    tup_value_or_no WITH_PQXX       	"$LIBPQXX_ROOT"
+    tup_value_or_no WITH_READLINE   	"$READLINE_ROOT"
+    tup_value_or_no WITH_TIFF           "$LIBTIFF_ROOT"
+    tup_value_or_no WITH_WT         	"$WT_ROOT"
+    tup_value_or_no WITH_YAMLCPP    	"$YAMLCPP_ROOT"
+    tup_value_or_no WITH_YICES      	"$YICES_ROOT"
+    tup_value_or_no WITH_Z3         	"$Z3_ROOT"
+    tup_value_or_no WITH_ZLIB           "$ZLIB_ROOT"
+    tup_value_or_no AUTOTOOLS_STASH 	"$RG_BLD/$stash_file"
+    echo " \$tup_config_vars <${RG_SRC}/tup.config >${RG_BLD}/tup.config"
     echo
 
     # Make sure tup is initialized and the monitor is running
     echo "(cd $RG_SRC && tup init)"
-    echo "tup rose_config.h"
+    echo "tup parse" # because first time can take a while
+    echo "tup tup.debug"
     echo
 
-    echo "echo '$arg0: restoring stashed GNU configure artifacts...'"
-    echo "tar xf $stash_file --touch"
-    echo "echo"
-    echo "echo 'You may want to run 'tup monitor' for improved performance.'"
+    if [ -n "$first_time" ]; then
+	echo "echo '$arg0: restoring stashed GNU configure artifacts...'"
+	echo "tar xf $stash_file --touch"
+	echo "echo"
+	echo "echo 'You may want to run 'tup monitor' for improved performance, esp. on NFS mounts.'"
+    fi
 }
 
 ########################################################################################################################

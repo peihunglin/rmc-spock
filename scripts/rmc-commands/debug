@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+# This runs a debugger based on the build system
+
+case "$RMC_BUILD" in
+    tup)
+	set -x
+	exec cgdb -ex "set substitute-path $RG_BLD $RG_SRC" "$@"
+	;;
+
+    *)
+	exec cgdb "$@"
+	;;
+esac

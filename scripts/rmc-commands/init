@@ -160,6 +160,7 @@ project_estcp() {
         rmc_gcrypt)        echo 1.7                   ;;
         rmc_wt)            echo 3.3.7                 ;;
         rmc_yaml)          echo 0.5.3                 ;;
+	rmc_z3)            echo 4                     ;;
     esac
 }
 
@@ -186,6 +187,7 @@ project_binaries() {
         rmc_pqxx)          echo 4                     ;;
         rmc_wt)            echo 3.3.7                 ;;
         rmc_yaml)          echo 0.5.3                 ;;
+	rmc_z3)            echo 4                     ;;
     esac
 }
 
