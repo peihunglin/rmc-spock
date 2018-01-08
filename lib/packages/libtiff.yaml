@@ -31,3 +31,5 @@ install:
       make -j$PARALLELISM
       make test
       make install
+
+      [ -e "$PACKAGE_ROOT/lib" ] || mv "$PACKAGE_ROOT/lib64" "$PACKAGE_ROOT/lib"
