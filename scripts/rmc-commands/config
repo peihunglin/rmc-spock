@@ -521,6 +521,7 @@ tup_command() {
     if [ -n "$first_time" ]; then
 	echo "echo '$arg0: restoring stashed GNU configure artifacts...'"
 	echo "tar xf $stash_file --touch"
+	echo "tup parse"
 	echo "echo"
 	echo "echo 'You may want to run 'tup monitor' for improved performance, esp. on NFS mounts.'"
     fi

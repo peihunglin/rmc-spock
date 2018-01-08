@@ -130,6 +130,13 @@ run_make_command() {
 run_tup_command() {
     local cmd="tup"
 
+    # If the target is "install" then we do something special
+    local doing_install=
+    if [ "${#targets[*]}" -eq 1 -a "${targets[0]}" = "install" ]; then
+	doing_install=yes
+	targets=("$RG_BLD")
+    fi
+    
     # If no target specified, use "." as the target in order to restrict the build to one directory.
     # BTW, the targets must come before other command-line switches.
     cmd="${cmd} ${targets[*]}"
@@ -156,6 +163,11 @@ run_tup_command() {
     echo "+ $cmd" >&2
     if [ "$dry_run" != "yes" ]; then
 	eval "$cmd" || exit 1
+    fi
+
+    # Copy files to final locations?
+    if [ -n "$doing_install" ]; then
+	(cd "$RG_BLD" && $RG_SRC/scripts/tup/install-staged "$ROSE_INSTALLED") || exit 1
     fi
 }
 
