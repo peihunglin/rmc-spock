@@ -709,7 +709,7 @@ rmc_java() {
     RMC_JAVA="$1"
 
     case "$RMC_JAVA" in
-	none|system)
+	none|system|ambivalent)
 	    : good
 	    ;;
 	oracle-java-*)

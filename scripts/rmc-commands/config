@@ -368,7 +368,10 @@ cmake_command() {
     cmake_error_if_specified java     "$RMC_JAVA"     "$JAVA_COMPILER"
     cmake_error_if_specified magic    "$RMC_MAGIC"    "$LIBMAGIC_ROOT"
     cmake_error_if_specified pqxx     "$RMC_PQXX"     "$LIBPQXX_ROOT"
+    cmake_error_if_specified qt       "$RMC_QT"
+    cmake_error_if_specified raja     "$RMC_RAJA"
     cmake_error_if_specified readline "$RMC_READLINE" "$LIBREADLINE_ROOT"
+    cmake_error_if_specified spot     "$RMC_SPOT"
     cmake_error_if_specified sqlite   "$RMC_SQLITE"   "$SQLITE_ROOT"
     cmake_error_if_specified wt       "$RMC_WT"       "$WT_ROOT"
     cmake_error_if_specified yaml     "$RMC_YAML"     "$YAMLCPP_ROOT"
@@ -396,13 +399,27 @@ cmake_command() {
     [ -n "$PYTHON_LIBDIRS" ] && echo -n " -DPYTHON_LIBRARIES='$PYTHON_LIBDIRS'"
 
     # Most user systems don't have cuda, so this should be the default
-    echo -n " -Denable-cuda=OFF"
-
+    if [ "$RMC_CUDA" = "ambivalent" ]; then
+	: good
+    elif [ "$RMC_CUDA" = "no" -o "$RMC_CUDA" = "none" ]; then
+	echo -n " -Denable-cuda=OFF"
+    else
+	die "cmake does not support cuda '$RMC_CUDA'; try setting it to 'none' or 'ambivalent'"
+    fi
+    
     echo " $ROSE_SOURCE"
 }
 
 # Echo the tup commands to standard output
 tup_command() {
+    if [ ! -e "$RG_SRC/Tuprules.tup" ]; then
+	echo "$arg0: tup builds are not supported by this version of ROSE" >&2
+	echo "    You probably need to either apply Robb's Tup patches or" >&2
+	echo "    change $RG_BLD/.rmc-main.cfg to " >&2
+	echo "    use a different build system." >&2
+	exit 1
+    fi
+    
     # We have to do slighly different things depending on whether tup was previously configured.
     local stash_file=".autotools-stash.tar"
     local time_stamp=.configure_time_stamp
