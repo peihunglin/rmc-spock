@@ -285,7 +285,7 @@ config_property() {
     echo
     echo "# Compiler settings"
     config_property rmc_codegen       "default|m32"
-    config_property rmc_compiler      "('gnu'|'llvm'|'intel')-version[-language]"
+    config_property rmc_compiler      "('gnu'|'llvm'|'intel')-language-version"
     config_property rmc_debug         "debug support: 'yes' or 'no'"
     config_property rmc_optimize      "optimizations: 'yes', 'no', or 'ambivalent'"
     config_property rmc_warnings      "compiler warnings: 'yes' or 'no'"

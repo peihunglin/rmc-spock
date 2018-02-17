@@ -167,7 +167,7 @@ run_tup_command() {
 
     # Copy files to final locations?
     if [ -n "$doing_install" ]; then
-	(cd "$RG_BLD" && $RG_SRC/scripts/tup/install-staged "$ROSE_INSTALLED") || exit 1
+	(set -x; cd "$RG_BLD" && $RG_SRC/scripts/tup/install-staged "$ROSE_INSTALLED") || exit 1
     fi
 }
 

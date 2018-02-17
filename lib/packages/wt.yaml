@@ -1,5 +1,5 @@
 package:        wt
-versions:       [ 3.3.3, 3.3.4, 3.3.5, 3.3.6, 3.3.7, 3.3.8 ]
+versions:       [ 3.3.3, 3.3.4, 3.3.5, 3.3.6, 3.3.7, 3.3.8, 4.0.1, 4.0.2 ]
 
 dependencies:
   - version: "=3.3.3"
@@ -28,8 +28,6 @@ dependencies:
   - version: ">=3.3.6"
     install: [ boost>=1.41, libgraphicsmagick, c++-compiler ]
     build:   [ c-compiler ]
-
-
 
 
 variables:

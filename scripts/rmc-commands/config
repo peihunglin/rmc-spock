@@ -526,6 +526,7 @@ tup_command() {
     tup_value_or_no WITH_Z3         	"$Z3_ROOT"
     tup_value_or_no WITH_ZLIB           "$ZLIB_ROOT"
     tup_value_or_no AUTOTOOLS_STASH 	"$RG_BLD/$stash_file"
+    tup_value_or_no ROSE_SOURCE         "$RG_SRC"
     echo " \$tup_config_vars <${RG_SRC}/tup.config >${RG_BLD}/tup.config"
     echo
 
