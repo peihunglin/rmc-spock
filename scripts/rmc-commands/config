@@ -40,13 +40,18 @@ cxx_flags() {
 
 # Flags to control C and C++ warning messages as a space-separated list w/out quoting.
 cc_warning_flags() {
+    local c_major="${C_VERSION%%.*}"
     case "$RMC_WARNINGS" in
 	yes)
 	    echo -n "-Wall"
 	    echo -n " -Wno-unused-local-typedefs" # common warning from boost
 	    echo -n " -Wno-attributes"
-	    echo -n " -Wno-misleading-indentation" # common warning from ROSE generated header files
-	    echo -n " -Wno-nonnull-compare" # because ROSE has lots of "assert(this)"
+
+	    if [ "$c_major" -gt 4 ]; then
+		echo -n " -Wno-misleading-indentation" # common warning from ROSE generated header files
+		echo -n " -Wno-nonnull-compare" # because ROSE has lots of "assert(this)"
+		echo -n " -fdiagnostics-color=always" # colorized within tools like emacs
+	    fi
 	    ;;
 	no|ambivalent)
 	    : nothing
@@ -55,15 +60,20 @@ cc_warning_flags() {
 }
 
 cxx_warning_flags() {
+    local cxx_major="${CXX_VERSION%%.*}"
     case "$RMC_WARNINGS" in
 	yes)
 	    echo -n "-Wall"
 	    echo -n " -Wno-unused-local-typedefs" # common warning from boost
 	    echo -n " -Wno-attributes"
 	    echo -n " -Wno-deprecated-declarations" # common warning from dlib using std::auto_ptr
-	    echo -n " -Wno-terminate" # common warning from dlib throwing an exception in destructors
-	    echo -n " -Wno-misleading-indentation" # common warning from ROSE generated header files
-	    echo -n " -Wno-nonnull-compare" # because ROSE has lots of "assert(this)"
+
+	    if [ "$cxx_major" -gt 4 ]; then
+		echo -n " -Wno-terminate" # common warning from dlib throwing an exception in destructors
+		echo -n " -Wno-misleading-indentation" # common warning from ROSE generated header files
+		echo -n " -Wno-nonnull-compare" # because ROSE has lots of "assert(this)"
+		echo -n " -fdiagnostics-color=always" # colorized within tools like emacs
+	    fi
 	    ;;
 	no|ambivalent)
 	    : nothing
