@@ -142,7 +142,7 @@ project_none() {
         rmc_readline)      echo none                  ;;
         rmc_spot)          echo none                  ;;
         rmc_sqlite)        echo none                  ;;
-	rmc_tup)           echo ambivalent            ;;
+        rmc_tup)           echo ambivalent            ;;
         rmc_wt)            echo none                  ;;
         rmc_yaml)          echo none                  ;;
         rmc_yices)         echo none                  ;;
@@ -160,7 +160,7 @@ project_estcp() {
         rmc_gcrypt)        echo 1.7                   ;;
         rmc_wt)            echo 3.3.7                 ;;
         rmc_yaml)          echo 0.5.3                 ;;
-	rmc_z3)            echo 4                     ;;
+        rmc_z3)            echo 4                     ;;
     esac
 }
 
@@ -187,7 +187,7 @@ project_binaries() {
         rmc_pqxx)          echo 4                     ;;
         rmc_wt)            echo 3.3.7                 ;;
         rmc_yaml)          echo 0.5.3                 ;;
-	rmc_z3)            echo 4                     ;;
+        rmc_z3)            echo 4                     ;;
     esac
 }
 
@@ -205,7 +205,7 @@ project_gpu() {
 project_envars() {
     local rmc_command="$1"
     case "$rmc_command" in
-	rmc_install)       echo "$INSTALL"            ;;
+        rmc_install)       echo "$INSTALL"            ;;
         rmc_build)         echo "$BUILD"              ;;
         rmc_parallelism)   echo "$PARALLELISM"        ;;
         rmc_codegen)       echo "$CODEGEN"            ;;
@@ -237,7 +237,7 @@ project_envars() {
         rmc_readline)      echo "$READLINE"           ;;
         rmc_spot)          echo "$SPOT"               ;;
         rmc_sqlite)        echo "$SQLITE"             ;;
-	rmc_tup)           echo "$TUP"                ;;
+        rmc_tup)           echo "$TUP"                ;;
         rmc_wt)            echo "$WT"                 ;;
         rmc_yaml)          echo "$YAML"               ;;
         rmc_yices)         echo "$YICES"              ;;
