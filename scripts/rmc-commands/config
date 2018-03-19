@@ -528,6 +528,7 @@ tup_command() {
     tup_value_or_no WITH_MAGIC      	"$LIBMAGIC_ROOT"
     tup_value_or_no WITH_PNG        	"$LIBPNG_ROOT"
     tup_value_or_no WITH_PQXX       	"$LIBPQXX_ROOT"
+    tup_value_or_no WITH_QT             "$QT_ROOT"
     tup_value_or_no WITH_READLINE   	"$READLINE_ROOT"
     tup_value_or_no WITH_TIFF           "$LIBTIFF_ROOT"
     tup_value_or_no WITH_WT         	"$WT_ROOT"

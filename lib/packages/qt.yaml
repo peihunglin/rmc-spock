@@ -1,0 +1,49 @@
+# NOTE: This probably only works with native compilers at this point since
+# it depends on a lot of other libraries being installed natively.
+#  Needs: libfontconfig1-dev
+
+package: qt
+
+versions: [ 5.10, 5.11 ]
+
+dependencies:
+  - version: ">=5.10"
+    aliases: []
+    install: [ c++-compiler ]
+    build: default-c
+
+variables:
+  - version: ">=5.10"
+    module_subset: default,-qtwebkit,-qtwebkit-examples,-qtwebkitengine,qtcharts
+
+download:
+  - version: ">=5.10"
+    shell: |
+      git clone https://code.qt.io/qt/qt5.git download
+      cd download
+      git checkout $PACKAGE_VERSION
+      ./init-repository --module-subset=$module_subset
+      cd ..
+      tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=5.10"
+    shell: |
+      cc --spock-triplet
+      c++ --spock-triplet
+
+      platform=
+      case "$(c++ --spock-triplet |cut -d: -f1)" in
+          llvm)
+              platform='-platform linux-clang'
+              ;;
+          gnu)
+              platform='-platform linux-g++'
+              ;;
+      esac
+
+      mkdir build
+      cd build
+      ../download/configure -prefix "$PACKAGE_ROOT" $platform -opensource -confirm-license -fontconfig
+      make -j$PARALLELISM
+      make install
