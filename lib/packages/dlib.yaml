@@ -3,8 +3,8 @@ versions:       [ 18.11, 18.12, 18.13, 18.14, 18.15, 18.16, 18.17, 18.18 ]
 
 dependencies:
   - version: ">=18"
-    build: []
-    install: []
+    build: [ c++-compiler ]
+    install: [ c++-compiler ]
 
 download:
   - version: ">=18"
@@ -16,5 +16,11 @@ download:
 install:
   - version: ">=18"
     shell: |
+        c++ --spock-triplet
+
         mkdir -p "$PACKAGE_ROOT/include"
-        cp -pdR download/dlib "$PACKAGE_ROOT/include/dlib"
+        cp -pdr download/dlib "$PACKAGE_ROOT/include/dlib"
+
+        c++ -shared -fPIC -o libdlib.so -DDLIB_NO_GUI_SUPPORT "$PACKAGE_ROOT/include/dlib/all/source.cpp"
+        mkdir -p "$PACKAGE_ROOT/lib"
+        cp -p libdlib.so "$PACKAGE_ROOT/lib"
