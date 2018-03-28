@@ -1,5 +1,8 @@
 package: libtiff
-versions: [ 3.9.4, 3.9.5, 3.9.6, 3.9.7, 4.0.1, 4.0.2, 4.0.3, 4.0.4, 4.0.5, 4.0.6, 4.0.7 ]
+
+# Upstream keeps removing versions from their download site
+#versions: [ 3.9.4, 3.9.5, 3.9.6, 3.9.7, 4.0.1, 4.0.2, 4.0.3, 4.0.4, 4.0.5, 4.0.6, 4.0.7 ]
+versions: [ 3.9.7, 4.0.4, 4.0.5, 4.0.6, 4.0.7, 4.0.8, 4.0.9 ]
 
 dependencies:
   - version: '>=3'
@@ -15,7 +18,7 @@ download:
       tar cf - download |gzip -9 >download.tar.gz
 
 install:
-  - version: ">=3"
+  - version: ">=4.0.5"
     shell: |
       cc --spock-triplet
 
