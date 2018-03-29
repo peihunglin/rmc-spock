@@ -82,68 +82,68 @@ EOF
 command= do_install= do_graph= do_debug=
 while [ "$#" -gt 0 ]; do
     case "$1" in
-	--) shift; break ;;
+        --) shift; break ;;
 
-	--help|-h)
-	    usage
-	    exit 0
-	    ;;
+        --help|-h)
+            usage
+            exit 0
+            ;;
 
-	--cwd=*)
-	    cd "${1#--cwd=}" || exit 1
-	    shift
-	    ;;
-	-C)
-	    cd "$2" || exit 1
-	    shift 2
-	    ;;
+        --cwd=*)
+            cd "${1#--cwd=}" || exit 1
+            shift
+            ;;
+        -C)
+            cd "$2" || exit 1
+            shift 2
+            ;;
 
-	--blddir=*)
-	    RG_BLD="${1#--blddir=}"
-	    shift
-	    ;;
+        --blddir=*)
+            RG_BLD="${1#--blddir=}"
+            shift
+            ;;
 
-	--debug)
-	    do_debug=all
-	    shift
-	    ;;
+        --debug)
+            do_debug=all
+            shift
+            ;;
 
-	--graph=*)
-	    do_graph="$1"
-	    shift
-	    ;;
-	--graph)
-	    do_graph="$1=$2"
-	    shift 2
-	    ;;
+        --graph=*)
+            do_graph="$1"
+            shift
+            ;;
+        --graph)
+            do_graph="$1=$2"
+            shift 2
+            ;;
 
-	--install=yes|--install=no|--install=ask)
-	    do_install="$1"
-	    shift
-	    ;;
-	--install)
-	    if [ "$2" = "yes" -o "$2" = "no" -o "$2" = "ask" ]; then
-		do_install="--install=$2"
-		shift 2
-	    else
-		do_install="--install=ask"
-		shift
-	    fi
-	    ;;
+        --install=yes|--install=no|--install=ask)
+            do_install="$1"
+            shift
+            ;;
+        --install)
+            if [ "$2" = "yes" -o "$2" = "no" -o "$2" = "ask" ]; then
+                do_install="--install=$2"
+                shift 2
+            else
+                do_install="--install=ask"
+                shift
+            fi
+            ;;
 
-	--version|-V)
-	    "$SPOCK_BINDIR/spock-ls" --version
-	    exit 0
-	    ;;
+        --version|-V)
+            "$SPOCK_BINDIR/spock-ls" --version
+            exit 0
+            ;;
 
-	-*)
-	    die "unrecognized command-line switch: $1"
-	    ;;
+        -*)
+            die "unrecognized command-line switch: $1"
+            ;;
 
-	*)
-	    command="$1"
-	    shift
-	    break ;;
+        *)
+            command="$1"
+            shift
+            break ;;
     esac
 done
 
@@ -157,12 +157,12 @@ fi
 
 
 ########################################################################################################################
-#		      _   _ _   _ _ _ _           _____                 _   _
-#		     | | | | |_(_) (_) |_ _   _  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___
-#		     | | | | __| | | | __| | | | | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|
-#		     | |_| | |_| | | | |_| |_| | |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
-#		      \___/ \__|_|_|_|\__|\__, | |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
-#		                          |___/
+#                     _   _ _   _ _ _ _           _____                 _   _
+#                    | | | | |_(_) (_) |_ _   _  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___
+#                    | | | | __| | | | __| | | | | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+#                    | |_| | |_| | | | |_| |_| | |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
+#                     \___/ \__|_|_|_|\__|\__, | |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+#                                         |___/
 #
 ########################################################################################################################
 
@@ -177,7 +177,7 @@ check_arg_in() {
     local function="$1" arg="$2"; shift 2
     local possible
     for possible in "$@"; do
-	[ "$arg" = "$possible" ] && return 0
+        [ "$arg" = "$possible" ] && return 0
     done
     die "$function argument must be in the set {" "$@" "}"
 }
@@ -188,89 +188,89 @@ package_spec() {
 
     local pkgname= pkgspec=
     case "$function" in
-	# The compiler spec is weird: the $pkgvers includes the compiler vendor and language in addition to the version.
-	rmc_compiler) pkgspec="$pkgvers"; pkgvers= ;;
+        # The compiler spec is weird: the $pkgvers includes the compiler vendor and language in addition to the version.
+        rmc_compiler) pkgspec="$pkgvers"; pkgvers= ;;
 
-	rmc_dwarf) pkgname="libdwarf" ;;
-	rmc_elf) pkgname="libelf" ;;
-	rmc_gcrypt) pkgname="libgcrypt" ;;
-	rmc_magic) pkgname="libmagic" ;;
-	rmc_pqxx) pkgname="libpqxx" ;;
-	rmc_yaml) pkgname="yamlcpp" ;;
+        rmc_dwarf) pkgname="libdwarf" ;;
+        rmc_elf) pkgname="libelf" ;;
+        rmc_gcrypt) pkgname="libgcrypt" ;;
+        rmc_magic) pkgname="libmagic" ;;
+        rmc_pqxx) pkgname="libpqxx" ;;
+        rmc_yaml) pkgname="yamlcpp" ;;
 
-	# rmc_java is a bit weird because a vendor such as "oracle-java-" can precede the version number. If the
-	# vendor is present, then it becomes the Spock package spec, otherwise we assume it should be "orical-java-".
-	rmc_java)
-	    case "$pkgvers" in
-		no|none|system|ambivalent)
-		    pkgname="oracle-java"
-		    ;;
-		*)
-		    pkgspec="$pkgvers"
-		    pkgvers=
-		    ;;
-	    esac
-	    ;;
+        # rmc_java is a bit weird because a vendor such as "oracle-java-" can precede the version number. If the
+        # vendor is present, then it becomes the Spock package spec, otherwise we assume it should be "orical-java-".
+        rmc_java)
+            case "$pkgvers" in
+                no|none|system|ambivalent)
+                    pkgname="oracle-java"
+                    ;;
+                *)
+                    pkgspec="$pkgvers"
+                    pkgvers=
+                    ;;
+            esac
+            ;;
 
-	rmc_codegen)
-	    pkgspec="${RMC_CODEGEN}-generation"
-	    ;;
+        rmc_codegen)
+            pkgspec="${RMC_CODEGEN}-generation"
+            ;;
 
-	rmc_cuda)
-	    # This is a special case because we want the user to be able to specify a specific specification
-	    # in addition to just a version number.
-	    case "$pkgvers" in
-		no|none|ambivalent)
-		    pkgspec=
-		    ;;
-		system)
-		    pkgspec="cuda-compiler"
-		    ;;
-		[0-9]*)
-		    pkgspec="nvidia-cuda-$pkgvers"
-		    ;;
-		*)
-		    pkgspec="$pkgvers"
-		    ;;
-	    esac
-	    ;;
+        rmc_cuda)
+            # This is a special case because we want the user to be able to specify a specific specification
+            # in addition to just a version number.
+            case "$pkgvers" in
+                no|none|ambivalent)
+                    pkgspec=
+                    ;;
+                system)
+                    pkgspec="cuda-compiler"
+                    ;;
+                [0-9]*)
+                    pkgspec="nvidia-cuda-$pkgvers"
+                    ;;
+                *)
+                    pkgspec="$pkgvers"
+                    ;;
+            esac
+            ;;
 
-	rmc_raja)
-	    # If RAJA is desired, it should be either "raja-nocuda" or "raja-cuda" depending on whether CUDA
-	    # support is also desired.
-	    case "$pkgvers" in
-		no|none|ambivalent|system)
-		    pkgspec=
-		    ;;
-		*)
-		    case "$RMC_CUDA" in
-			no|none|ambivalent)
-			    pkgspec="raja-nocuda-$pkgvers"
-			    ;;
-			*)
-			    pkgspec="raja-cuda-$pkgvers"
-			    ;;
-		    esac
-		    ;;
-	    esac
-	    ;;
+        rmc_raja)
+            # If RAJA is desired, it should be either "raja-nocuda" or "raja-cuda" depending on whether CUDA
+            # support is also desired.
+            case "$pkgvers" in
+                no|none|ambivalent|system)
+                    pkgspec=
+                    ;;
+                *)
+                    case "$RMC_CUDA" in
+                        no|none|ambivalent)
+                            pkgspec="raja-nocuda-$pkgvers"
+                            ;;
+                        *)
+                            pkgspec="raja-cuda-$pkgvers"
+                            ;;
+                    esac
+                    ;;
+            esac
+            ;;
 
-	rmc_tup)
-	    if [ "$RMC_BUILD" = "tup" -a "$pkgvers" = "ambivalent" ]; then
-		pkgspec="tup=49fc3ff5" # 2017-12-19 version of git HEAD
-	    fi
-	    ;;
-	    
-	rmc_*) pkgname="${function#rmc_}" ;;
-	*) die "check_package fails for $function $1" ;;
+        rmc_tup)
+            if [ "$RMC_BUILD" = "tup" -a "$pkgvers" = "ambivalent" ]; then
+                pkgspec="tup=49fc3ff5" # 2017-12-19 version of git HEAD
+            fi
+            ;;
+
+        rmc_*) pkgname="${function#rmc_}" ;;
+        *) die "check_package fails for $function $1" ;;
     esac
 
     if [ "$pkgspec" = "" ]; then
-	case "$pkgvers" in
-	    system) pkgspec="$pkgname" ;;
-	    no|none|ambivalent) pkgspec= ;;
-	    *) pkgspec="$pkgname-$pkgvers" ;;
-	esac
+        case "$pkgvers" in
+            system) pkgspec="$pkgname" ;;
+            no|none|ambivalent) pkgspec= ;;
+            *) pkgspec="$pkgname-$pkgvers" ;;
+        esac
     fi
 
     echo "$pkgspec"
@@ -279,17 +279,17 @@ package_spec() {
 # Find the top of the ROSE build tree by looking for .rmc-main.cfg
 find_build_tree() {
     if [ -n "$RG_BLD" -a -e "$RG_BLD/.rmc-main.cfg" ]; then
-	echo "$RG_BLD"
-	return 0
+        echo "$RG_BLD"
+        return 0
     else
-	local dir=$(pwd)
-	while [ "$dir" != "" ]; do
-	    if [ -e "$dir/.rmc-main.cfg" ]; then
-		echo "$dir"
-		return 0
-	    fi
-	    dir="${dir%/*}"
-	done
+        local dir=$(pwd)
+        while [ "$dir" != "" ]; do
+            if [ -e "$dir/.rmc-main.cfg" ]; then
+                echo "$dir"
+                return 0
+            fi
+            dir="${dir%/*}"
+        done
     fi
     die "cannot find top of ROSE build tree"
 }
@@ -348,11 +348,11 @@ read_config_file() {
 
     # Make sure some basic things are set. If they're set, then they've already been validated.
     [ ! -d "$RMC_ROSESRC" -o ! -e "$RMC_ROSESRC/config/support-rose.m4" ] &&
-	die "$config_file: missing or incorrect rmc_rosesrc (use \"rmc_rosesrc /path/to/ROSE/source/tree\")"
+        die "$config_file: missing or incorrect rmc_rosesrc (use \"rmc_rosesrc /path/to/ROSE/source/tree\")"
     [ "$RMC_COMPILER" = "" ] &&
-	die "$config_file: missing rmc_compiler specification (try \"rmc_compiler gnu-4-default\")"
+        die "$config_file: missing rmc_compiler specification (try \"rmc_compiler gnu-4-default\")"
     [ -n "$RMC_BOOST" ] ||
-	die "$config_file: missing rmc_boost specification (try \"rmc_boost 1.62\")"
+        die "$config_file: missing rmc_boost specification (try \"rmc_boost 1.62\")"
 
     # Export important variables not exported by rmc_* commands
     export RG_SRC="$RMC_ROSESRC"
@@ -368,17 +368,17 @@ read_config_file() {
 
     # If ROSE is being installed, then make sure its lib dir is searched.
     case "$RMC_INSTALLED" in
-	yes|ambivalent|"")
-	    export ROSE_INSTALLED="$RG_BLD/installed"
-	    export LD_RUN_PATH="$LD_LIBRARY_PATH:$ROSE_INSTALLED/lib"
-	    ;;
-	no)
-	    export ROSE_INSTALLED="/NO_ROSE_INSTALLATION_PREFIX"
-	    ;;
-	*)
-	    export ROSE_INSTALLED="$RMC_INSTALLED"
-	    export LD_RUN_PATH="$LD_LIBRARY_PATH:$ROSE_INSTALLED/lib"
-	    ;;
+        yes|ambivalent|"")
+            export ROSE_INSTALLED="$RG_BLD/installed"
+            export LD_RUN_PATH="$LD_LIBRARY_PATH:$ROSE_INSTALLED/lib"
+            ;;
+        no)
+            export ROSE_INSTALLED="/NO_ROSE_INSTALLATION_PREFIX"
+            ;;
+        *)
+            export ROSE_INSTALLED="$RMC_INSTALLED"
+            export LD_RUN_PATH="$LD_LIBRARY_PATH:$ROSE_INSTALLED/lib"
+            ;;
     esac
 }
 
@@ -391,21 +391,21 @@ is_rmc_compiler_spec() {
     local cxx_lang=$(echo "$spec" |cut -d- -f3 -s)
 
     case "$cxx_vendor" in
-	gcc|llvm|intel)
-	    :
-	    ;;
-	*)
-	    return 1
-	    ;;
+        gcc|llvm|intel)
+            :
+            ;;
+        *)
+            return 1
+            ;;
     esac
 
     case "$cxx_lang" in
-	""|default|c++03|c++11|c++14|c++17|gnu++03|gnu++11|gnu++14|gnu++17)
-	    :
-	    ;;
-	*)
-	    return 1
-	    ;;
+        ""|default|c++03|c++11|c++14|c++17|gnu++03|gnu++11|gnu++14|gnu++17)
+            :
+            ;;
+        *)
+            return 1
+            ;;
     esac
 
     return 0
@@ -418,88 +418,88 @@ parse_cxx_spec() {
     local rmc_or_spock_spec="$1"
 
     if is_rmc_compiler_spec "$rmc_or_spock_spec"; then
-	# RMC compiler names were like VENDOR-VERS-LANG with "-LANG" defaulting to "default".
-	local cxx_vendor=$(echo "$rmc_or_spock_spec" |cut -d- -f1)
-	local cxx_version=$(echo "$rmc_or_spock_spec" |cut -d- -f2 -s)
-	local cxx_language=$(echo "$rmc_or_spock_spec" |cut -d- -f3 -s)
-	[ "$cxx_vendor" = "" -o "$cxx_version" = "" ] && die "rmc_compiler $rmc_or_spock_spec is not proper format"
-	[ "$cxx_language" = "" ] && cxx_language=default
+        # RMC compiler names were like VENDOR-VERS-LANG with "-LANG" defaulting to "default".
+        local cxx_vendor=$(echo "$rmc_or_spock_spec" |cut -d- -f1)
+        local cxx_version=$(echo "$rmc_or_spock_spec" |cut -d- -f2 -s)
+        local cxx_language=$(echo "$rmc_or_spock_spec" |cut -d- -f3 -s)
+        [ "$cxx_vendor" = "" -o "$cxx_version" = "" ] && die "rmc_compiler $rmc_or_spock_spec is not proper format"
+        [ "$cxx_language" = "" ] && cxx_language=default
 
-	# Spock vendor names are different
-	[ "$cxx_vendor" = "gcc" ] && cxx_vendor="gnu"
+        # Spock vendor names are different
+        [ "$cxx_vendor" = "gcc" ] && cxx_vendor="gnu"
 
-	# Spock includes the LANG as part of the package name, like gnu-c++11. RMC's "default" meant no language was
-	# specified and therefore the actual language varies by compiler vendor and version.  Spock installs such compilers
-	# with an alias. For instance, the "gnu-c++-4.8" is an alias for "gnu-gnu++03-4.8" since the default
-	# language for GCC-4.8.4's g++ command is gnu++03.
-	[ "$cxx_language" = "default" ] && cxx_language=default-c++
+        # Spock includes the LANG as part of the package name, like gnu-c++11. RMC's "default" meant no language was
+        # specified and therefore the actual language varies by compiler vendor and version.  Spock installs such compilers
+        # with an alias. For instance, the "gnu-c++-4.8" is an alias for "gnu-gnu++03-4.8" since the default
+        # language for GCC-4.8.4's g++ command is gnu++03.
+        [ "$cxx_language" = "default" ] && cxx_language=default-c++
 
-	# Spock specs need a version operator
-	[ -n "$cxx_version" ] && cxx_version="-$cxx_version"
+        # Spock specs need a version operator
+        [ -n "$cxx_version" ] && cxx_version="-$cxx_version"
 
     else
-	# Spock specs are VENDOR-LANG-VERS for specific compilers where "-VERS" is optional and its leading "-" can be
-	# any Spock version comparison operator.
-	case "$rmc_or_spock_spec" in
-	    gnu*)
-		local cxx_vendor=gnu
-		local langvers="${rmc_or_spock_spec#gnu}"
-		;;
-	    llvm*)
-		local cxx_vendor=llvm
-		local langvers="${rmc_or_spock_spec#llvm}"
-		;;
-	    intel*)
-		local cxx_vendor=intel
-		local langvers="${rmc_or_spock_spec#intel}"
-		;;
-	    *)
-		die "malformed compiler spec: unknown vendor field in \"$rmc_or_spock_spec\""
-		;;
-	esac
+        # Spock specs are VENDOR-LANG-VERS for specific compilers where "-VERS" is optional and its leading "-" can be
+        # any Spock version comparison operator.
+        case "$rmc_or_spock_spec" in
+            gnu*)
+                local cxx_vendor=gnu
+                local langvers="${rmc_or_spock_spec#gnu}"
+                ;;
+            llvm*)
+                local cxx_vendor=llvm
+                local langvers="${rmc_or_spock_spec#llvm}"
+                ;;
+            intel*)
+                local cxx_vendor=intel
+                local langvers="${rmc_or_spock_spec#intel}"
+                ;;
+            *)
+                die "malformed compiler spec: unknown vendor field in \"$rmc_or_spock_spec\""
+                ;;
+        esac
 
-	case "$langvers" in
-	    -gnu++03*)
-		local cxx_language=gnu++03
-		local cxx_version="${langvers#-gnu++03}"
-		;;
-	    -gnu++11*)
-		local cxx_language=gnu++11
-		local cxx_version="${langvers#-gnu++11}"
-		;;
-	    -gnu++14*)
-		local cxx_language=gnu++14
-		local cxx_version="${langvers#-gnu++14}"
-		;;
-	    -gnu++17*)
-		local cxx_language=gnu++17
-		local cxx_version="${langvers#-gnu++17}"
-		;;
-	    -c++03*)
-		local cxx_language=c++03
-		local cxx_version="${langvers#-c++03}"
-		;;
-	    -c++11*)
-		local cxx_language=c++11
-		local cxx_version="${langvers#-c++11}"
-		;;
-	    -c++14*)
-		local cxx_language=c++14
-		local cxx_version="${langvers#-c++14}"
-		;;
-	    -c++17*)
-		local cxx_language=c++17
-		local cxx_version="${langvers#-c++17}";
-		;;
-	    -default)
-		local cxx_language="default-c++"
-		local cxx_version="${langvers#-default}"
-		;;
-	    *)
-		local cxx_language="default-c++"
-		local cxx_version="$langvers"
-		;;
-	    esac
+        case "$langvers" in
+            -gnu++03*)
+                local cxx_language=gnu++03
+                local cxx_version="${langvers#-gnu++03}"
+                ;;
+            -gnu++11*)
+                local cxx_language=gnu++11
+                local cxx_version="${langvers#-gnu++11}"
+                ;;
+            -gnu++14*)
+                local cxx_language=gnu++14
+                local cxx_version="${langvers#-gnu++14}"
+                ;;
+            -gnu++17*)
+                local cxx_language=gnu++17
+                local cxx_version="${langvers#-gnu++17}"
+                ;;
+            -c++03*)
+                local cxx_language=c++03
+                local cxx_version="${langvers#-c++03}"
+                ;;
+            -c++11*)
+                local cxx_language=c++11
+                local cxx_version="${langvers#-c++11}"
+                ;;
+            -c++14*)
+                local cxx_language=c++14
+                local cxx_version="${langvers#-c++14}"
+                ;;
+            -c++17*)
+                local cxx_language=c++17
+                local cxx_version="${langvers#-c++17}";
+                ;;
+            -default)
+                local cxx_language="default-c++"
+                local cxx_version="${langvers#-default}"
+                ;;
+            *)
+                local cxx_language="default-c++"
+                local cxx_version="$langvers"
+                ;;
+            esac
     fi
 
     echo "$cxx_vendor:$cxx_language:$cxx_version"
@@ -518,30 +518,30 @@ preinstall() {
     local cxx_codegen=$(package_spec rmc_codegen "$RMC_CODEGEN")
 
     env \
-	COMPILER_COLLECTIONS="$cxx_vendor$cxx_version" \
-	CXX_LANGUAGES="$cxx_lang" \
-	CMAKE_VERSIONS=$(echo "$RMC_CMAKE" |sed 's/system/installed/') \
-	BOOST_VERSIONS="$RMC_BOOST" \
-	DLIB_VERSIONS=$(echo "$RMC_DLIB" |sed 's/system/installed/') \
-	JAVA_VERSIONS=$(echo "$RMC_JAVA" |sed 's/system/installed/') \
-	PYTHON_VERSIONS=$(echo "$RMC_PYTHON" |sed 's/system/installed/') \
-	SPOT_VERSIONS=$(echo "$RMC_SPOT" |sed 's/system/installed/') \
-	YICES_VERSIONS=$(echo "$RMC_YICES" |sed 's/system/installed/') \
-	LCOV_VERSIONS=$(echo "$RMC_LCOV" |sed 's/system/installed/') \
-	LIBTOOL_VERSIONS=$(echo "$RMC_LIBTOOL" |sed 's/system/installed/') \
-	YAMLCPP_VERSIONS=$(echo "$RMC_YAML" |sed 's/system/installed/') \
-	IGNORE_FAILURES=no \
-	$SPOCK_BINDIR/spock-shell --with "$cxx_codegen" \
-	$SPOCK_SCRIPTS/rose-install-all-deps
+        COMPILER_COLLECTIONS="$cxx_vendor$cxx_version" \
+        CXX_LANGUAGES="$cxx_lang" \
+        CMAKE_VERSIONS=$(echo "$RMC_CMAKE" |sed 's/system/installed/') \
+        BOOST_VERSIONS="$RMC_BOOST" \
+        DLIB_VERSIONS=$(echo "$RMC_DLIB" |sed 's/system/installed/') \
+        JAVA_VERSIONS=$(echo "$RMC_JAVA" |sed 's/system/installed/') \
+        PYTHON_VERSIONS=$(echo "$RMC_PYTHON" |sed 's/system/installed/') \
+        SPOT_VERSIONS=$(echo "$RMC_SPOT" |sed 's/system/installed/') \
+        YICES_VERSIONS=$(echo "$RMC_YICES" |sed 's/system/installed/') \
+        LCOV_VERSIONS=$(echo "$RMC_LCOV" |sed 's/system/installed/') \
+        LIBTOOL_VERSIONS=$(echo "$RMC_LIBTOOL" |sed 's/system/installed/') \
+        YAMLCPP_VERSIONS=$(echo "$RMC_YAML" |sed 's/system/installed/') \
+        IGNORE_FAILURES=no \
+        $SPOCK_BINDIR/spock-shell --with "$cxx_codegen" \
+        $SPOCK_SCRIPTS/rose-install-all-deps
 }
 
 ########################################################################################################################
-#		         ____             __ _                       _   _
-#		        / ___|___  _ __  / _(_) __ _ _   _ _ __ __ _| |_(_) ___  _ __
-#		       | |   / _ \| '_ \| |_| |/ _` | | | | '__/ _` | __| |/ _ \| '_ \
-#		       | |__| (_) | | | |  _| | (_| | |_| | | | (_| | |_| | (_) | | | |
-#		        \____\___/|_| |_|_| |_|\__, |\__,_|_|  \__,_|\__|_|\___/|_| |_|
-#		                               |___/
+#                        ____             __ _                       _   _
+#                       / ___|___  _ __  / _(_) __ _ _   _ _ __ __ _| |_(_) ___  _ __
+#                      | |   / _ \| '_ \| |_| |/ _` | | | | '__/ _` | __| |/ _ \| '_ \
+#                      | |__| (_) | | | |  _| | (_| | |_| | | | (_| | |_| | (_) | | | |
+#                       \____\___/|_| |_|_| |_|\__, |\__,_|_|  \__,_|\__|_|\___/|_| |_|
+#                                              |___/
 #
 #
 # These rmc_* commands that appear in config files. They mostly just set variables of the same name after validating the
@@ -555,7 +555,7 @@ rmc_rosesrc() {
     [ "$RMC_ROSESRC" = "" ] && die "ROSE source tree is required"
     [ -d "$RMC_ROSESRC" ] || die "ROSE source tree is missing: $RMC_ROSESRC"
     [ -e "$RMC_ROSESRC/src/frontend/BinaryFormats/ElfSection.C" ] || \
-	die "does not look like a ROSE source tree: $RMC_ROSESRC"
+        die "does not look like a ROSE source tree: $RMC_ROSESRC"
 }
 
 rmc_toolchain() {
@@ -579,7 +579,7 @@ rmc_parallelism() {
     check_one_arg rmc_parallelism "$@"
     local nprocs=
     case "$1" in
-	""|system)
+        ""|system)
             local nprocs=$(sed -n '/^processor[ \t]*:/p' /proc/cpuinfo |wc -l)
             [ -n "$nprocs" ] || nprocs=1
             ;;
@@ -709,15 +709,15 @@ rmc_java() {
     RMC_JAVA="$1"
 
     case "$RMC_JAVA" in
-	none|system|ambivalent)
-	    : good
-	    ;;
-	oracle-java-*)
-	    : good
-	    ;;
-	*)
-	    RMC_JAVA="oracle-java-$RMC_JAVA"
-	    ;;
+        none|system|ambivalent)
+            : good
+            ;;
+        oracle-java-*)
+            : good
+            ;;
+        *)
+            RMC_JAVA="oracle-java-$RMC_JAVA"
+            ;;
     esac
 }
 
@@ -747,14 +747,14 @@ rmc_python() {
 
     local exe=$(which "$RMC_PYTHON" 2>/dev/null)
     if [ -n "$exe" ]; then
-	# Python2's --version emits to to standard error instead of standard output. We keep only the major version
-	local pyver=$("$exe" --version 2>&1 |sed -n '/^Python / s/^[^0-9]*\([0-9]\+\).*/\1/p')
-	[ -n "$pyver" ] && RMC_PYTHON="$pyver"
+        # Python2's --version emits to to standard error instead of standard output. We keep only the major version
+        local pyver=$("$exe" --version 2>&1 |sed -n '/^Python / s/^[^0-9]*\([0-9]\+\).*/\1/p')
+        [ -n "$pyver" ] && RMC_PYTHON="$pyver"
     fi
 
     case "$RMC_PYTHON" in
-	2|*python2*) RMC_PYTHON=2 ;;
-	3|*python3*) RMC_PYTHON=3 ;;
+        2|*python2*) RMC_PYTHON=2 ;;
+        3|*python3*) RMC_PYTHON=3 ;;
     esac
 }
 
@@ -810,8 +810,13 @@ rmc_z3() {
 
 rmc_other() {
     check_one_arg rmc_other "$@"
-    RMC_OTHER="$1"
+    if [ "$1" = none ]; then
+        RMC_OTHER=
+    else
+        RMC_OTHER="$1"
+    fi
 }
+
 ########################################################################################################################
 #                        __  __       _
 #                       |  \/  | __ _(_)_ __
@@ -841,35 +846,35 @@ if [ "$RMC_HASH" = "" ]; then
     # Convert RMC-style software dependencies to Spock-style in a temporary file
     depfile=$(tempfile)
     (
-	package_spec rmc_codegen  "$RMC_CODEGEN"
-	package_spec rmc_compiler "$RMC_CXX_COMPILER"
-	package_spec rmc_compiler "$RMC_C_COMPILER"
-	package_spec rmc_binwalk  "$RMC_BINWALK"
-	package_spec rmc_bison    "$RMC_BISON"
-	package_spec rmc_boost    "$RMC_BOOST"
-	package_spec rmc_cmake    "$RMC_CMAKE"
-	package_spec rmc_cuda     "$RMC_CUDA"
-	package_spec rmc_dlib     "$RMC_DLIB"
-	package_spec rmc_doxygen  "$RMC_DOXYGEN"
-	package_spec rmc_dwarf    "$RMC_DWARF"
-	package_spec rmc_elf      "$RMC_ELF"
-	package_spec rmc_gcrypt   "$RMC_GCRYPT"
-	package_spec rmc_java     "$RMC_JAVA"
-	package_spec rmc_lcov     "$RMC_LCOV"
-	package_spec rmc_libtool  "$RMC_LIBTOOL"
-	package_spec rmc_magic    "$RMC_MAGIC"
-	package_spec rmc_pqxx     "$RMC_PQXX"
-	package_spec rmc_python   "$RMC_PYTHON"
-	package_spec rmc_qt       "$RMC_QT"
-	package_spec rmc_raja     "$RMC_RAJA"
-	package_spec rmc_readline "$RMC_READLINE"
-	package_spec rmc_spot     "$RMC_SPOT"
-	package_spec rmc_sqlite   "$RMC_SQLITE"
-	package_spec rmc_tup      "$RMC_TUP"
-	package_spec rmc_wt       "$RMC_WT"
-	package_spec rmc_yaml     "$RMC_YAML"
-	package_spec rmc_yices    "$RMC_YICES"
-	package_spec rmc_z3       "$RMC_Z3"
+        package_spec rmc_codegen  "$RMC_CODEGEN"
+        package_spec rmc_compiler "$RMC_CXX_COMPILER"
+        package_spec rmc_compiler "$RMC_C_COMPILER"
+        package_spec rmc_binwalk  "$RMC_BINWALK"
+        package_spec rmc_bison    "$RMC_BISON"
+        package_spec rmc_boost    "$RMC_BOOST"
+        package_spec rmc_cmake    "$RMC_CMAKE"
+        package_spec rmc_cuda     "$RMC_CUDA"
+        package_spec rmc_dlib     "$RMC_DLIB"
+        package_spec rmc_doxygen  "$RMC_DOXYGEN"
+        package_spec rmc_dwarf    "$RMC_DWARF"
+        package_spec rmc_elf      "$RMC_ELF"
+        package_spec rmc_gcrypt   "$RMC_GCRYPT"
+        package_spec rmc_java     "$RMC_JAVA"
+        package_spec rmc_lcov     "$RMC_LCOV"
+        package_spec rmc_libtool  "$RMC_LIBTOOL"
+        package_spec rmc_magic    "$RMC_MAGIC"
+        package_spec rmc_pqxx     "$RMC_PQXX"
+        package_spec rmc_python   "$RMC_PYTHON"
+        package_spec rmc_qt       "$RMC_QT"
+        package_spec rmc_raja     "$RMC_RAJA"
+        package_spec rmc_readline "$RMC_READLINE"
+        package_spec rmc_spot     "$RMC_SPOT"
+        package_spec rmc_sqlite   "$RMC_SQLITE"
+        package_spec rmc_tup      "$RMC_TUP"
+        package_spec rmc_wt       "$RMC_WT"
+        package_spec rmc_yaml     "$RMC_YAML"
+        package_spec rmc_yices    "$RMC_YICES"
+        package_spec rmc_z3       "$RMC_Z3"
     ) |sed '/^$/d' >"$depfile"
 
     # DEBUGGING
@@ -879,16 +884,16 @@ if [ "$RMC_HASH" = "" ]; then
     # implemented. Therefore, if installation is requested and packages are missing, run the rose-install-all-deps script
     # to install some of them (the problematic ones) before continuing.
     if [ -n "$do_install" -a "$do_install" != "--install=no" ]; then
-	if ! "$SPOCK_BINDIR/spock-shell" --with-file "$depfile" --log none true; then
-	    preinstall || exit 1
-	fi
+        if ! "$SPOCK_BINDIR/spock-shell" --with-file "$depfile" --log none true; then
+            preinstall || exit 1
+        fi
     fi
 
     # Attempt to resolve the dependency constraints and cache the results for later.
     if ! "$SPOCK_BINDIR/spock-shell" --with-file "$depfile" --output "$blddir/.spock" \
-	 $do_install $do_graph --log="$do_debug" true; then
-	rm -f "$depfile" "$blddir/.spock"
-	exit 1
+         $do_install $do_graph --log="$do_debug" true; then
+        rm -f "$depfile" "$blddir/.spock"
+        exit 1
     fi
     rm -rf "$depfile"
 
@@ -914,7 +919,7 @@ if [ "$command" = "" ]; then
     exec "$SPOCK_BINDIR/spock-shell" --log='none,>=warn' --with-file "$blddir/.spock" --welcome
 elif [ -x "$SPOCK_SCRIPTS/rmc-commands/$command" ]; then
     exec "$SPOCK_BINDIR/spock-shell" --log='none,>=warn' --with-file "$blddir/.spock" \
-	 "$SPOCK_SCRIPTS/rmc-commands/$command" "$@"
+         "$SPOCK_SCRIPTS/rmc-commands/$command" "$@"
 else
     exec "$SPOCK_BINDIR/spock-shell" --log='none,>=warn' --with-file "$blddir/.spock" "$command" "$@"
 fi
