@@ -1,0 +1,51 @@
+#!/bin/bash
+eval $(spock-ls --shellvars --export)
+
+# Directory must not end with a slash
+justin_gcc_dir=/usr/casc/overture/ROSE/opt/rhel7/x86_64/gcc
+
+# What compiler versions are already installed?
+have_gcc_versions=( $(spock-ls -1 gnu-compilers |cut -d= -f2 |cut -d@ -f1) )
+
+# Find the "gcc" executables in the location where justing installs them.
+echo "This may take a LONG time to search a large NFS directory..."
+find $justin_gcc_dir -type f -name gcc |\
+    while read cc; do
+	echo
+	echo "found \"gcc\" $cc"
+	gcc_dir="${cc%/*}"
+	gcc_subdir="${cc#$justin_gcc_dir/}"
+	gcc_version="${gcc_subdir%%/*}"
+	echo "  version=$gcc_version"
+	[ -n "$gcc_version" ] || continue
+
+	# Do we already have this version?
+	have_this_version=
+	for v in "${have_gcc_versions[@]}"; do
+	    if [ "$gcc_version" = "$v" ]; then
+		have_this_version=yes
+		break
+	    fi
+	done
+	if [ -n "$have_this_version" ]; then
+	    echo "  already know about this version"
+	    continue
+	fi
+
+	# Add this version of C compiler
+	$SPOCK_SCRIPTS/spock-install-system-compilers c $cc
+
+	# Add this version of C++ compiler
+	cxx="$gcc_dir/g++"
+	if [ -e "$cxx" ]; then
+	    $SPOCK_SCRIPTS/spock-install-system-compilers c++ $cxx
+	fi
+
+	# Add this version of fortran compiler
+	fc="$gcc_dir/gfortran"
+	if [ -e "$fc" ]; then
+	    $SPOCK_SCRIPTS/spock-install-system-compilers fortran $fc
+	fi
+
+	have_gcc_versions=( "${have_gcc_versions[@]}" $gcc_version )
+    done
