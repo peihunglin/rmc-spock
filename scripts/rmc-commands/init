@@ -158,6 +158,7 @@ project_estcp() {
         rmc_binwalk)       echo 2                     ;;
         rmc_dlib)          echo 18.17                 ;;
         rmc_gcrypt)        echo 1.7                   ;;
+	rmc_qt)            echo 5                     ;;
         rmc_wt)            echo 3.3.7                 ;;
         rmc_yaml)          echo 0.5.3                 ;;
         rmc_z3)            echo 4                     ;;
@@ -169,7 +170,7 @@ project_matrix() {
     local rmc_command="$1"
     case "$rmc_command" in
         rmc_languages)     echo none                  ;;
-        rmc_pqxx)          echo 4                     ;;
+        rmc_pqxx)          echo 5                     ;;
         rmc_wt)            echo 3.3.7                 ;;
         rmc_yaml)          echo 0.5.3                 ;;
     esac
@@ -184,7 +185,7 @@ project_binaries() {
         rmc_dlib)          echo 18.17                 ;;
         rmc_gcrypt)        echo 1.7                   ;;
         rmc_magic)         echo 5                     ;;
-        rmc_pqxx)          echo 4                     ;;
+        rmc_pqxx)          echo 5                     ;;
         rmc_wt)            echo 3.3.7                 ;;
         rmc_yaml)          echo 0.5.3                 ;;
         rmc_z3)            echo 4                     ;;

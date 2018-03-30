@@ -1,6 +1,7 @@
 package:        libpqxx
 
-versions:       [ 3.0, 3.0.1, 3.0.2, 3.0.3, 4.0, 4.0.1 ]
+# Versions 6.2.0 and 6.2.1 don't compile on Mint-18.3 (Robb's devel machine).
+versions:       [ 3.0, 3.0.1, 3.0.2, 3.0.3, 4.0, 4.0.1, 5.0.0, 5.0.1, 5.1.0, 5.1.1, 6.0.0, 6.1.0, 6.1.1 ]
 
 dependencies:
   - version: ">=3"
@@ -13,11 +14,22 @@ variables:
     url: "http://pqxx.org/download/software/libpqxx"
     patches: config-sed
 
+  - version: ">=5"
+    url: "https://github.com/jtv/libpqxx"
+    patches: none
+    config_args: "--disable-documentation"
+
 download:
   - version: ">=3"
     shell: |
       wget -O - "$url/libpqxx-$PACKAGE_VERSION.tar.gz" |tar xvzf -
       mv libpqxx-$PACKAGE_VERSION download
+      tar cvf - download |gzip -9 >download.tar.gz
+
+  - version: ">=5"
+    shell: |
+      git clone "$url" download
+      (cd download && git reset --hard "$PACKAGE_VERSION")
       tar cvf - download |gzip -9 >download.tar.gz
 
 install:
@@ -34,7 +46,8 @@ install:
         LDFLAGS="$(spock-compiler-libdirs) -lpq" \
         ./configure \
         --prefix="$PACKAGE_ROOT" \
-        --enable-shared
+        --enable-shared \
+        $config_args
 
         make -j$PARALLELISM
         make install

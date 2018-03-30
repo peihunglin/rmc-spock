@@ -31,8 +31,10 @@ spock-apply-patches() {
     local patch_names="$1"
     local patch_name
     for patch_name in $patch_names; do
-	patch_name="${SPOCK_PKGDIR}/${PACKAGE_NAME}-$patch_name.diff"
-	patch --directory=download -p1 <"$patch_name" || return 1
+	if [ "$patch_name" != "none" ]; then
+	    patch_name="${SPOCK_PKGDIR}/${PACKAGE_NAME}-$patch_name.diff"
+	    patch --directory=download -p1 <"$patch_name" || return 1
+	fi
     done
 }
 
