@@ -35,70 +35,85 @@ cc_flags() {
 }
 
 cxx_flags() {
-    echo "-fPIC -ftemplate-backtrace-limit=0"
+    echo -n "-fPIC"
+
+    local cxx_major=$(echo "$CXX_VERSION" |cut -d. -f1)
+    local cxx_minor=$(echo "$CXX_VERSION" |cut -d. -f2)
+
+    if [ "$cxx_major" -eq 4 && "$cxx_minor" -ge 8 ] || [ "$cxx_major" -ge 5 ]; then
+        echo -n " -ftemplate-backtrace-limit=0"
+    fi
 }
 
 # Flags to control C and C++ warning messages as a space-separated list w/out quoting.
 cc_warning_flags() {
-    local c_major="${C_VERSION%%.*}"
+    local c_major=$(echo "$C_VERSION" |cut -d. -f1)
+    local c_minor=$(echo "$C_VERSION" |cut -d. -f2)
     case "$RMC_WARNINGS" in
-	yes)
-	    echo -n "-Wall"
-	    echo -n " -Wno-unused-local-typedefs" # common warning from boost
-	    echo -n " -Wno-attributes"
+        yes)
+            echo -n "-Wall"
+            echo -n " -Wno-attributes"
 
-	    if [ "$c_major" -gt 4 ]; then
-		echo -n " -Wno-misleading-indentation" # common warning from ROSE generated header files
-		echo -n " -Wno-nonnull-compare" # because ROSE has lots of "assert(this)"
-		echo -n " -fdiagnostics-color=always" # colorized within tools like emacs
-	    fi
-	    ;;
-	no|ambivalent)
-	    : nothing
-	    ;;
+            if [ "$c_major" -eq 4 -a "$c_minor" -ge 4 ] || [ "$c_major" -gt 4 ]; then
+                echo -n " -Wno-unused-local-typedefs" # common warning from boost
+            fi
+
+            if [ "$c_major" -ge 5 ]; then
+                echo -n " -Wno-misleading-indentation" # common warning from ROSE generated header files
+                echo -n " -Wno-nonnull-compare" # because ROSE has lots of "assert(this)"
+                echo -n " -fdiagnostics-color=always" # colorized within tools like emacs
+            fi
+            ;;
+        no|ambivalent)
+            : nothing
+            ;;
     esac
 }
 
 cxx_warning_flags() {
-    local cxx_major="${CXX_VERSION%%.*}"
+    local cxx_major=$(echo "$CXX_VERSION" |cut -d. -f1)
+    local cxx_minor=$(echo "$CXX_VERSION" |cut -d. -f2)
     case "$RMC_WARNINGS" in
-	yes)
-	    echo -n "-Wall"
-	    echo -n " -Wno-unused-local-typedefs" # common warning from boost
-	    echo -n " -Wno-attributes"
-	    echo -n " -Wno-deprecated-declarations" # common warning from dlib using std::auto_ptr
+        yes)
+            echo -n "-Wall"
+            echo -n " -Wno-attributes"
+            echo -n " -Wno-deprecated-declarations" # common warning from dlib using std::auto_ptr
 
-	    if [ "$cxx_major" -gt 4 ]; then
-		echo -n " -Wno-terminate" # common warning from dlib throwing an exception in destructors
-		echo -n " -Wno-misleading-indentation" # common warning from ROSE generated header files
-		echo -n " -Wno-nonnull-compare" # because ROSE has lots of "assert(this)"
-		echo -n " -fdiagnostics-color=always" # colorized within tools like emacs
-	    fi
-	    ;;
-	no|ambivalent)
-	    : nothing
-	    ;;
+            if [ "$cxx_major" -eq 4 -a "$cxx_minor" -ge 4 ] || [ "$cxx_major" -gt 4 ]; then
+                echo -n " -Wno-unused-local-typedefs" # common warning from boost
+            fi
+
+            if [ "$cxx_major" -ge 5 ]; then
+                echo -n " -Wno-terminate" # common warning from dlib throwing an exception in destructors
+                echo -n " -Wno-misleading-indentation" # common warning from ROSE generated header files
+                echo -n " -Wno-nonnull-compare" # because ROSE has lots of "assert(this)"
+                echo -n " -fdiagnostics-color=always" # colorized within tools like emacs
+            fi
+            ;;
+        no|ambivalent)
+            : nothing
+            ;;
     esac
 }
 
 # Flags for code coverage
 code_coverage_flags() {
     case "$RMC_LCOV" in
-	""|no|none|ambivalent)
-	    : nothing to do
-	    ;;
-	*)
-	    case "$CXX_VENDOR" in
-		gnu|llvm)
-		    # Pei-Hung reports that we should be using "--coverage" instead of "-fprofile-arcs -ftest-coverage"
-		    # echo "-fprofile-arcs -ftest-coverage"
-		    echo "--coverage"
-		    ;;
-		*)
-		    die "cannot generate code coverage results for $CXX_VENDOR compilers"
-		    ;;
-	    esac
-	    ;;
+        ""|no|none|ambivalent)
+            : nothing to do
+            ;;
+        *)
+            case "$CXX_VENDOR" in
+                gnu|llvm)
+                    # Pei-Hung reports that we should be using "--coverage" instead of "-fprofile-arcs -ftest-coverage"
+                    # echo "-fprofile-arcs -ftest-coverage"
+                    echo "--coverage"
+                    ;;
+                *)
+                    die "cannot generate code coverage results for $CXX_VENDOR compilers"
+                    ;;
+            esac
+            ;;
     esac
 }
 
@@ -106,17 +121,17 @@ code_coverage_flags() {
 autoconf_optimize_flags() {
     local switch="$1"
     case "$RMC_OPTIMIZE" in
-	yes) echo -n " $switch='-O3 -DNDEBUG'" ;;
-	no)  echo -n " $switch='-O0'" ;;
-	ambivalent) : nothing ;;
+        yes) echo -n " $switch='-O3 -DNDEBUG'" ;;
+        no)  echo -n " $switch='-O0'" ;;
+        ambivalent) : nothing ;;
     esac
 }
 
 cmake_optimize_flags() {
     case "$RMC_OPTIMIZE" in
-	yes) echo -n "-O3 -DNDEBUG" ;;
-	no)  echo -n "-O0" ;;
-	ambivalent) : nothing ;;
+        yes) echo -n "-O3 -DNDEBUG" ;;
+        no)  echo -n "-O0" ;;
+        ambivalent) : nothing ;;
     esac
 }
 
@@ -159,15 +174,15 @@ tup_cxx_warning_flags() {
 autoconf_debug_flags() {
     local switch="$1"
     case "$RMC_DEBUG" in
-	yes) echo -n " $switch='-g $(code_coverage_flags)'" ;;
-	no)  echo -n " $switch='-fomit-frame-pointer $(code_coverage_flags)'" ;;
+        yes) echo -n " $switch='-g $(code_coverage_flags)'" ;;
+        no)  echo -n " $switch='-fomit-frame-pointer $(code_coverage_flags)'" ;;
     esac
 }
 
 cmake_debug_flags() {
     case "$RMC_DEBUG" in
-	yes) echo -n "-g" ;;
-	no)  echo -n "-fomit-frame-pointer" ;;
+        yes) echo -n "-g" ;;
+        no)  echo -n "-fomit-frame-pointer" ;;
     esac
 }
 
@@ -188,20 +203,20 @@ normalize_languages() {
     local languages="$(echo "$*" | sed 's/[, \t]\+/ /g')"
     local result=() lang=
     for lang in $languages; do
-	case "$lang" in
-	    none)
-		: ignored
-		;;
-	    all)
-		result=("${result[@]}" $(all_languages))
-		;;
-	    c)
-		result=("${result[@]}" "c++")
-		;;
-	    *)
-		result=("${result[@]}" "$lang")
-		;;
-	esac
+        case "$lang" in
+            none)
+                : ignored
+                ;;
+            all)
+                result=("${result[@]}" $(all_languages))
+                ;;
+            c)
+                result=("${result[@]}" "c++")
+                ;;
+            *)
+                result=("${result[@]}" "$lang")
+                ;;
+        esac
     done
     echo "${result[@]}" |tr ' ' '\n' |sort -u |tr '\n' ' ' |sed 's/ *$//'
 }
@@ -211,16 +226,16 @@ normalize_languages() {
 autoconf_optional_with() {
     local name="$1" value="$2" if_true="$3"
     case "$value" in
-	no|none)
-	    echo -n " --without-$name"
-	    ;;
-	""|ambivalent)
-	    : nothing
-	    ;;
-	*)
-	    [ -n "$if_true" ] && value="$if_true"
-	    echo -n " --with-$name='$value'"
-	    ;;
+        no|none)
+            echo -n " --without-$name"
+            ;;
+        ""|ambivalent)
+            : nothing
+            ;;
+        *)
+            [ -n "$if_true" ] && value="$if_true"
+            echo -n " --with-$name='$value'"
+            ;;
     esac
 }
 
@@ -230,61 +245,61 @@ autoconf_optional_with() {
 autoconf_optional_enable() {
     local name="$1" value="$2" if_true="$3" if_false="$4"
     case "$value" in
-	no|none)
-	    if [ -n "$if_false" ]; then
-		echo -n " --enable-${name}='$if_false'"
-	    else
-		echo -n " --disable-$name"
-	    fi
-	    ;;
-	""|ambivalent)
-	    : nothing
-	    ;;
-	*)
-	    [ -n "$if_true" ] && value="$if_true"
-	    echo -n " --enable-$name='$value'"
-	    ;;
+        no|none)
+            if [ -n "$if_false" ]; then
+                echo -n " --enable-${name}='$if_false'"
+            else
+                echo -n " --disable-$name"
+            fi
+            ;;
+        ""|ambivalent)
+            : nothing
+            ;;
+        *)
+            [ -n "$if_true" ] && value="$if_true"
+            echo -n " --enable-$name='$value'"
+            ;;
     esac
 }
 
 cmake_optional() {
     local name="$1" value="$2" if_true="$3"
     case "$value" in
-	no|none)
-	    echo -n " -D$name=no"
-	    ;;
-	""|ambivalent)
-	    : nothing
-	    ;;
-	*)
-	    [ -n "$if_true" ] && value="$if_true"
-	    echo -n " -D$name='$value'"
-	    ;;
+        no|none)
+            echo -n " -D$name=no"
+            ;;
+        ""|ambivalent)
+            : nothing
+            ;;
+        *)
+            [ -n "$if_true" ] && value="$if_true"
+            echo -n " -D$name='$value'"
+            ;;
     esac
 }
 
 cmake_error_if_specified() {
     local name="$1" value="$2" if_true="$3"
     case "$value" in
-	""|ambivalent)
-	    : good
-	    ;;
-	*)
-	    [ -n "$if_true" ] && value="$if_true"
-	    die "cmake does not support $name '$value'; try setting it to 'ambivalent'"
-	    ;;
+        ""|ambivalent)
+            : good
+            ;;
+        *)
+            [ -n "$if_true" ] && value="$if_true"
+            die "cmake does not support $name '$value'; try setting it to 'ambivalent'"
+            ;;
     esac
 }
 
 tup_value_or_no() {
     local name="$1" value="$2"
     case "$value" in
-	no|none|""|ambivalent)
-	    echo -n " ${name}=no"
-	    ;;
-	*)
-	    echo -n " ${name}=${value}"
-	    ;;
+        no|none|""|ambivalent)
+            echo -n " ${name}=no"
+            ;;
+        *)
+            echo -n " ${name}=${value}"
+            ;;
     esac
 }
 
@@ -293,18 +308,18 @@ cmake_language_name() {
     local lang="$1"
 
     case "$lang" in
-	binaries) echo "enable-binary-analysis" ;;
-	c++)      echo "enable-c" ;;
-	*)        echo "enable-$lang" ;;
+        binaries) echo "enable-binary-analysis" ;;
+        c++)      echo "enable-c" ;;
+        *)        echo "enable-$lang" ;;
     esac
 }
 
 tup_language_name() {
     local lang="$1"
     case "$lang" in
-	c++)      echo "ENABLE_CXX_ANALYSIS" ;;
-	binaries) echo "ENABLE_BINARY_ANALYSIS" ;;
-	*)        echo "ENABLE_${lang}_ANALYSIS" | tr a-z A-Z ;;
+        c++)      echo "ENABLE_CXX_ANALYSIS" ;;
+        binaries) echo "ENABLE_BINARY_ANALYSIS" ;;
+        *)        echo "ENABLE_${lang}_ANALYSIS" | tr a-z A-Z ;;
     esac
 }
 
@@ -312,15 +327,15 @@ tup_language_name() {
 cmake_frontend_languages() {
     declare -A languages
     for lang in $(normalize_languages "$RMC_LANGUAGES"); do
-	languages["$lang"]=yes
+        languages["$lang"]=yes
     done
 
     for lang in $(normalize_languages all); do
-	if [ -n "${languages[$lang]}" ]; then
-	    echo -n " -D$(cmake_language_name $lang)=ON"
-	else
-	    echo -n " -D$(cmake_language_name $lang)=OFF"
-	fi
+        if [ -n "${languages[$lang]}" ]; then
+            echo -n " -D$(cmake_language_name $lang)=ON"
+        else
+            echo -n " -D$(cmake_language_name $lang)=OFF"
+        fi
     done
 }
 
@@ -410,47 +425,47 @@ cmake_command() {
 
     # Most user systems don't have cuda, so this should be the default
     if [ "$RMC_CUDA" = "ambivalent" ]; then
-	: good
+        : good
     elif [ "$RMC_CUDA" = "no" -o "$RMC_CUDA" = "none" ]; then
-	echo -n " -Denable-cuda=OFF"
+        echo -n " -Denable-cuda=OFF"
     else
-	die "cmake does not support cuda '$RMC_CUDA'; try setting it to 'none' or 'ambivalent'"
+        die "cmake does not support cuda '$RMC_CUDA'; try setting it to 'none' or 'ambivalent'"
     fi
-    
+
     echo " $ROSE_SOURCE"
 }
 
 # Echo the tup commands to standard output
 tup_command() {
     if [ ! -e "$RG_SRC/Tuprules.tup" ]; then
-	echo "$arg0: tup builds are not supported by this version of ROSE" >&2
-	echo "    You probably need to either apply Robb's Tup patches or" >&2
-	echo "    change $RG_BLD/.rmc-main.cfg to " >&2
-	echo "    use a different build system." >&2
-	exit 1
+        echo "$arg0: tup builds are not supported by this version of ROSE" >&2
+        echo "    You probably need to either apply Robb's Tup patches or" >&2
+        echo "    change $RG_BLD/.rmc-main.cfg to " >&2
+        echo "    use a different build system." >&2
+        exit 1
     fi
-    
+
     # We have to do slighly different things depending on whether tup was previously configured.
     local stash_file=".autotools-stash.tar"
     local time_stamp=.configure_time_stamp
     local first_time=yes
     [ -s tup.debug ] && first_time=
     if [ -n "$first_time" ]; then
-	echo "if [ -s tup.debug ]; then"
-	echo "    echo \"$arg0: hey, you can't just reuse this old script. Rerun $arg0 instead.\" >&2"
-	echo "    exit 1"
-	echo "fi"
+        echo "if [ -s tup.debug ]; then"
+        echo "    echo \"$arg0: hey, you can't just reuse this old script. Rerun $arg0 instead.\" >&2"
+        echo "    exit 1"
+        echo "fi"
     else
-	echo "if [ ! -s tup.debug ]; then"
-	echo "    echo \"$arg0: hey, you can't just reuse this old script. Rerun $arg0 instead.\" >&2"
-	echo "    exit 1"
-	echo "fi"
-	echo "touch $time_stamp" #used by tar, below
+        echo "if [ ! -s tup.debug ]; then"
+        echo "    echo \"$arg0: hey, you can't just reuse this old script. Rerun $arg0 instead.\" >&2"
+        echo "    exit 1"
+        echo "fi"
+        echo "touch $time_stamp" #used by tar, below
 
-	# We need to make sure that all the files touched by configure actually have their modification times
-	# updated. Unfortunately the configure script tries hard to not modify mtimes, so we need to help it along by
-	# untarring what we saved last time (tar, like most programs, updates mtimes for the files it modifies).
-	echo "tar xf $stash_file"
+        # We need to make sure that all the files touched by configure actually have their modification times
+        # updated. Unfortunately the configure script tries hard to not modify mtimes, so we need to help it along by
+        # untarring what we saved last time (tar, like most programs, updates mtimes for the files it modifies).
+        echo "tar xf $stash_file"
     fi
     echo
 
@@ -470,15 +485,15 @@ tup_command() {
 
     echo "echo '$arg0: stashing remaining GNU configure artifacts in $stash_file...'"
     if [ -n "$first_time" ]; then
-	# When initializing tup the first time, we can't have anything in the variant directory, but yet the variant
-	# directory needs to be a subdirectory of the ROSE source tree, and (see above) it needs to also be where we run
-	# "configure". Therefore, package up everything configure produced and squirrel it away.
-	echo "tar cf - --exclude=$stash_file . >$stash_file" # create file before starting tar
-	echo 'rm -rf *' # don't remove dot files (.rmc-main.cfg, .spock, $stash_file, etc)
+        # When initializing tup the first time, we can't have anything in the variant directory, but yet the variant
+        # directory needs to be a subdirectory of the ROSE source tree, and (see above) it needs to also be where we run
+        # "configure". Therefore, package up everything configure produced and squirrel it away.
+        echo "tar cf - --exclude=$stash_file . >$stash_file" # create file before starting tar
+        echo 'rm -rf *' # don't remove dot files (.rmc-main.cfg, .spock, $stash_file, etc)
     else
-	# When initializing tup the next time, we need to have certain things in the stash file because we need them
-	# for a couple Tupfile rules. Unfortunately, configure doesn't update mtimes for some files if they didn't
-	# change.
+        # When initializing tup the next time, we need to have certain things in the stash file because we need them
+        # for a couple Tupfile rules. Unfortunately, configure doesn't update mtimes for some files if they didn't
+        # change.
         echo "tar cf - --exclude=$stash_file --newer-mtime=$time_stamp . >$stash_file"
     fi
     echo
@@ -500,43 +515,43 @@ tup_command() {
 
     declare -A languages
     for lang in $(normalize_languages "$RMC_LANGUAGES"); do
-	languages["$lang"]=yes
+        languages["$lang"]=yes
     done
     for lang in $(normalize_languages all); do
-	if [ "$lang" = "c" ]; then
-	    : same as c++
-	elif [ -n "${languages[$lang]}" ]; then
-	    echo -n " $(tup_language_name $lang)=yes"
-	else
-	    echo -n " $(tup_language_name $lang)=no"
-	fi
+        if [ "$lang" = "c" ]; then
+            : same as c++
+        elif [ -n "${languages[$lang]}" ]; then
+            echo -n " $(tup_language_name $lang)=yes"
+        else
+            echo -n " $(tup_language_name $lang)=no"
+        fi
     done
 
-    tup_value_or_no WITH_BINWALK    	"$BINWALK_ROOT"
-    tup_value_or_no WITH_BOOST      	"$BOOST_ROOT"
-    tup_value_or_no WITH_BZIP2      	"$LIBBZ2_ROOT"
-    tup_value_or_no WITH_DLIB       	"$DLIB_ROOT"
-    tup_value_or_no WITH_DOXYGEN    	"$DOXYGEN_ROOT"
-    tup_value_or_no WITH_DWARF      	"$LIBDWARF_ROOT"
-    tup_value_or_no WITH_ELF        	"$LIBELF_ROOT"
-    tup_value_or_no WITH_GCRYPT     	"$LIBGCRYPT_ROOT"
-    tup_value_or_no WITH_GPG_ERROR  	"$LIBGPG_ERROR_ROOT"
+    tup_value_or_no WITH_BINWALK        "$BINWALK_ROOT"
+    tup_value_or_no WITH_BOOST          "$BOOST_ROOT"
+    tup_value_or_no WITH_BZIP2          "$LIBBZ2_ROOT"
+    tup_value_or_no WITH_DLIB           "$DLIB_ROOT"
+    tup_value_or_no WITH_DOXYGEN        "$DOXYGEN_ROOT"
+    tup_value_or_no WITH_DWARF          "$LIBDWARF_ROOT"
+    tup_value_or_no WITH_ELF            "$LIBELF_ROOT"
+    tup_value_or_no WITH_GCRYPT         "$LIBGCRYPT_ROOT"
+    tup_value_or_no WITH_GPG_ERROR      "$LIBGPG_ERROR_ROOT"
     tup_value_or_no WITH_GRAPHICSMAGICK "$LIBGRAPHICSMAGICK"
-    tup_value_or_no WITH_JPEG       	"$LIBJPEG_ROOT"
-    tup_value_or_no WITH_LCMS       	"$LIBLCMS_ROOT"
-    tup_value_or_no WITH_LZMA       	"$LIBLZMA_ROOT"
-    tup_value_or_no WITH_MAGIC      	"$LIBMAGIC_ROOT"
-    tup_value_or_no WITH_PNG        	"$LIBPNG_ROOT"
-    tup_value_or_no WITH_PQXX       	"$LIBPQXX_ROOT"
+    tup_value_or_no WITH_JPEG           "$LIBJPEG_ROOT"
+    tup_value_or_no WITH_LCMS           "$LIBLCMS_ROOT"
+    tup_value_or_no WITH_LZMA           "$LIBLZMA_ROOT"
+    tup_value_or_no WITH_MAGIC          "$LIBMAGIC_ROOT"
+    tup_value_or_no WITH_PNG            "$LIBPNG_ROOT"
+    tup_value_or_no WITH_PQXX           "$LIBPQXX_ROOT"
     tup_value_or_no WITH_QT             "$QT_ROOT"
-    tup_value_or_no WITH_READLINE   	"$READLINE_ROOT"
+    tup_value_or_no WITH_READLINE       "$READLINE_ROOT"
     tup_value_or_no WITH_TIFF           "$LIBTIFF_ROOT"
-    tup_value_or_no WITH_WT         	"$WT_ROOT"
-    tup_value_or_no WITH_YAMLCPP    	"$YAMLCPP_ROOT"
-    tup_value_or_no WITH_YICES      	"$YICES_ROOT"
-    tup_value_or_no WITH_Z3         	"$Z3_ROOT"
+    tup_value_or_no WITH_WT             "$WT_ROOT"
+    tup_value_or_no WITH_YAMLCPP        "$YAMLCPP_ROOT"
+    tup_value_or_no WITH_YICES          "$YICES_ROOT"
+    tup_value_or_no WITH_Z3             "$Z3_ROOT"
     tup_value_or_no WITH_ZLIB           "$ZLIB_ROOT"
-    tup_value_or_no AUTOTOOLS_STASH 	"$RG_BLD/$stash_file"
+    tup_value_or_no AUTOTOOLS_STASH     "$RG_BLD/$stash_file"
     tup_value_or_no ROSE_SOURCE         "$RG_SRC"
     echo " \$tup_config_vars <${RG_SRC}/tup.config >${RG_BLD}/tup.config"
     echo
@@ -548,11 +563,11 @@ tup_command() {
     echo
 
     if [ -n "$first_time" ]; then
-	echo "echo '$arg0: restoring stashed GNU configure artifacts...'"
-	echo "tar xf $stash_file --touch"
-	echo "tup parse"
-	echo "echo"
-	echo "echo 'You may want to run 'tup monitor' for improved performance, esp. on NFS mounts.'"
+        echo "echo '$arg0: restoring stashed GNU configure artifacts...'"
+        echo "tar xf $stash_file --touch"
+        echo "tup parse"
+        echo "echo"
+        echo "echo 'You may want to run 'tup monitor' for improved performance, esp. on NFS mounts.'"
     fi
 }
 
@@ -573,11 +588,11 @@ dry_run=
 run_build_script=
 while [ "$#" -gt 0 ]; do
     case "$1" in
-	--) shift; break ;;
-	-h|--help) show_help_and_exit; shift ;;
-	-n|--dry-run) dry_run=yes; shift ;;
-	-b|--build) run_build_script=yes; shift ;;
-	*) echo "$0: unknown switch: $1" >&2; exit 1 ;;
+        --) shift; break ;;
+        -h|--help) show_help_and_exit; shift ;;
+        -n|--dry-run) dry_run=yes; shift ;;
+        -b|--build) run_build_script=yes; shift ;;
+        *) echo "$0: unknown switch: $1" >&2; exit 1 ;;
     esac
 done
 
@@ -597,17 +612,17 @@ fi
 
 case "$RMC_BUILD" in
     autoconf)
-	autoconf_command >>"$script"
-	;;
+        autoconf_command >>"$script"
+        ;;
     cmake)
-	cmake_command >>"$script"
-	;;
+        cmake_command >>"$script"
+        ;;
     tup)
-	tup_command >>"$script"
-	;;
+        tup_command >>"$script"
+        ;;
     *)
-	die "unknown build system: $RMC_BUILD"
-	;;
+        die "unknown build system: $RMC_BUILD"
+        ;;
 esac
 
 if [ -n "$dry_run" ]; then
