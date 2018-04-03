@@ -40,7 +40,7 @@ cxx_flags() {
     local cxx_major=$(echo "$CXX_VERSION" |cut -d. -f1)
     local cxx_minor=$(echo "$CXX_VERSION" |cut -d. -f2)
 
-    if [ "$cxx_major" -eq 4 && "$cxx_minor" -ge 8 ] || [ "$cxx_major" -ge 5 ]; then
+    if [ "$cxx_major" -eq 4 -a "$cxx_minor" -ge 8 ] || [ "$cxx_major" -ge 5 ]; then
         echo -n " -ftemplate-backtrace-limit=0"
     fi
 }
