@@ -59,10 +59,13 @@ cc_warning_flags() {
             fi
 
             if [ "$c_major" -ge 5 ]; then
-                echo -n " -Wno-misleading-indentation" # common warning from ROSE generated header files
-                echo -n " -Wno-nonnull-compare" # because ROSE has lots of "assert(this)"
                 echo -n " -fdiagnostics-color=always" # colorized within tools like emacs
             fi
+
+	    if [ "$c_major" -ge 6 ]; then
+                echo -n " -Wno-misleading-indentation" # common warning from ROSE generated header files
+                echo -n " -Wno-nonnull-compare" # because ROSE has lots of "assert(this)"
+	    fi
             ;;
         no|ambivalent)
             : nothing
@@ -84,11 +87,14 @@ cxx_warning_flags() {
             fi
 
             if [ "$cxx_major" -ge 5 ]; then
+                echo -n " -fdiagnostics-color=always" # colorized within tools like emacs
+            fi
+
+	    if [ "$cxx_major" -ge 6 ]; then
                 echo -n " -Wno-terminate" # common warning from dlib throwing an exception in destructors
                 echo -n " -Wno-misleading-indentation" # common warning from ROSE generated header files
                 echo -n " -Wno-nonnull-compare" # because ROSE has lots of "assert(this)"
-                echo -n " -fdiagnostics-color=always" # colorized within tools like emacs
-            fi
+	    fi
             ;;
         no|ambivalent)
             : nothing
