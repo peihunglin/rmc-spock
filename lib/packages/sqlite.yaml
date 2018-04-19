@@ -1,0 +1,38 @@
+package: sqlite
+versions: [ 3.23.1 ]
+
+dependencies:
+  - version: ">=3"
+    # Sqlite compilation errors with c89 compilers
+    install: [ gnu11-compiler ]
+    build:   []
+
+download:
+  - version: ">=3"
+    shell: |
+      fossil version
+
+      fossil clone https://www.sqlite.org/src sqlite.fossil
+      mkdir download
+      (cd download && fossil open ../sqlite.fossil version-$PACKAGE_VERSION)
+      tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=3"
+    shell: |
+      cc --spock-triplet
+
+      mkdir build
+      cd build
+
+      env \
+          CC=cc \
+          LDFLAGS="$(spock-compiler-libdirs)" \
+          CPPFLAGS="$(spock-compiler-incdirs)" \
+          ../download/configure \
+          --prefix=$PACKAGE_ROOT \
+          --disable-tcl \
+          --disable-readline
+
+      make -j$PARALLELISM
+      make install
