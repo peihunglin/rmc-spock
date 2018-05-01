@@ -484,10 +484,8 @@ tup_command() {
 
     # We're not interested in all the files produced by "configure", so delete some of the noise.
     echo "echo '$arg0: removing unnecessary configure artifacts...'"
-    #echo "rm -rf config.status libltdl libtool stamp-h stamp-h1"
-    #echo "rm -f src/3rdPartyLibraries/libharu-2.1.0/{config.status,libtool}"
     echo "find . -name Makefile -print0 |xargs -0 rm"
-    #echo "find . -depth -type d -print0 |xargs -0 rmdir 2>/dev/null || true"
+    echo "mv libtool .libtool"
 
     echo "echo '$arg0: stashing remaining GNU configure artifacts in $stash_file...'"
     if [ -n "$first_time" ]; then
