@@ -40,7 +40,7 @@ cxx_flags() {
     local cxx_major=$(echo "$CXX_VERSION" |cut -d. -f1)
     local cxx_minor=$(echo "$CXX_VERSION" |cut -d. -f2)
 
-    if [ "$cxx_major" -eq 4 && "$cxx_minor" -ge 8 ] || [ "$cxx_major" -ge 5 ]; then
+    if [ "$cxx_major" -eq 4 -a "$cxx_minor" -ge 8 ] || [ "$cxx_major" -ge 5 ]; then
         echo -n " -ftemplate-backtrace-limit=0"
     fi
 }
@@ -59,10 +59,13 @@ cc_warning_flags() {
             fi
 
             if [ "$c_major" -ge 5 ]; then
-                echo -n " -Wno-misleading-indentation" # common warning from ROSE generated header files
-                echo -n " -Wno-nonnull-compare" # because ROSE has lots of "assert(this)"
                 echo -n " -fdiagnostics-color=always" # colorized within tools like emacs
             fi
+
+	    if [ "$c_major" -ge 6 ]; then
+                echo -n " -Wno-misleading-indentation" # common warning from ROSE generated header files
+                echo -n " -Wno-nonnull-compare" # because ROSE has lots of "assert(this)"
+	    fi
             ;;
         no|ambivalent)
             : nothing
@@ -84,11 +87,14 @@ cxx_warning_flags() {
             fi
 
             if [ "$cxx_major" -ge 5 ]; then
+                echo -n " -fdiagnostics-color=always" # colorized within tools like emacs
+            fi
+
+	    if [ "$cxx_major" -ge 6 ]; then
                 echo -n " -Wno-terminate" # common warning from dlib throwing an exception in destructors
                 echo -n " -Wno-misleading-indentation" # common warning from ROSE generated header files
                 echo -n " -Wno-nonnull-compare" # because ROSE has lots of "assert(this)"
-                echo -n " -fdiagnostics-color=always" # colorized within tools like emacs
-            fi
+	    fi
             ;;
         no|ambivalent)
             : nothing
@@ -478,10 +484,8 @@ tup_command() {
 
     # We're not interested in all the files produced by "configure", so delete some of the noise.
     echo "echo '$arg0: removing unnecessary configure artifacts...'"
-    #echo "rm -rf config.status libltdl libtool stamp-h stamp-h1"
-    #echo "rm -f src/3rdPartyLibraries/libharu-2.1.0/{config.status,libtool}"
     echo "find . -name Makefile -print0 |xargs -0 rm"
-    #echo "find . -depth -type d -print0 |xargs -0 rmdir 2>/dev/null || true"
+    echo "mv libtool .libtool"
 
     echo "echo '$arg0: stashing remaining GNU configure artifacts in $stash_file...'"
     if [ -n "$first_time" ]; then
