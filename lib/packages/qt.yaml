@@ -44,6 +44,6 @@ install:
 
       mkdir build
       cd build
-      ../download/configure -prefix "$PACKAGE_ROOT" $platform -opensource -confirm-license -fontconfig
+      ../download/configure -prefix "$PACKAGE_ROOT" $platform -opensource -confirm-license -fontconfig -qt-xcb
       make -j$PARALLELISM
       make install

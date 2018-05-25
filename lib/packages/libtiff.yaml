@@ -13,7 +13,7 @@ dependencies:
 download:
   - version: ">=3"
     shell: |
-      wget -O - ftp://download.osgeo.org/libtiff/tiff-$PACKAGE_VERSION.tar.gz |tar xzf -
+      wget -O - http://download.osgeo.org/libtiff/tiff-$PACKAGE_VERSION.tar.gz |tar xzf -
       mv tiff-$PACKAGE_VERSION download
       tar cf - download |gzip -9 >download.tar.gz
 
