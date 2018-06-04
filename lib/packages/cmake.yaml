@@ -33,19 +33,12 @@ install:
         if [ -r /etc/os-release ]; then
             if grep "Red Hat" /etc/os-release >/dev/null; then
                 if [ -e /usr/lib/libtinfo.so -a ! -e /usr/lib64/libtinfo.so -a -e /usr/lib64/libtinfo.so.5 ]; then
-                    fix_libtinfo=yes
-                    ln -s /usr/lib64/libtinfo.so.5 libtinfo.so
-                    export LIBRARY_PATH="$(pwd):$LIBRARY_PATH"
+                    fix_libtinfo="-- -DBUILD_CursesDialog=OFF"
                 fi
             fi
         fi
 
         cd download
-        ./bootstrap --parallel=$PARALLELISM --prefix="$PACKAGE_ROOT"
+        ./bootstrap --parallel=$PARALLELISM --prefix="$PACKAGE_ROOT" $fix_libtinfo
         make -j$PARALLELISM
         make install
-
-        if [ -n "$fix_libtinfo" ]; then
-            mkdir -p "$PACKAGE_ROOT/lib"
-            (cd "$PACKAGE_ROOT/lib" && ln -s /usr/lib64/libtinfo.so.5 libtinfo.so)
-        fi
