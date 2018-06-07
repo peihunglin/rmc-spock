@@ -26,6 +26,8 @@ install:
         LDFLAGS="$(spock-compiler-libdirs)" \
         CPPFLAGS="$(spock-compiler-incdirs)" \
         ./configure \
+        --enable-static \
+        --enable-shared \
         --prefix=$PACKAGE_ROOT \
         --disable-languages
 

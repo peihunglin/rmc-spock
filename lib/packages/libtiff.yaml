@@ -27,9 +27,21 @@ install:
 
       mkdir build
       cd build
+
+      # First build static libraries
       cmake ../download \
         -DCMAKE_C_COMPILER=cc \
-        -DCMAKE_INSTALL_PREFIX="$PACKAGE_ROOT"
+        -DCMAKE_INSTALL_PREFIX="$PACKAGE_ROOT" \
+        -DBUILD_SHARED_LIBS:BOOL=OFF
+      make -j$PARALLELISM
+      make test
+      make install
+
+      # Then build shared libraries
+      cmake ../download \
+        -DCMAKE_C_COMPILER=cc \
+        -DCMAKE_INSTALL_PREFIX="$PACKAGE_ROOT" \
+        -DBUILD_SHARED_LIBS:BOOL=ON
         
       make -j$PARALLELISM
       make test

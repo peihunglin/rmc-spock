@@ -35,11 +35,23 @@ install:
 
       mkdir build
       cd build
+
+      # Build static libraries
       cmake ../download \
           -DCMAKE_C_COMPILER=cc \
           -DCMAKE_CXX_COMPILER=c++ \
           -DCMAKE_INSTALL_PREFIX="$PACKAGE_ROOT" \
-          -DBUILD_SHARED_LIBS=Yes \
+          -DBUILD_SHARED_LIBS:BOOL=NO \
+          -DBOOST_ROOT=$BOOST_ROOT
+      make -j$PARALLELISM
+      make install
+      
+      # Build shared libraries
+      cmake ../download \
+          -DCMAKE_C_COMPILER=cc \
+          -DCMAKE_CXX_COMPILER=c++ \
+          -DCMAKE_INSTALL_PREFIX="$PACKAGE_ROOT" \
+          -DBUILD_SHARED_LIBS:BOOL=YES \
           -DBOOST_ROOT=$BOOST_ROOT
       make -j$PARALLELISM
       make install
