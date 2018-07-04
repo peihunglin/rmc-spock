@@ -78,6 +78,8 @@ install:
 
         mkdir build
         cd build
+
+        # Build static libraries
         cmake ../download \
             -DCMAKE_C_COMPILER=cc \
             -DCMAKE_CXX_COMPILER=c++ \
@@ -86,6 +88,21 @@ install:
             -DBOOST_ROOT="$BOOST_ROOT" \
             -DWT_WRASTERIMAGE_IMPLEMENTATION=GraphicsMagick \
             -DGM_INCLUDE_DIR:PATH="$LIBGRAPHICSMAGICK_ROOT/include/GraphicsMagick" \
-            -DGM_LIB:FILEPATH="$LIBGRAPHICSMAGICK_ROOT/lib/libGraphicsMagick.so"
+            -DGM_LIB:FILEPATH="$LIBGRAPHICSMAGICK_ROOT/lib/libGraphicsMagick.so" \
+            -DSHARED_LIBS:BOOL=NO
+        make -j$PARALLELISM
+        make install
+
+        # Build shared libraries
+        cmake ../download \
+            -DCMAKE_C_COMPILER=cc \
+            -DCMAKE_CXX_COMPILER=c++ \
+            -DCMAKE_INSTALL_PREFIX="$PACKAGE_ROOT" \
+            -DCONFIGDIR="$PACKAGE_ROOT/etc/wt" \
+            -DBOOST_ROOT="$BOOST_ROOT" \
+            -DWT_WRASTERIMAGE_IMPLEMENTATION=GraphicsMagick \
+            -DGM_INCLUDE_DIR:PATH="$LIBGRAPHICSMAGICK_ROOT/include/GraphicsMagick" \
+            -DGM_LIB:FILEPATH="$LIBGRAPHICSMAGICK_ROOT/lib/libGraphicsMagick.so" \
+            -DSHARED_LIBS:BOOL=YES
         make -j$PARALLELISM
         make install

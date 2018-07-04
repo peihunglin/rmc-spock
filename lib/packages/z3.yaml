@@ -31,7 +31,9 @@ install:
       python --version
 
       cd download
-      CXX=c++ CC=cc python scripts/mk_make.py --prefix="$PACKAGE_ROOT"
+
+      # Build static and shared libraries both at once
+      CXX=c++ CC=cc python scripts/mk_make.py --prefix="$PACKAGE_ROOT" --staticlib
       cd build
       make -j$PARALLELISM
       make install

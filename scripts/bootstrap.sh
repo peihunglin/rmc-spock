@@ -61,6 +61,13 @@ while [ "$#" -gt 0 ]; do
     esac
 done
 
+if [ -n "$SPOCK_EMPLOYED" ]; then
+    echo "$arg0: error: you cannot run this script from inside a spock shell" >&2
+    echo "$arg0: info: exit this shell, then try again" >&2
+    echo "$arg0: info: you're at shell level $[SHLVL-1]" >&2
+    exit 0
+fi
+
 if [ "$prefix" = "" ]; then
     prefix="$HOME/.spock"
     echo "$arg0: assuming --prefix=$prefix"

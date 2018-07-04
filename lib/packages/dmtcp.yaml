@@ -1,0 +1,45 @@
+package: dmtcp
+versions: [ 2.4.0, 2.4.1, 2.4.2, 2.4.3, 2.4.4, 2.4.5, 2.4.6, 2.4.7, 2.4.8, 2.4.9,
+            2.5.0, 2.5.1, 2.5.2,
+            2.6.20180517 ]
+
+dependencies:
+  - version: ">=2.4"
+    aliases: []
+    install: [ c-compiler ]
+    build: [ gnu11-compiler ]
+
+download:
+  - version: ">=2.4"
+    shell: |
+      git clone -b $PACKAGE_VERSION https://github.com/dmtcp/dmtcp download
+      tar cf - download |gzip -9 >download.tar.gz
+
+  # Version 2.6 is not released yet, so we're using particular Git commit dates.
+  - version: "=2.6.20180517"
+    shell: |
+      git clone https://github.com/dmtcp/dmtcp download
+      cd download
+      git fetch origin 50a39d80a550214a043f4baf54c39731bc16f3c8
+      git reset --hard FETCH_HEAD
+      git clean -dfxq
+      cd ..
+      tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=2.4"
+    shell: |
+      cd download
+      cc --spock-triplet
+
+      env \
+          CC=cc \
+          LDFLAGS="$(spock-compiler-libdirs)" \
+          CPPFLAGS="$(spock-compiler-incdirs)" \
+          ./configure \
+          --enable-unique-checkpoint-filenames \
+          --disable-test-suite \
+          --prefix="$PACKAGE_ROOT"
+
+      make -j$PARALLELISM
+      make install
