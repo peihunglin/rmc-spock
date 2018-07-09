@@ -451,6 +451,13 @@ tup_command() {
         exit 1
     fi
 
+    if [ ! -e "$RG_SRC/scripts/tup" ]; then
+	echo "$arg0: you must clone ROBB's tup scripts to \$ROSE/scripts/tup" >&2
+	echo "using this command:" >&2
+	echo "  git clone https://github.com/matzke1/tup-scripts $RG_SRC/scripts/tup" >&2
+	exit 1
+    fi
+
     # We have to do slighly different things depending on whether tup was previously configured.
     local stash_file=".autotools-stash.tar"
     local time_stamp=.configure_time_stamp

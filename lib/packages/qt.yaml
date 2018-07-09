@@ -42,8 +42,26 @@ install:
               ;;
       esac
 
+      # Build shared libraries (-shared is the default)
+      rm -rf build
       mkdir build
-      cd build
-      ../download/configure -prefix "$PACKAGE_ROOT" $platform -opensource -confirm-license -fontconfig
-      make -j$PARALLELISM
-      make install
+      (
+          set -e
+          cd build
+          ../download/configure -prefix "$PACKAGE_ROOT" $platform -opensource -confirm-license -fontconfig -qt-xcb
+          # The extra serial makes are for debugging
+          make -j$PARALLELISM || make
+          make -j$PARALLELISM install || make install
+      )
+
+      # Build static libraries. Apparently we can't build static and shared at the same time. I'm ignoring failures for
+      # the time being because it seems that some libraries don't compile, but most do.
+      rm -rf build
+      mkdir build
+      (
+          set -e
+          cd build
+          ../download/configure -prefix "$PACKAGE_ROOT" $platform -opensource -confirm-license -fontconfig -qt-xcb -static
+          make -j$PARALLELISM || true
+          make -j$PARALLELISM install || true
+      )

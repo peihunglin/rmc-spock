@@ -1,5 +1,6 @@
 package:        yamlcpp
-versions:       [ 0.5.1, 0.5.2, 0.5.3, 0.6.0, 0.6.1, 0.6.2 ]
+versions:       [ 0.5.1, 0.5.2, 0.5.3, 0.6.0, 0.6.1, 0.6.2,
+                  0.6.2.20180411 ]
 
 dependencies:
   - version: ">=0.5.1"
@@ -19,6 +20,13 @@ download:
       cd download
       git archive --format=tar --prefix=download/ HEAD |gzip -9 >../download.tar.gz
 
+  - version: "=0.6.2.20180411"
+    shell: |
+      git clone https://github.com/jbeder/yaml-cpp download
+      cd download
+      git reset --hard 124ae4760062e2f5827a6238c122ccbf66eb4e6e
+      git archive --format=tar --prefix=download/ HEAD |gzip -9 >../download.tar.gz
+
 install:
   - version: ">=0.5.1"
     shell: |
@@ -27,11 +35,23 @@ install:
 
       mkdir build
       cd build
+
+      # Build static libraries
       cmake ../download \
           -DCMAKE_C_COMPILER=cc \
           -DCMAKE_CXX_COMPILER=c++ \
           -DCMAKE_INSTALL_PREFIX="$PACKAGE_ROOT" \
-          -DBUILD_SHARED_LIBS=Yes \
+          -DBUILD_SHARED_LIBS:BOOL=NO \
+          -DBOOST_ROOT=$BOOST_ROOT
+      make -j$PARALLELISM
+      make install
+      
+      # Build shared libraries
+      cmake ../download \
+          -DCMAKE_C_COMPILER=cc \
+          -DCMAKE_CXX_COMPILER=c++ \
+          -DCMAKE_INSTALL_PREFIX="$PACKAGE_ROOT" \
+          -DBUILD_SHARED_LIBS:BOOL=YES \
           -DBOOST_ROOT=$BOOST_ROOT
       make -j$PARALLELISM
       make install
