@@ -28,6 +28,10 @@ download:
 install:
   - version: ">=2"
     shell: |
+      vers_major=$(echo $PACKAGE_VERSION |cut -d. -f1)
+      vers_minor=$(echo $PACKAGE_VERSION |cut -d. -f2)
+      vers_mm=$(echo $PACKAGE_VERSION |cut -d. -f1-2)
+
       cc --spock-triplet
       c++ --spock-triplet
 
@@ -38,13 +42,20 @@ install:
         LDFLAGS="$(spock-compiler-libdirs)" \
         CPPFLAGS="$(spock-compiler-incdirs)" \
         ./configure \
-        --prefix="$PACKAGE_ROOT"
+        --prefix="$PACKAGE_ROOT" \
+        --enable-shared
 
       make -j$PARALLELISM
       make install
 
       # "python" should be the version we're using
-      vers_major=$(echo $PACKAGE_VERSION |cut -d. -f1)
       if [ ! -e "$PACKAGE_ROOT/bin/python" -a -e "$PACKAGE_ROOT/bin/python${vers_major}" ]; then
           (cd "$PACKAGE_ROOT/bin" && ln -s python${vers_major} python)
       fi
+
+      # Python's build system doesn't correctly initialize rpaths, so do it by hand
+      patchelf --set-rpath $PACKAGE_ROOT/lib $PACKAGE_ROOT/bin/python${vers_mm}
+      patchelf --set-rpath $PACKAGE_ROOT/lib $PACKAGE_ROOT/bin/python${vers_mm}m
+
+      # Include directory depends on the python version number
+      PYTHON_INCDIRS=$PACKAGE_ROOT/include/python${vers_mm}m
