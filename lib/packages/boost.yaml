@@ -1,22 +1,94 @@
 package:        boost
 
+# List of all versions supported by this file
 versions:       [ 1.50.0, 1.51.0, 1.52.0, 1.53.0, 1.54.0, 1.55.0,
                   1.56.0, 1.57.0, 1.58.0, 1.59.0, 1.60.0, 1.61.0,
                   1.62.0, 1.63.0, 1.64.0, 1.65.1, 1.66.0, 1.67.0 ]
 
+# Dependencies for building and installation.
+#
+# As with many of the other settings in this file, dependency
+# information is organized by package version.  Spock will scan the
+# YAML objects in this list and use the *last* group of settings
+# that match the version being installed.  At least one group
+# must match.
+#
+# The "install" property is a list of packages upon which this package
+# depends when it is used in a build environment. If there's only one
+# dependency it can appear as a scalar instead of a list.
+#
+# The "build" property lists additional packages (in addition to the
+# "install" packages) that must be used when building this package.
+#
+# The "aliases" property lists secondary names for the installed
+# package. Secondary names are used to prevent two related packages
+# from being used at the same time. For instance, since gnu-c++03, 
+# gnu-c++11, and llvm-c++14 are all C++ compilers, they have a
+# "c++-compiler" alias which prevents more than one C++ compiler from
+# being used at a time.
+#
+# Hint: some build systems (cmake in particular) look also for a C
+# compiler whenever a C++ compiler is selected. To prevent problems,
+# the build dependencies should always include "c-compiler" if they
+# include any C++ compiler.
+
 dependencies:
   - version: ">=1.50"
     aliases: []
-    install: [ c++-compiler, zlib ]
+
+    # "c++-compiler" means any C++ compiler from any vendor. This
+    # could be a compiler that supports C++11 or a compiler (GCC or
+    # LLVM) that supports the gnu++03 language, etc.
+    install: [ c++-compiler, zlib, python ]
+
+    # Standard C compilers (c89 c94 c11 etc) do not work: they fail to
+    # compile during boost's bootstrap.sh phase. "gnu-default-c" is
+    # the GCC C compiler with default language; "llvm-default-c" is
+    # the LLVM C compiler with default language; and "default-c" is
+    # the default C language from any vendor.
     build:   default-c
+
+# When running shell commands, it is often useful to have variables
+# whoe value depends on the version being installed.  Spock will scan
+# this list to find those items that match the version, and then
+# create a shell variable with the specified value.  The list is
+# scanned from beginning to end, but only the last occurrence of each
+# variable is used.
 
 variables:
   - version: ">=1.50"
     iostream_flags: -sNO_COMPRESSION=1 -sNO_ZLIB=1 -sNO_BZIP2=1
-    libraries: chrono date_time filesystem iostreams program_options random regex serialization signals system thread wave
+    libraries: chrono date_time filesystem iostreams program_options python random regex serialization signals system thread wave
 
   - version: ">=1.54"
     iostream_flags: "-sNO_BZIP2=1"
+
+# Instructions for how to obtain the package.  Spock will use
+# the last section which matches the version beging installed.
+# This allows you to easily order your scripts using ">=VERSION"
+# in ascending order.
+#
+# In general, whenever you see a "shell" property it is Bash shell
+# commands. The commands are inserted into a shell script before being
+# run, so (unlike make) side effects persist from command to command
+# without needing to add semicolons and escaped linefeeds.
+#
+# The following variables are defined during a download:
+#    PACKAGE_NAME    - the name of the package, such as "boost"
+#    PACKAGE_NAME_UC - uppercase suitable as shell variable name
+#    PACKAGE_VERSION - version number being processed, "1.52.0"
+#    PACKAGE_HASH    - unique 8-character hash
+#    PACKAGE_SPEC    - as in "boost=1.52.0@84c2d792
+#    PACKAGE_ACTION  - set to "download"
+#
+# Plus additional variables from the
+# $SPOCK_SCRIPTS/installation-support.sh file.
+#
+# A "set -x" is issued before the following commands run.
+#
+# Spock expects that the script produces a file named
+# "download.tar.gz" in the CWD (which is a temporary directory).  By
+# convention, these tarballs untar to a directory named "download".
 
 download:
   - version: ">=1.50"
@@ -27,18 +99,55 @@ download:
         mv boost_$version_underscore download
         tar cf - download |gzip -9 >download.tar.gz
 
+# Instructions for building and installing a package. By "install" we
+# mean that the final entities (libraries, headers, executables, man
+# pages, etc) are moved into an installation directory and a YAML
+# fragment is created to describe the parts.
+#
+# Installation from source usually consists of these parts:
+#
+#   1. Download a tarball (handled above)
+#   2. Untar the tarball into a working directory (handled by Spock)
+#   3. Configure the packages build system
+#   4. Build the package in parallel
+#   5. Install the package
+#   6. Generate information about the package
+#
+# Besides the variables listed under "download" above, these variables
+# are defined:
+#   PACKAGE_ROOT     - the directory into which to install
+#   PACKAGE_ACTION   - set to 'install'
+#
+# The script should define any environment variables that need to be
+# adjusted when the package is actually used. It can do this with the
+# "spock-export" command, which takes a variable name and a value as
+# its two arguments. If the variable already exists in the user's
+# environment, then it is adjusted by prepending the value specified
+# by this script and separating it with colons.  For instance, by
+# saying "spock-export PATH $PACKAGE_ROOT/bin" you can add the
+# package's "bin" directory to the beginning of the user's PATH
+# variable.
+
 install:
   - version: ">=1.50"
     shell: |
+        # We start with some simple debugging to make sure we've got
+        # the expected compilers.
+
         cc --spock-triplet
         c++ --spock-triplet
 
+        # Initialization. Boost's bjam gives an error if parallelism is larger than 64.
+        
         [ "$PARALLELISM" -gt 64 ] && PARALLELISM=64
         libraries_commas=$(echo "$libraries" |sed 's/  */,/g')
 
+        # All compiling is done in the downloaded source directory,
+        # which Spock has already unpacked from the tarball.
+
         cd download
 
-        # It's unfortunate that boost uses a custom build script instead of something more popular like
+        # Configuration.  It's unfortunate that boost uses a custom build script instead of something more popular like
         # cmake or autoconf. Therefore, I'm not quite sure that these commands are actually building what I expect them
         # to be building.
         
@@ -73,6 +182,10 @@ install:
         
         sed --in-place '/^if/,/^}/ d' project-config.jam
 
+        # Our scripts customarily build, then install as two separate steps.  This is sometimes more efficient if the
+        # installation directory is an NFS mount.  Also, be liberal about turning on debugging output during the build,
+        # which is saved along with the installation.
+        #
         # I could not find documentation about whether "b2" commands also need the --prefix switch. The generated
         # project-config.jam file specifies a prefix, but I'm not sure if all versions of boost we support did this, so
         # specify the prefix again here.
@@ -83,3 +196,26 @@ install:
         
         BOOST_BUILD_PATH=$(pwd) ./b2 --prefix="$PACKAGE_ROOT" $iostream_flags toolset=$boost_toolset -d+2 -s ZLIB_INCLUDE=$ZLIB_INCDIRS -s ZLIB_LIBPATH=$ZLIB_LIBDIRS -j$PARALLELISM
         BOOST_BUILD_PATH=$(pwd) ./b2 --prefix="$PACKAGE_ROOT" $iostream_flags toolset=$boost_toolset -d+2 -s ZLIB_INCLUDE=$ZLIB_INCDIRS -s ZLIB_LIBPATH=$ZLIB_LIBDIRS install
+
+        # Finally, describe the variables that should be adjusted or
+        # created when this package is employed by a user.  These
+        # variables are set automatically (but they're not available
+        # to use within this script itself):
+        #   BOOST_ROOT      - the same value as $PACKAGE_ROOT
+        #   BOOST_VERSION   - the same as $PACKAGE_VERSION
+        #   BOOST_LIBDIRS   - directories containing libraries
+        #   ALL_LIBDIRS     - ditto, but for all packages
+        #   BOOST_INCDIRS   - directories containing include files
+        #   ALL_INCDIRS     - ditto, but for all packages
+        #   LD_RUN_PATH     - directories containing shared libs
+        #   PATH            - directories containing executables
+
+# The "post-install" script is available to run after Spock installs
+# the package.  Most packages don't need this, but you could use it to
+# make adjustments, print messages, etc.  The "post-install" is
+# completely optional and usually omitted.
+
+post-install:
+  - version: ">=1.50"
+    shell: |
+        true # nothing to do here

@@ -40,9 +40,13 @@ cxx_flags() {
     local cxx_major=$(echo "$CXX_VERSION" |cut -d. -f1)
     local cxx_minor=$(echo "$CXX_VERSION" |cut -d. -f2)
 
-    if [ "$cxx_major" -eq 4 -a "$cxx_minor" -ge 8 ] || [ "$cxx_major" -ge 5 ]; then
-        echo -n " -ftemplate-backtrace-limit=0"
-    fi
+    case "$CXX_VENDOR" in
+        gnu|llvm)
+            if [ "$cxx_major" -eq 4 -a "$cxx_minor" -ge 8 ] || [ "$cxx_major" -ge 5 ]; then
+                echo -n " -ftemplate-backtrace-limit=0"
+            fi
+            ;;
+    esac
 }
 
 # Flags to control C and C++ warning messages as a space-separated list w/out quoting.
@@ -51,21 +55,25 @@ cc_warning_flags() {
     local c_minor=$(echo "$C_VERSION" |cut -d. -f2)
     case "$RMC_WARNINGS" in
         yes)
-            echo -n "-Wall"
-            echo -n " -Wno-attributes"
+            case "$C_VENDOR" in
+                gnu|llvm)
+                    echo -n "-Wall"
+                    echo -n " -Wno-attributes"
 
-            if [ "$c_major" -eq 4 -a "$c_minor" -ge 4 ] || [ "$c_major" -gt 4 ]; then
-                echo -n " -Wno-unused-local-typedefs" # common warning from boost
-            fi
+                    if [ "$c_major" -eq 4 -a "$c_minor" -ge 4 ] || [ "$c_major" -gt 4 ]; then
+                        echo -n " -Wno-unused-local-typedefs" # common warning from boost
+                    fi
 
-            if [ "$c_major" -ge 5 ]; then
-                echo -n " -fdiagnostics-color=always" # colorized within tools like emacs
-            fi
+                    if [ "$c_major" -ge 5 ]; then
+                        echo -n " -fdiagnostics-color=always" # colorized within tools like emacs
+                    fi
 
-	    if [ "$c_major" -ge 6 ]; then
-                echo -n " -Wno-misleading-indentation" # common warning from ROSE generated header files
-                echo -n " -Wno-nonnull-compare" # because ROSE has lots of "assert(this)"
-	    fi
+                    if [ "$c_major" -ge 6 ]; then
+                        echo -n " -Wno-misleading-indentation" # common warning from ROSE generated header files
+                        echo -n " -Wno-nonnull-compare" # because ROSE has lots of "assert(this)"
+                    fi
+                    ;;
+            esac
             ;;
         no|ambivalent)
             : nothing
@@ -78,23 +86,27 @@ cxx_warning_flags() {
     local cxx_minor=$(echo "$CXX_VERSION" |cut -d. -f2)
     case "$RMC_WARNINGS" in
         yes)
-            echo -n "-Wall"
-            echo -n " -Wno-attributes"
-            echo -n " -Wno-deprecated-declarations" # common warning from dlib using std::auto_ptr
+            case "$CXX_VENDOR" in
+                gnu|llvm)
+                    echo -n "-Wall"
+                    echo -n " -Wno-attributes"
+                    echo -n " -Wno-deprecated-declarations" # common warning from dlib using std::auto_ptr
 
-            if [ "$cxx_major" -eq 4 -a "$cxx_minor" -ge 4 ] || [ "$cxx_major" -gt 4 ]; then
-                echo -n " -Wno-unused-local-typedefs" # common warning from boost
-            fi
+                    if [ "$cxx_major" -eq 4 -a "$cxx_minor" -ge 4 ] || [ "$cxx_major" -gt 4 ]; then
+                        echo -n " -Wno-unused-local-typedefs" # common warning from boost
+                    fi
 
-            if [ "$cxx_major" -ge 5 ]; then
-                echo -n " -fdiagnostics-color=always" # colorized within tools like emacs
-            fi
+                    if [ "$cxx_major" -ge 5 ]; then
+                        echo -n " -fdiagnostics-color=always" # colorized within tools like emacs
+                    fi
 
-	    if [ "$cxx_major" -ge 6 ]; then
-                echo -n " -Wno-terminate" # common warning from dlib throwing an exception in destructors
-                echo -n " -Wno-misleading-indentation" # common warning from ROSE generated header files
-                echo -n " -Wno-nonnull-compare" # because ROSE has lots of "assert(this)"
-	    fi
+                    if [ "$cxx_major" -ge 6 ]; then
+                        echo -n " -Wno-terminate" # common warning from dlib throwing an exception in destructors
+                        echo -n " -Wno-misleading-indentation" # common warning from ROSE generated header files
+                        echo -n " -Wno-nonnull-compare" # because ROSE has lots of "assert(this)"
+                    fi
+                    ;;
+            esac
             ;;
         no|ambivalent)
             : nothing
@@ -452,10 +464,10 @@ tup_command() {
     fi
 
     if [ ! -e "$RG_SRC/scripts/tup" ]; then
-	echo "$arg0: you must clone ROBB's tup scripts to \$ROSE/scripts/tup" >&2
-	echo "using this command:" >&2
-	echo "  git clone https://github.com/matzke1/tup-scripts $RG_SRC/scripts/tup" >&2
-	exit 1
+        echo "$arg0: you must clone ROBB's tup scripts to \$ROSE/scripts/tup" >&2
+        echo "using this command:" >&2
+        echo "  git clone https://github.com/matzke1/tup-scripts $RG_SRC/scripts/tup" >&2
+        exit 1
     fi
 
     # We have to do slighly different things depending on whether tup was previously configured.
@@ -554,6 +566,8 @@ tup_command() {
     tup_value_or_no WITH_MAGIC          "$LIBMAGIC_ROOT"
     tup_value_or_no WITH_PNG            "$LIBPNG_ROOT"
     tup_value_or_no WITH_PQXX           "$LIBPQXX_ROOT"
+    tup_value_or_no WITH_PYTHON         "$PYTHON_ROOT"
+    tup_value_or_no PYTHON_VERSION      $(echo "$PYTHON_VERSION" |cut -d. -f1-2)
     tup_value_or_no WITH_QT             "$QT_ROOT"
     tup_value_or_no WITH_READLINE       "$READLINE_ROOT"
     tup_value_or_no WITH_TIFF           "$LIBTIFF_ROOT"

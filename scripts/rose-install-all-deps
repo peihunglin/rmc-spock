@@ -272,19 +272,46 @@ using-these CMake "${CMAKE_SPECS[@]}"
 
 
 ########################################################################################################################
+=== Python
+########################################################################################################################
+
+# Python creates C++ libraries and thus has a C++ compiler dependency
+echo "*** Installing Python versions: $PYTHON_VERSIONS"
+PYTHON_SPECS=()
+if [ "$PYTHON_VERSIONS" = "installed" ]; then
+    die "python \"installed\" setting is not implemented yet"
+else
+    for python_version in $PYTHON_VERSIONS; do
+	[ "$python_version" = "none" ] && continue
+	for cxx_spec in "${CXX_COMPILER_SPECS[@]}"; do
+	    spec=$(install-package "$cxx_spec,default-c" "python-$python_version")
+	    if [ "$spec" = "" ]; then
+		cannot_install
+	    else
+		PYTHON_SPECS=("${PYTHON_SPECS[@]}" "$spec")
+	    fi
+	done
+    done
+fi
+
+using-these Python "${PYTHON_SPECS[@]}"
+
+
+########################################################################################################################
 === Boost
 ########################################################################################################################
 
-# Boost has C++ libraries and thus must be compiled with each C++ compiler.
-echo "*** Installing Boost versions (per compiler): $BOOST_VERSIONS"
+# Boost has C++ libraries and thus must be compiled with each C++ compiler. It also depends on Python since we're
+# building the boost_python library. Iterating over the python specs is sufficient to grab all the C++ compiler specs.
+echo "*** Installing Boost versions (per python): $BOOST_VERSIONS"
 BOOST_SPECS=()
 if [ "$BOOST_VERSIONS" = "installed" ]; then
     die "boost \"installed\" setting is not implemented yet"
 else
     for boost_version in $BOOST_VERSIONS; do
 	[ "$boost_version" = "none" ] && continue
-	for cxx_spec in "${CXX_COMPILER_SPECS[@]}"; do
-	    spec=$(install-package "$cxx_spec,default-c" "boost-$boost_version")
+	for python_spec in "${PYTHON_SPECS[@]}"; do
+	    spec=$(install-package "$python_spec,default-c" "boost-$boost_version")
 	    if [ "$spec" = "" ]; then
 		cannot_install
 	    else
@@ -353,32 +380,6 @@ else
 fi
 
 using-these Java "${JAVA_SPECS[@]}"
-
-
-########################################################################################################################
-=== Python
-########################################################################################################################
-
-# Python creates C++ libraries and thus has a C++ compiler dependency
-echo "*** Installing Python versions: $PYTHON_VERSIONS"
-PYTHON_SPECS=()
-if [ "$PYTHON_VERSIONS" = "installed" ]; then
-    die "python \"installed\" setting is not implemented yet"
-else
-    for python_version in $PYTHON_VERSIONS; do
-	[ "$python_version" = "none" ] && continue
-	for cxx_spec in "${CXX_COMPILER_SPECS[@]}"; do
-	    spec=$(install-package "$cxx_spec,default-c" "python-$python_version")
-	    if [ "$spec" = "" ]; then
-		cannot_install
-	    else
-		PYTHON_SPECS=("${PYTHON_SPECS[@]}" "$spec")
-	    fi
-	done
-    done
-fi
-
-using-these Python "${PYTHON_SPECS[@]}"
 
 
 ########################################################################################################################

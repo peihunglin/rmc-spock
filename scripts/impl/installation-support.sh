@@ -76,32 +76,40 @@ spock-finalize() {
     set +x
     if [ "$PACKAGE_ACTION" = "install" ]; then
 	(
-	    # Libraries
-	    if [ -d "$PACKAGE_ROOT/lib64" ]; then
-		echo "    ${PACKAGE_NAME_UC}_LIBDIRS: '$PACKAGE_ROOT/lib64'"
-		echo "    ALL_LIBDIRS: '$PACKAGE_ROOT/lib64'"
+	    # Find default library directories
+	    local libdirs=($(eval "echo \$${PACKAGE_NAME_UC}_LIBDIRS |tr : ' '"))
+	    if [ ${#libdirs[*]} -eq 0 ]; then
+	        [ -d "$PACKAGE_ROOT/lib64" ] && libdirs=(${libdirs[@]} "$PACKAGE_ROOT/lib64")
+		[ -d "$PACKAGE_ROOT/lib"   ] && libdirs=(${libdirs[@]} "$PACKAGE_ROOT/lib")
+            fi
 
-		# If there appear to be shared libraries in $PACKAGE_ROOT/lib64, then add them
-		# to the LD_RUN_PATH
-		if [ -n "$(ls $PACKAGE_ROOT/lib64/*.so 2>/dev/null)" ]; then
-		    echo "    LD_RUN_PATH:                '$PACKAGE_ROOT/lib64'"
-		fi
-	    elif [ -d "$PACKAGE_ROOT/lib" ]; then
-		echo "    ${PACKAGE_NAME_UC}_LIBDIRS: '$PACKAGE_ROOT/lib'"
-		echo "    ALL_LIBDIRS: '$PACKAGE_ROOT/lib'"
+	    # Package LIBDIRS and ALL_LIBDIRS
+	    local val=$(echo "${libdirs[@]}" |tr ' ' :)
+	    [ -n "$val" ] && echo "    ${PACKAGE_NAME_UC}_LIBDIRS: '$val'"
+	    [ -n "$val" ] && echo "    ALL_LIBDIRS: '$val'"
 
-		# If there appear to be shared libraries in $PACKAGE_ROOT/lib, then add them
-		# to the LD_RUN_PATH
-		if [ -n "$(ls $PACKAGE_ROOT/lib/*.so 2>/dev/null)" ]; then
-		    echo "    LD_RUN_PATH:                '$PACKAGE_ROOT/lib'"
-		fi
+	    # LD_RUN_PATH
+	    runpaths=($(echo $LD_RUN_PATH |tr : ' '))
+	    if [ ${#runpaths[*]} -eq 0 ]; then
+		for libdir in "${libdirs[@]}"; do
+		    if [ -n "$(ls $libdir/*.so 2>/dev/null)" ]; then
+			runpaths=(${runpaths[@]} "$libdir")
+		    fi
+		done
+	    fi
+	    val=$(echo "${runpaths[@]}" |tr ' ' :)
+	    [ -n "$val" ] && echo "    LD_RUN_PATH: '$val'"
+
+	    # Find default include directories
+	    local incdirs=($(eval "echo \$${PACKAGE_NAME_UC}_INCDIRS |tr : ' '"))
+	    if [ ${#incdirs[*]} -eq 0 ]; then
+		[ -d "$PACKAGE_ROOT/include" ] && incdirs=(${incdirs[@]} "$PACKAGE_ROOT/include")
 	    fi
 
-	    # Include files
-	    if [ -d "$PACKAGE_ROOT/include" ]; then
-		echo "    ${PACKAGE_NAME_UC}_INCDIRS: '$PACKAGE_ROOT/include'"
-		echo "    ALL_INCDIRS: '$PACKAGE_ROOT/include'"
-	    fi
+	    # Package INCDIRS and ALL_INCDIRS
+	    val=$(echo "${incdirs[@]}" |tr ' ' :)
+	    [ -n "$val" ] && echo "    ${PACKAGE_NAME_UC}_INCDIRS: '$val'"
+	    [ -n "$val" ] && echo "    ALL_INCDIRS: '$val'"
 
 	    # Executables
 	    if [ -d "$PACKAGE_ROOT/bin" ]; then
