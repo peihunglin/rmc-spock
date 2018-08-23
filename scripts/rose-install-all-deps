@@ -310,14 +310,27 @@ if [ "$BOOST_VERSIONS" = "installed" ]; then
 else
     for boost_version in $BOOST_VERSIONS; do
 	[ "$boost_version" = "none" ] && continue
-	for python_spec in "${PYTHON_SPECS[@]}"; do
-	    spec=$(install-package "$python_spec,default-c" "boost-$boost_version")
-	    if [ "$spec" = "" ]; then
-		cannot_install
-	    else
-		BOOST_SPECS=("${BOOST_SPECS[@]}" "$spec")
-	    fi
-	done
+	if [ "${#PYTHON_SPECS[*]}" -gt 0 ]; then
+	    # Boost with python support
+	    for python_spec in "${PYTHON_SPECS[@]}"; do
+		spec=$(install-package "$python_spec,default-c" "boost-$boost_version")
+		if [ "$spec" = "" ]; then
+		    cannot_install
+		else
+		    BOOST_SPECS=("${BOOST_SPECS[@]}" "$spec")
+		fi
+	    done
+	else
+	    # Boost without python support
+	    for cxx_spec in "${CXX_COMPILER_SPECS[@]}"; do
+		spec=$(install-package "$cxx_spec,default-c" "boost-$boost_version")
+		if [ "$spec" = "" ]; then
+                    cannot_install
+		else
+                    BOOST_SPECS=("${BOOST_SPECS[@]}" "$spec")
+		fi
+            done
+	fi
     done
 fi
 

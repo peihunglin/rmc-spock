@@ -269,6 +269,7 @@ package_spec() {
         case "$pkgvers" in
             system) pkgspec="$pkgname" ;;
             no|none|ambivalent) pkgspec= ;;
+	    =*) pkgspec="$pkgname$pkgvers" ;;
             *) pkgspec="$pkgname-$pkgvers" ;;
         esac
     fi
