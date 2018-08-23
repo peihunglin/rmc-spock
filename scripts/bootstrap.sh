@@ -11,8 +11,20 @@ arg0="${0##*/}"
 prefix=
 downloads=
 upgrade=yes
+boost_version=1.62.0
+
 while [ "$#" -gt 0 ]; do
     case "$1" in
+	# Boost version number
+	--boost=*)
+	    boost_version="${1#--boost=}"
+	    shift
+	    ;;
+	--boost)
+	    boost_version="$2"
+	    shift 2
+	    ;;
+
 	# If you already ran some other version of Spock, some things
 	# might have been downloaded already. You can point this
 	# script to that directory.
@@ -157,7 +169,8 @@ ncpus=$(sed -n '/^processor[ \t]\+:/p' </proc/cpuinfo |wc -l)
 
 
 #-------------------- Boost --------------------
-: ${boost_url:=http://sourceforge.net/projects/boost/files/boost/1.62.0/boost_1_62_0.tar.bz2/download}
+boost_version_u=$(echo "$boost_version" |tr . _)
+: ${boost_url:=http://sourceforge.net/projects/boost/files/boost/$boost_version/boost_$(boost_version_u).tar.bz2/download}
 boost_libs=chrono,date_time,filesystem,iostreams,program_options,random,regex,serialization,signals,system,thread,wave
 boost_root="$prefix/dependencies/$SPOCK_HOSTNAME/boost"
 
@@ -166,20 +179,20 @@ if [ ! -d "$boost_root" ]; then
         set -ex
 	mkdir -p _build/boost
         cd _build/boost
-        if [ -e "$downloads/boost-1.62.0.tar.gz" ]; then
-            tar xf "$downloads/boost-1.62.0.tar.gz"
-            mv download boost_1_62_0
-	elif [ -e "$downloads/boost_1_62_0.tar.bz2" ]; then
-	    tar xf "$downloads/boost_1_62_0.tar.bz2"
+        if [ -e "$downloads/boost-${boost_version}.tar.gz" ]; then
+            tar xf "$downloads/boost-${boost_version}.tar.gz"
+            mv download boost_${boost_version_u}
+	elif [ -e "$downloads/boost_${boost_version_u}.tar.bz2" ]; then
+	    tar xf "$downloads/boost_${boost_version_u}.tar.bz2"
         else
             wget -O - "$boost_url" |tar xjf -
         fi
-	if [ -n "$downloads" -a ! -e "$downloads/boost-1.62.0.tar.gz" ]; then
-	    ln -s boost_1_62_0 download
-	    tar cf - download/. |gzip -9 >"$downloads/boost-1.62.0.tar.gz"
+	if [ -n "$downloads" -a ! -e "$downloads/boost-${boost_version}.tar.gz" ]; then
+	    ln -s boost_$boost_version_u download
+	    tar cf - download/. |gzip -9 >"$downloads/boost-${boost_version}.tar.gz"
 	    rm download
 	fi
-        cd boost_1_62_0
+        cd boost_${boost_version_u}
 
 	boost_cxx_vendor=
 	case "$cxx_vendor" in
@@ -194,7 +207,7 @@ if [ ! -d "$boost_root" ]; then
         ./b2 --prefix="$boost_root" -sNO_BZIP2=1 toolset="$boost_cxx_vendor" -j$ncpus
         ./b2 --prefix="$boost_root" -sNO_BZIP2=1 toolset="$boost_cxx_vendor" install
     )
-    rm -rf _build/boost_1_62_0
+    rm -rf _build/boost_${boost_version_u}
 fi
 
 #-------------------- Yaml-cpp --------------------
