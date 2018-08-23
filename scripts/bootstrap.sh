@@ -14,6 +14,8 @@ upgrade=yes
 boost_version=1.62.0
 cmake_version=3.8.2
 yamlcpp_version=0.5.3
+sawyer_version=0.1.0
+have_network=yes
 
 while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -49,6 +51,16 @@ while [ "$#" -gt 0 ]; do
 	    shift 2
 	    ;;
 
+	# Whether we have network access
+	--network)
+	    have_network=yes
+	    shift
+	    ;;
+	--no-network)
+	    have_network=
+	    shift
+	    ;;
+
 	# Where to install Spock's files.
 	--prefix=*)
 	    prefix="${1#--prefix=}"
@@ -56,6 +68,16 @@ while [ "$#" -gt 0 ]; do
 	    ;;
 	--prefix)
 	    prefix="$2"
+	    shift 2
+	    ;;
+
+	# Sawyer version
+	--sawyer=*)
+	    sawyer_version="${1#--sawyer=}"
+	    shift
+	    ;;
+	--sawyer)
+	    sawyer_version="$2"
 	    shift 2
 	    ;;
 
@@ -72,7 +94,7 @@ while [ "$#" -gt 0 ]; do
 
 	# Yaml-cpp version
 	--yamlcpp=*)
-	    yamlcpp_version="${1#--yaml=}"
+	    yamlcpp_version="${1#--yamlcpp=}"
 	    shift
 	    ;;
 	--yamlcpp)
@@ -207,8 +229,11 @@ if [ ! -d "$boost_root" ]; then
             mv download boost_${boost_version_u}
 	elif [ -e "$downloads/boost_${boost_version_u}.tar.bz2" ]; then
 	    tar xf "$downloads/boost_${boost_version_u}.tar.bz2"
-        else
+        elif [ -n "$have_network" ]; then
             wget -O - "$boost_url" |tar xjf -
+	else
+	    echo "$arg0: cannot find boost-${boost_version}, and no network" >&2
+	    exit 1
         fi
 	if [ -n "$downloads" -a ! -e "$downloads/boost-${boost_version}.tar.gz" ]; then
 	    ln -s boost_$boost_version_u download
@@ -245,9 +270,12 @@ if [ ! -d "$cmake_root" ]; then
 	if [ -e "$downloads/cmake-${cmake_version}.tar.gz" ]; then
 	    tar xf "$downloads/cmake-${cmake_version}.tar.gz"
 	    mv download cmake-src
-	else
+	elif [ -n "$have_network" ]; then
 	    wget -O - "$cmake_url" |tar xzf -
 	    mv cmake-${cmake_version} cmake-src
+	else
+	    echo "$arg0: cannot find cmake-${cmake_version}, and no network" >&2
+	    exit 1
 	fi
 	cd cmake-src
 
@@ -280,14 +308,17 @@ if [ ! -d "$yamlcpp_root" ]; then
 	if [ -e "$downloads/yamlcpp-${yamlcpp_version}.tar.gz" ]; then
 	    tar xf "$downloads/yamlcpp-${yamlcpp_version}.tar.gz"
 	    mv download yamlcpp-src
-	else
+	elif [ -n "$have_network" ]; then
             git clone -b release-${yamlcpp_version} "$yamlcpp_url" yamlcpp-src
-            (cd yamlcpp-src && git checkout -b r053 release-${yamlcpp_version})
+            (cd yamlcpp-src && git checkout -b r-${yamlcpp_version} release-${yamlcpp_version})
 	    if [ -n "$downloads" ]; then
 		ln -s yamlcpp-src download
 		tar cf - download/. |gzip -9 >"$downloads/yamlcpp-${yamlcpp_version}.tar.gz"
 		rm download
 	    fi
+	else
+	    echo "$arg0: cannot find yamlcpp-${yamlcpp_version}, and no network" >&2
+	    exit 1
 	fi
 
         mkdir yamlcpp-bld
@@ -312,16 +343,20 @@ if [ ! -d "$sawyer_root" ]; then
         set -ex
         cd _build
 
-	if [ -e "$downloads/sawyer-0.0.0.tar.gz" ]; then
-	    tar xf "$downloads/sawyer-0.0.0.tar.gz"
+	if [ -e "$downloads/sawyer-${sawyer_version}.tar.gz" ]; then
+	    tar xf "$downloads/sawyer-${sawyer_version}.tar.gz"
 	    mv download sawyer-src
-	else
-	    git clone "$sawyer_url" sawyer-src
+	elif [ -n "$have_network" ]; then
+	    git clone -b release-${sawyer_version} "$sawyer_url" sawyer-src
+	    (cd sawyer-src && git checkout -b r-${sawyer_version} release-${sawyer_version})
 	    if [ -n "$downloads" ]; then
 		ln -s sawyer-src download
 		tar cf - download/. |gzip -9 >"$downloads/sawyer-0.0.0.tar.gz"
 		rm download
 	    fi
+	else
+	    echo "$arg0: cannot find sawyer-${sawyer_version}, and no network" >&2
+	    eixt 1
 	fi
 
         mkdir sawyer-bld
