@@ -1,12 +1,18 @@
 package: zlib
-versions: [ 1.2.11 ]
+versions: [ 1.2.3, 1.2.11 ]
 
 dependencies:
-  - version: '>=1.2.11'
+  - version: '>=1.2.3'
     install: [ c-compiler ]
     build:   []
     
 download:
+  - version: ">=1.2.3"
+    shell: |
+      wget -O - https://sourceforge.net/projects/libpng/files/zlib/$PACKAGE_VERSION/zlib-$PACKAGE_VERSION.tar.gz/download |tar xzf -
+      mv zlib-$PACKAGE_VERSION download
+      tar cf - download |gzip -9 >download.tar.gz
+
   - version: ">=1.2.11"
     shell: |
       wget -O - http://zlib.net/zlib-$PACKAGE_VERSION.tar.gz | tar xzf -
@@ -14,12 +20,54 @@ download:
       tar cf - download |gzip -9 >download.tar.gz
 
 install:
+  - version: ">=1.2.3"
+    shell: |
+      # Zlib's ability to detect whether dynamic linking is available
+      # is naive -- it depends on the name of the C compiler
+      # command. If the compiler command contains the string "gcc"
+      # anywhere then dynamic linking is checked, otherwise configure
+      # complains that dynamic linking is not possible.
+      case "$C_VENDOR" in
+          gnu) CC=gcc ;;
+          *) CC=cc ;;
+      esac
+      
+      $CC --spock-triplet
+
+      cd download
+
+      # Shared library
+      env \
+        LDFLAGS="$(spock-compiler-libdirs)" \
+        CPPFLAGS="$(spock-compiler-incdirs)" \
+        ./configure --shared \
+        --prefix=$PACKAGE_ROOT
+
+      make -j$PARALLELISM
+      make test
+      make install
+
+      # Static library
+      env \
+        LDFLAGS="$(spock-compiler-libdirs)" \
+        CPPFLAGS="$(spock-compiler-incdirs)" \
+        ./configure \
+        --prefix=$PACKAGE_ROOT
+
+      make -j$PARALLELISM
+      make test
+
+      # "make install" unhelpfully removes the already-installed
+      # shared library
+      cp libz.a $PACKAGE_ROOT/lib/.
+
   - version: ">=1.2.11"
     shell: |
       cc --spock-triplet
 
       cd download
 
+      # Shared and static libraries
       env \
         CC=cc \
         LDFLAGS="$(spock-compiler-libdirs)" \
