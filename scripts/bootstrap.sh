@@ -182,14 +182,17 @@ fi
 cxx_vendor=$(echo "$cxx_quad" |cut -d: -f1)
 cxx_version=$(echo "$cxx_quad" |cut -d: -f4 -s)
 
-# Check version number
+# Check version number (must be >= 4.4.7)
 too_old=
 if [ "$cxx_vendor" = "gnu" ]; then
     cxx_version_major=$(echo "$cxx_version" |cut -d. -f1)
     cxx_version_minor=$(echo "$cxx_version" |cut -d. -f2 -s)
+    cxx_version_patch=$(echo "$cxx_version" |cut -d. -f3 -s)
     if [ "$cxx_version_major" -lt 4 ]; then
 	too_old=yes
-    elif [ "$cxx_version_major" = "4" -a "$cxx_version_minor" -lt 8 ]; then
+    elif [ "$cxx_version_major" = "4" -a "$cxx_version_minor" -lt 4 ]; then
+	too_old=yes
+    elif [ "$cxx_version_major" = "4" -a "$cxx_version_minor" = "4" -a "$cxx_version_patch" -lt 7 ]; then
 	too_old=yes
     fi
 fi
