@@ -13,6 +13,7 @@ downloads=
 upgrade=yes
 boost_version=1.62.0
 cmake_version=3.8.2
+yamlcpp_version=0.5.3
 
 while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -68,6 +69,16 @@ while [ "$#" -gt 0 ]; do
             upgrade=
             shift
             ;;
+
+	# Yaml-cpp version
+	--yamlcpp=*)
+	    yamlcpp_version="${1#--yaml=}"
+	    shift
+	    ;;
+	--yamlcpp)
+	    yamlcpp_version="$2"
+	    shift 2
+	    ;;
 
 	--)
 	    shift
@@ -266,15 +277,15 @@ if [ ! -d "$yamlcpp_root" ]; then
         set -ex
 	cd _build
 
-	if [ -e "$downloads/yamlcpp-0.5.3.tar.gz" ]; then
-	    tar xf "$downloads/yamlcpp-0.5.3.tar.gz"
+	if [ -e "$downloads/yamlcpp-${yamlcpp_version}.tar.gz" ]; then
+	    tar xf "$downloads/yamlcpp-${yamlcpp_version}.tar.gz"
 	    mv download yamlcpp-src
 	else
-            git clone -b release-0.5.3 "$yamlcpp_url" yamlcpp-src
-            (cd yamlcpp-src && git checkout -b r053 release-0.5.3)
+            git clone -b release-${yamlcpp_version} "$yamlcpp_url" yamlcpp-src
+            (cd yamlcpp-src && git checkout -b r053 release-${yamlcpp_version})
 	    if [ -n "$downloads" ]; then
 		ln -s yamlcpp-src download
-		tar cf - download/. |gzip -9 >"$downloads/yamlcpp-0.5.3.tar.gz"
+		tar cf - download/. |gzip -9 >"$downloads/yamlcpp-${yamlcpp_version}.tar.gz"
 		rm download
 	    fi
 	fi
