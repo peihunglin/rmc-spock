@@ -12,6 +12,7 @@ prefix=
 downloads=
 upgrade=yes
 boost_version=1.62.0
+cmake_version=3.8.2
 
 while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -22,6 +23,16 @@ while [ "$#" -gt 0 ]; do
 	    ;;
 	--boost)
 	    boost_version="$2"
+	    shift 2
+	    ;;
+
+	# CMake version
+	--cmake=*)
+	    cmake_version="${1#--cmake=}"
+	    shift
+	    ;;
+	--cmake)
+	    cmake_veresion="$2"
 	    shift 2
 	    ;;
 
@@ -162,6 +173,7 @@ if [ -n "$too_old" ]; then
     fi
     exit 1
 fi
+echo "$arg0: compiling RMC/Spock and dependencies with $cxx_quad"
 
 # How many threads can we use for compiling?
 ncpus=$(sed -n '/^processor[ \t]\+:/p' </proc/cpuinfo |wc -l)
@@ -210,6 +222,41 @@ if [ ! -d "$boost_root" ]; then
     rm -rf _build/boost_${boost_version_u}
 fi
 
+#-------------------- CMake --------------------
+cmake_version_2=$(echo "$cmake_version" |cut -d. -f1-2)
+: ${cmake_url:=https://cmake.org/files/v${cmake_version_2}/cmake-${cmake_version}.tar.gz}
+cmake_root="$prefix/dependencies/$SPOCK_HOSTNAME/cmake"
+if [ ! -d "$cmake_root" ]; then
+    (
+	set -ex
+	cd _build
+
+	if [ -e "$downloads/cmake-${cmake_version}.tar.gz" ]; then
+	    tar xf "$downloads/cmake-${cmake_version}.tar.gz"
+	    mv download cmake-src
+	else
+	    wget -O - "$cmake_url" |tar xzf -
+	    mv cmake-${cmake_version} cmake-src
+	fi
+	cd cmake-src
+
+        # Work around CMake issue 18057?
+        fix_libtinfo=
+        if [ -r /etc/os-release ]; then
+            if grep "Red Hat" /etc/os-release >/dev/null; then
+                if [ -e /usr/lib/libtinfo.so -a ! -e /usr/lib64/libtinfo.so -a -e /usr/lib64/libtinfo.so.5 ]; then
+                    fix_libtinfo="-- -DBUILD_CursesDialog=OFF"
+                fi
+            fi
+        fi
+
+        ./bootstrap --parallel=$ncpus --prefix="$cmake_root" $fix_libtinfo
+        make -j$PARALLELISM
+        make install
+    )
+    rm -rf _build/cmake-src
+fi
+
 #-------------------- Yaml-cpp --------------------
 : ${yamlcpp_url:=https://github.com/jbeder/yaml-cpp}
 
@@ -234,7 +281,7 @@ if [ ! -d "$yamlcpp_root" ]; then
 
         mkdir yamlcpp-bld
         cd yamlcpp-bld
-        cmake ../yamlcpp-src \
+        "$cmake_root/bin/cmake" ../yamlcpp-src \
               -DCMAKE_C_COMPILER="$c_exe" \
               -DCMAKE_CXX_COMPILER="$cxx_exe" \
               -DBUILD_SHARED_LIBS=Yes \
@@ -268,7 +315,7 @@ if [ ! -d "$sawyer_root" ]; then
 
         mkdir sawyer-bld
         cd sawyer-bld
-        cmake ../sawyer-src \
+        "$cmake_root/bin/cmake" ../sawyer-src \
               -DCMAKE_C_COMPILER="$c_exe" \
               -DCMAKE_CXX_COMPILER="$cxx_exe" \
               -DBOOST_ROOT="$boost_root" \
@@ -283,7 +330,7 @@ fi
     set -ex
     cd _build
 
-    cmake .. \
+    "$cmake_root/bin/cmake" .. \
           -DCMAKE_C_COMPILER="$c_exe" \
           -DCMAKE_CXX_COMPILER="$cxx_exe" \
           -DCMAKE_BUILD_TYPE=Debug \
