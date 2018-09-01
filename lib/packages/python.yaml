@@ -11,7 +11,7 @@ versions: [ 2.7.13, 3.6.0, 3.6.1 ]
 dependencies:
   - version: ">=2"
     # FIXME: we aught to add libreadline
-    install: [ c++-compiler, c-compiler, patchelf ]
+    install: [ c++-compiler, c-compiler, patchelf, zlib ]
     build: []
 
 variables:
