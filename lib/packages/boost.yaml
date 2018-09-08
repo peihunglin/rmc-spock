@@ -164,6 +164,7 @@ install:
             echo "# Warning!!! Spaces are significant in the following strings."
             echo "using $boost_toolset : $cxx_version : $(which c++) ;"
             echo "using zlib : $ZLIB_VERSION : <include>$ZLIB_INCDIRS <search>$ZLIB_LIBDIRS ;"
+            echo "using python : $(echo $PYTHON_VERSION |cut -d. -f1-2) : $PYTHON_ROOT/bin/python : $PYTHON_INCDIRS ;"
         ) >"user-config.jam"
 
         # The BOOST_BUILD_PATH env. var must be set in order for boost to find "user-config.jam". We set it for each
