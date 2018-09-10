@@ -1,0 +1,38 @@
+package: jq
+
+versions: [ 1.5 ]
+
+dependencies:
+  - version: ">=1.5"
+    aliases: []
+    install: []
+    build: [ default-c, bison, libtool ]
+
+variables:
+  - version: ">=1.5"
+    url: https://github.com/stedolan/jq
+
+download:
+  - version: ">=1.5"
+    shell: |
+      git clone $url download
+      (cd download && git checkout -b jq-$PACKAGE_VERSION jq-$PACKAGE_VERSION)
+      tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=1.5"
+    shell: |
+      cc --spock-triplet
+
+      cd download
+      autoreconf -i
+
+      env \
+          CC=cc \
+          LDFLAGS="$(spock-compiler-libdirs)" \
+          CPPFLAGS="$(spock-compiler-incdirs)" \
+          ./configure \
+          --prefix="$PACKAGE_ROOT"
+
+      make -j$PARALLELISM
+      make install
