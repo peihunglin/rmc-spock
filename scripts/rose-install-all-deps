@@ -66,6 +66,9 @@ source "$SPOCK_SCRIPTS/impl/basic-support.sh" || exit 1
 # List of Spot library versions
 : ${SPOT_VERSIONS:="1.2.6"}
 
+# List of Jq versions to install
+: ${JQ_VERSIONS:="1.5"}
+
 # Ignore failures if "yes"
 : ${IGNORE_FAILURES:=yes}
 
@@ -110,7 +113,7 @@ install-package() {
     # First, see if this package exists (without depending on $extra_deps)
     local with="$pkg_ghost"
     [ "$dependencies" = "" ] || with="$dependencies,$with"
-    local hash=$($SPOCK_BINDIR/spock-shell --with "$with" bash -c 'echo $SPOCK_EMPLOYED' 2>/dev/null |sed 's/.*://')
+    local hash=$($SPOCK_BINDIR/spock-shell --with "$with" $SPOCK_BINDIR/spock-using --fields "$pkg_ghost" 2>/dev/null |cut -s -f3)
     if [ "$hash" != "" ]; then
 	$SPOCK_BINDIR/spock-ls -1 "@$hash"
 	return 0
@@ -126,7 +129,7 @@ install-package() {
     )>&2 || return 1
 
     # Now we should be able to find it (without depending on $extra_deps)
-    local hash=$($SPOCK_BINDIR/spock-shell --with "$with" bash -c 'echo $SPOCK_EMPLOYED' 2>/dev/null |sed 's/.*://')
+    local hash=$($SPOCK_BINDIR/spock-shell --with "$with" $SPOCK_BINDIR/spock-using --fields "$pkg_ghost" 2>/dev/null |cut -s -f3)
     if [ "$hash" != "" ]; then
 	$SPOCK_BINDIR/spock-ls -1 "@$hash"
 	return 0
@@ -483,6 +486,33 @@ else
 fi
 
 using-these Spot "${SPOT_SPECS[@]}"
+
+
+########################################################################################################################
+=== jq
+########################################################################################################################
+
+# Jq is needed for "make check" in projects/BinaryAnalysisTools
+# Must be after we've chosen a compiler, bison, and libtool version
+echo "*** Installing Jq versions: $JQ_VERSIONS"
+JQ_SPECS=()
+if [ "$JQ_VERSIONS" = "installed" ]; then
+    die "jq \"installed\" setting is not implemented yet"
+else
+    for jq_version in $JQ_VERSIONS; do
+	for cxx_spec in "${CXX_COMPILER_SPECS[@]}"; do
+	    [ "$jq_version" = "none" ] && continue
+	    spec=$(install-package "$cxx_spec,bison,libtool" "jq-$jq_version")
+	    if [ "$spec" = "" ]; then
+		cannot_install
+	    else
+		JQ_SPECS=("${JQ_SPECS[@]}" "$spec")
+	    fi
+	done
+    done
+fi
+
+using-these Jq "${JQ_SPECS[@]}"
 
 
 ########################################################################################################################

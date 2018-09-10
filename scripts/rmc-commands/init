@@ -132,6 +132,7 @@ project_none() {
         rmc_elf)           echo none                  ;;
         rmc_gcrypt)        echo none                  ;;
         rmc_java)          echo none                  ;;
+	rmc_jq             echo none                  ;;
         rmc_lcov)          echo none                  ;;
         rmc_libtool)       echo ambivalent            ;;
         rmc_magic)         echo none                  ;;
@@ -158,6 +159,7 @@ project_estcp() {
         rmc_binwalk)       echo 2                     ;;
         rmc_dlib)          echo 18.17                 ;;
         rmc_gcrypt)        echo 1.7                   ;;
+	rmc_jq)            echo 1.5                   ;;
 	rmc_qt)            echo 5                     ;;
         rmc_wt)            echo 3.3.7                 ;;
         rmc_yaml)          echo 0.5.3                 ;;
@@ -184,6 +186,7 @@ project_binaries() {
         rmc_binwalk)       echo 2                     ;;
         rmc_dlib)          echo 18.17                 ;;
         rmc_gcrypt)        echo 1.7                   ;;
+	rmc_jq)            echo 1.5                   ;;
         rmc_magic)         echo 5                     ;;
         rmc_pqxx)          echo 5                     ;;
         rmc_wt)            echo 3.3.7                 ;;
@@ -228,6 +231,7 @@ project_envars() {
         rmc_elf)           echo "$ELF"                ;;
         rmc_gcrypt)        echo "$GCRYPT"             ;;
         rmc_java)          echo "$JAVA"               ;;
+	rmc_jq)            echo "$JQ"                 ;;
         rmc_lcov)          echo "$LCOV"               ;;
         rmc_libtool)       echo "$LIBTOOL"            ;;
         rmc_magic)         echo "$MAGIC"              ;;
@@ -308,6 +312,7 @@ config_property() {
     config_property rmc_elf           "ELF library version number (needed by dwarf)"
     config_property rmc_gcrypt        "GNU gcrypt library version number (optional)"
     config_property rmc_java          "Oracle JDK version number (optional)"
+    config_property rmc_jq            "Command-line JSON parser (optional)"
     config_property rmc_lcov          "Lcov version, and turns on coverage analysis (optional)"
     config_property rmc_libtool       "GNU libtool version number (optional)"
     config_property rmc_magic         "libmagic version number (optional)"

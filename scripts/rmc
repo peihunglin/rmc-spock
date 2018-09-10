@@ -325,6 +325,7 @@ read_config_file() {
     export RMC_ELF=none
     export RMC_GCRYPT=none
     export RMC_JAVA=none
+    export RMC_JQ=none
     export RMC_LCOV=none
     export RMC_LIBTOOL=none
     export RMC_MAGIC=none
@@ -533,6 +534,7 @@ preinstall() {
         BOOST_VERSIONS="$RMC_BOOST" \
         DLIB_VERSIONS=$(echo "$RMC_DLIB" |sed 's/system/installed/') \
         JAVA_VERSIONS=$(echo "$RMC_JAVA" |sed 's/system/installed/') \
+	JQ_VERSIONS=$(echo "$RMC_JQ" |sed 's/system/installed/') \
         PYTHON_VERSIONS=$(echo "$RMC_PYTHON" |sed 's/system/installed/') \
         SPOT_VERSIONS=$(echo "$RMC_SPOT" |sed 's/system/installed/') \
         YICES_VERSIONS=$(echo "$RMC_YICES" |sed 's/system/installed/') \
@@ -730,6 +732,11 @@ rmc_java() {
     esac
 }
 
+rmc_jq() {
+    check_one_arg rmc_jq "$@"
+    RMC_JQ="$1"
+}
+
 rmc_libtool() {
     check_one_arg rmc_libtool "$@"
     RMC_LIBTOOL="$1"
@@ -869,6 +876,7 @@ if [ "$RMC_HASH" = "" ]; then
         package_spec rmc_elf      "$RMC_ELF"
         package_spec rmc_gcrypt   "$RMC_GCRYPT"
         package_spec rmc_java     "$RMC_JAVA"
+	package_spec rmc_jq       "$RMC_JQ"
         package_spec rmc_lcov     "$RMC_LCOV"
         package_spec rmc_libtool  "$RMC_LIBTOOL"
         package_spec rmc_magic    "$RMC_MAGIC"
