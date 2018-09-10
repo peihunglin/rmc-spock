@@ -119,6 +119,14 @@ install-package() {
 	return 0
     fi
 
+    # Make sure all the dependencies are installed
+    if [ "${dependencies}${extra_deps}" != "" ]; then
+	(
+	    set -ex
+	    $SPOCK_BINDIR/spock-shell --with "$dependencies,$extra_deps" --install=yes --log '>=info' true >&2
+	) >&2 || return 1
+    fi
+    
     # Doesn't exist, so try to build it
     local with_extra="$with"
     [ "$extra_deps" = "" ] || with_extra="$extra_deps,$with_extra"
