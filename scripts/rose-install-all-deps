@@ -510,7 +510,7 @@ else
     for jq_version in $JQ_VERSIONS; do
 	for cxx_spec in "${CXX_COMPILER_SPECS[@]}"; do
 	    [ "$jq_version" = "none" ] && continue
-	    spec=$(install-package "$cxx_spec,bison,libtool" "jq-$jq_version")
+	    spec=$(install-package "$cxx_spec,default-c,bison,libtool" "jq-$jq_version")
 	    if [ "$spec" = "" ]; then
 		cannot_install
 	    else
