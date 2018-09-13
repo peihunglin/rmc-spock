@@ -217,8 +217,8 @@ ncpus=$(sed -n '/^processor[ \t]\+:/p' </proc/cpuinfo |wc -l)
 
 
 #-------------------- Boost --------------------
-boost_version_u=$(echo "$boost_version" |tr . _)
-: ${boost_url:=http://sourceforge.net/projects/boost/files/boost/$boost_version/boost_$(boost_version_u).tar.bz2/download}
+boost_version_u="$(echo "$boost_version" |tr . _)"
+: ${boost_url:=http://sourceforge.net/projects/boost/files/boost/$boost_version/boost_${boost_version_u}.tar.bz2/download}
 boost_libs=chrono,date_time,filesystem,iostreams,program_options,random,regex,serialization,signals,system,thread,wave
 boost_root="$prefix/dependencies/$SPOCK_HOSTNAME/boost"
 
