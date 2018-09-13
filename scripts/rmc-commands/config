@@ -60,7 +60,7 @@ cc_warning_flags() {
                     echo -n "-Wall"
                     echo -n " -Wno-attributes"
 
-                    if [ "$c_major" -eq 4 -a "$c_minor" -ge 4 ] || [ "$c_major" -gt 4 ]; then
+                    if [ "$c_major" -eq 4 -a "$c_minor" -ge 5 ] || [ "$c_major" -gt 4 ]; then
                         echo -n " -Wno-unused-local-typedefs" # common warning from boost
                     fi
 
@@ -92,7 +92,7 @@ cxx_warning_flags() {
                     echo -n " -Wno-attributes"
                     echo -n " -Wno-deprecated-declarations" # common warning from dlib using std::auto_ptr
 
-                    if [ "$cxx_major" -eq 4 -a "$cxx_minor" -ge 4 ] || [ "$cxx_major" -gt 4 ]; then
+                    if [ "$cxx_major" -eq 4 -a "$cxx_minor" -ge 5 ] || [ "$cxx_major" -gt 4 ]; then
                         echo -n " -Wno-unused-local-typedefs" # common warning from boost
                     fi
 
