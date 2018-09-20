@@ -293,7 +293,7 @@ if [ ! -d "$cmake_root" ]; then
         fi
 
         ./bootstrap --parallel=$ncpus --prefix="$cmake_root" $fix_libtinfo
-        make -j$PARALLELISM
+        make -j$ncpus
         make install
     )
     rm -rf _build/cmake-src
