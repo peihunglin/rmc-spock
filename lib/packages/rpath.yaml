@@ -1,0 +1,24 @@
+package:        rpath
+versions:       [ 1.1 ]
+
+dependencies:
+  - version: ">=1"
+    aliases: []
+    install: []
+    build:   [ c-compiler ]
+
+download:
+  - version: ">=1"
+    shell: |
+      git clone https://github.com/matzke1/rpath download
+      (cd download && git checkout v${PACKAGE_VERSION})
+      tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=1"
+    shell: |
+        cc --spock-triplet
+        cd download
+        cc -o rpath rpath.c
+        mkdir -p ${PACKAGE_ROOT}/bin
+        cp rpath ${PACKAGE_ROOT}/bin/.
