@@ -165,9 +165,10 @@ run_tup_command() {
 	eval "$cmd" || exit 1
     fi
 
-    # Copy files to final locations?
+    # Copy files to final locations?  The only ELF files in the MatrixTestingProject are sample inputs and therefore we
+    # should not monkey with their rpaths, but rather install them as-is.
     if [ -n "$doing_install" ]; then
-	(set -x; cd "$RG_BLD" && $RG_SRC/scripts/tup/install-staged --next) || exit 1
+	(set -x; cd "$RG_BLD" && $RG_SRC/scripts/tup/install-staged --next --exclude='projects/MatrixTestingProject/*') || exit 1
     fi
 }
 

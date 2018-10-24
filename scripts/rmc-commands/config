@@ -381,7 +381,6 @@ cmake_command() {
     cmake_error_if_specified sqlite   "$RMC_SQLITE"   "$SQLITE_ROOT"
     cmake_error_if_specified wt       "$RMC_WT"       "$WT_ROOT"
     cmake_error_if_specified yaml     "$RMC_YAML"     "$YAMLCPP_ROOT"
-    cmake_error_if_specified yices    "$RMC_YICES"    "$YICES_ROOT"
     cmake_error_if_specified z3       "$RMC_Z3"       "$Z3_ROOT"
 
     local cc_flags="$(cc_flags) $(cmake_optimize_flags) $(cmake_cc_warning_flags) $(cmake_debug_flags) $(code_coverage_flags)"
