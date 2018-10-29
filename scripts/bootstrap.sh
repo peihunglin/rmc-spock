@@ -291,6 +291,9 @@ if [ ! -d "$cmake_root" ]; then
                 fi
             fi
         fi
+	if [ -r /etc/redhat-release ]; then
+	    fix_libtinfo="-- -DBUILD_CursesDialog=OFF"
+	fi
 
         ./bootstrap --parallel=$ncpus --prefix="$cmake_root" $fix_libtinfo
         make -j$ncpus

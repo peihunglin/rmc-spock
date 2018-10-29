@@ -37,6 +37,9 @@ install:
                 fi
             fi
         fi
+        if [ -r /etc/redhat-release ]; then
+            fix_libtinfo="-- -DBUILD_CursesDialog=OFF"
+        fi
 
         cd download
         ./bootstrap --parallel=$PARALLELISM --prefix="$PACKAGE_ROOT" $fix_libtinfo
