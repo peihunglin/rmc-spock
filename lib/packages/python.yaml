@@ -54,8 +54,8 @@ install:
       fi
 
       # Python's build system doesn't correctly initialize rpaths, so do it by hand
-      [ -e $PACKAGE_ROOT/bin/python/${vers_mm}  ] && patchelf --set-rpath $PACKAGE_ROOT/lib $PACKAGE_ROOT/bin/python${vers_mm}
-      [ -e $PACKAGE_ROOT/bin/python/${vers_mm}m ] && patchelf --set-rpath $PACKAGE_ROOT/lib $PACKAGE_ROOT/bin/python${vers_mm}m
+      [ -e $PACKAGE_ROOT/bin/python${vers_mm}  ] && patchelf --set-rpath $PACKAGE_ROOT/lib $PACKAGE_ROOT/bin/python${vers_mm}
+      [ -e $PACKAGE_ROOT/bin/python${vers_mm}m ] && patchelf --set-rpath $PACKAGE_ROOT/lib $PACKAGE_ROOT/bin/python${vers_mm}m
 
       # Include directory depends on the python version number
       PYTHON_INCDIRS=$PACKAGE_ROOT/include/python${vers_mm}m
