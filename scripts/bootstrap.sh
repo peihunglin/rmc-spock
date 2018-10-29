@@ -280,6 +280,11 @@ if [ ! -d "$cmake_root" ]; then
 	    echo "$arg0: cannot find cmake-${cmake_version}, and no network" >&2
 	    exit 1
 	fi
+	if [ -n "$downloads" -a ! -e "$downloads/cmake-${cmake_version}.tar.gz" ]; then
+	    ln -s cmake-${cmake_version} download
+	    tar cf - download/. |gzip -9 >"$downloads/cmake-${cmake_version}.tar.gz"
+	    rm download
+	fi
 	cd cmake-src
 
         # Work around CMake issue 18057?
