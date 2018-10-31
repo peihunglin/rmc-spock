@@ -14,6 +14,10 @@ dependencies:
     install: []
     build: default-c
 
+variables:
+  - version: ">=0"
+    patches: compiler
+
 download:
   - version: ">=0"
     shell: |
@@ -34,6 +38,10 @@ install:
       cc --spock-triplet
 
       cd download
+
+      # Tup's bootstrap.sh is broken in that it doesn't set CONFIG_CC
+      # in the tup.config file based on the CC environment variable
+      # even though the first part of the bootstrap does.
       CC=cc ./bootstrap.sh
       
       ./tup # make sure it works
