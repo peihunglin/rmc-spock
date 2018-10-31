@@ -281,7 +281,7 @@ if [ ! -d "$cmake_root" ]; then
 	    exit 1
 	fi
 	if [ -n "$downloads" -a ! -e "$downloads/cmake-${cmake_version}.tar.gz" ]; then
-	    ln -s cmake-${cmake_version} download
+	    ln -s cmake-src download
 	    tar cf - download/. |gzip -9 >"$downloads/cmake-${cmake_version}.tar.gz"
 	    rm download
 	fi
