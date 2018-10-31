@@ -640,7 +640,7 @@ DefinedPackage::install(Context &ctx, Settings &settings /*in,out*/) {
         attempted = installDir / (settings.hash + "-build-log.txt");
     }
     if (!settings.tryAgain && bfs::exists(attempted))
-        fail<Exception::Conflict>(this, "installation was previously attempted and failed", attempted);
+        fail<Exception::Conflict>(this, "installation was previously attempted and failed (remove file to try again)", attempted);
     
     // Run the installation script. Put the output in a place where it won't be destroyed right away if there's a
     // failure. On success, we'll move it to a permanent location for historical record.
