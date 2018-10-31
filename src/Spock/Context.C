@@ -391,6 +391,7 @@ Context::subshell(const std::vector<std::string> &command, const SubshellSetting
             }
         } else {
             Sawyer::ProgressBar<size_t> progress(mlog[MARCH], settings.progressName);
+            progress.suffix(" seconds");
             while (1) {
                 ++progress;
                 if (waitpid(child, &status, WNOHANG) == child)
