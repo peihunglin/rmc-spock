@@ -104,6 +104,18 @@ cannot_install() {
     return 0
 }
 
+# Join arguments using commas
+join-commas() {
+    local retval=
+    for arg in "$@"; do
+	if [ -n "$arg" ]; then
+	    [ -n "$retval" ] && retval="${retval},"
+	    retval="${retval}${arg}"
+	fi
+    done
+    echo "$retval"
+}
+
 # Install $pkg_ghost with $dependencies if not installed already, and echo its spec regardless.  The $extra_deps are
 # extra dependencies used during build that would conflict with using $pkg_ghost itself (e.g., llvm depends on a system
 # compiler collection during the build, but cannot be used with that system compiler collection.
@@ -111,8 +123,7 @@ install-package() {
     local dependencies="$1" pkg_ghost="$2" extra_deps="$3"
 
     # First, see if this package exists (without depending on $extra_deps)
-    local with="$pkg_ghost"
-    [ "$dependencies" = "" ] || with="$dependencies,$with"
+    local with="$(join-commas "$dependencies" "$pkg_ghost")"
     local hash=$($SPOCK_BINDIR/spock-shell --with "$with" $SPOCK_BINDIR/spock-using --fields "$pkg_ghost" 2>/dev/null |cut -s -f3)
     if [ "$hash" != "" ]; then
 	$SPOCK_BINDIR/spock-ls -1 "@$hash"
@@ -122,14 +133,14 @@ install-package() {
     # Make sure all the dependencies are installed
     if [ "${dependencies}${extra_deps}" != "" ]; then
 	(
+	    local w="$(join-commas "$dependencies" "$extra_deps")"
 	    set -ex
-	    $SPOCK_BINDIR/spock-shell --with "$dependencies,$extra_deps" --install=yes --log '>=info' true >&2
+	    $SPOCK_BINDIR/spock-shell --with "$w" --install=yes --log '>=info' true >&2
 	) >&2 || return 1
     fi
     
     # Doesn't exist, so try to build it
-    local with_extra="$with"
-    [ "$extra_deps" = "" ] || with_extra="$extra_deps,$with_extra"
+    local with_extra="$(join-commas "$extra_deps" "$with")"
     echo >&2
     (
 	set -ex
@@ -212,7 +223,7 @@ else
 		llvm)
 		    # LLVM's build depends on cmake, so we build one using the same compiler that we use to compile
 		    # llvm. We'll install other user-requested versions of cmake later.
-		    if (echo "COMPILER_COLLECTIONS" |grep llvm >/dev/null 2>&1); then
+		    if (echo "$COMPILER_COLLECTIONS" |grep llvm >/dev/null 2>&1); then
 			install-package "gnu-default-c,gnu-default-c++" cmake-3
 		    fi
 		    build_deps="gnu-system-compilers"
