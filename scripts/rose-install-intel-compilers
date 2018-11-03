@@ -38,29 +38,33 @@ fi
 
 # Function to generate the compiler wrapper shell script
 generate_wrapper() {
-    local intel_setup="$1" compiler_exe="$2"
+    local intel_setup="$1" compiler_exe="$2" destination="$3"
 
-    echo "#!/bin/bash"
+    (
+	echo "#!/bin/bash"
 
-    # Intel compilers need to be able to find a valid g++ even though we want to hide g++ from users when they said
-    # to use only the Intel compiler.  Therefore, we must temporarily move the binary directory for the valid g++ before
-    # our own fake g++ that normally hides the real g++.
-    echo "export PATH=\"$GXX_BINDIR:\$PATH\""
+	# Intel compilers need to be able to find a valid g++ even though we want to hide g++ from users when they said
+	# to use only the Intel compiler.  Therefore, we must temporarily move the binary directory for the valid g++ before
+	# our own fake g++ that normally hides the real g++.
+	echo "export PATH=\"$GXX_BINDIR:\$PATH\""
 
-    # The Intel compiler setup script that we want to run only when running the Intel compiler. Doing it this way allows
-    # the user to invoke more than one version of the Intel compiler in his shell.
-    echo "source $intel_setup || exit 1"
+	# The Intel compiler setup script that we want to run only when running the Intel compiler. Doing it this way allows
+	# the user to invoke more than one version of the Intel compiler in his shell.
+	echo "source $intel_setup || exit 1"
 
-    # Programs compiled with an Intel compiler might need to link with Intel compiler-specific shared libraries, which
-    # the $intel_setup script puts in $LD_LIBRARY_PATH. We need to expose those when the user chooses to use a specific
-    # compiler, so we need a way to query them from the compiler (wrapper script) itself.
-    echo '[ "$#" -eq 1 -a "$1" = "--spock-so-paths" ] && echo "$LD_LIBRARY_PATH" && exit 0'
+	# Programs compiled with an Intel compiler might need to link with Intel compiler-specific shared libraries, which
+	# the $intel_setup script puts in $LD_LIBRARY_PATH. We need to expose those when the user chooses to use a specific
+	# compiler, so we need a way to query them from the compiler (wrapper script) itself.
+	echo '[ "$#" -eq 1 -a "$1" = "--spock-so-paths" ] && echo "$LD_LIBRARY_PATH" && exit 0'
 
-    # Finally, run the real Intel compiler
-    echo "exec $compiler_exe \"\$@\""
+	# Finally, run the real Intel compiler
+	echo "exec $compiler_exe \"\$@\""
+    ) > "${destination}.$$.tmp"
+
+    # Move file to final home atomically, overwriting any previous version
+    ln -f "${destination}.$$.tmp" "$destination"
+    rm "${destination}.$$.tmp"
 }
-
-
 
 # This script searches for Intel compilers (like "icpc") in common places and installs a shell script (like
 # "icpc-16.0.3") that's a wrapper around each compiler. This allows us to invoke specific versions of the compilers, and
@@ -75,7 +79,7 @@ for dir in /usr/apps/intel/{14,15,16,2017}*; do
 	quad=$($SPOCK_SCRIPTS/impl/detect-compiler-characteristics --baselang c++ --quad icpc)
 	if [ "$quad" != "" ]; then
 	    version=$(echo "$quad" |cut -d: -f4 -s)
-	    generate_wrapper "$dir/setup.sh" icpc >"$DESTINATION/icpc-$version"
+	    generate_wrapper "$dir/setup.sh" icpc "$DESTINATION/icpc-$version"
 	    chmod 755 "$DESTINATION/icpc-$version"
 	fi
 
@@ -83,7 +87,7 @@ for dir in /usr/apps/intel/{14,15,16,2017}*; do
 	quad=$($SPOCK_SCRIPTS/impl/detect-compiler-characteristics --baselang c --quad icc)
 	if [ "$quad" != "" ]; then
 	    version=$(echo "$quad" |cut -d: -f4 -s)
-	    generate_wrapper "$dir/setup.sh" icc >"$DESTINATION/icc-$version"
+	    generate_wrapper "$dir/setup.sh" icc "$DESTINATION/icc-$version"
 	    chmod 755 "$DESTINATION/icc-$version"
 	fi
 
@@ -91,7 +95,7 @@ for dir in /usr/apps/intel/{14,15,16,2017}*; do
 	quad=$($SPOCK_SCRIPTS/impl/detect-compiler-characteristics --baselang fortran --quad ifort)
 	if [ "$quad" != "" ]; then
 	    version=$(echo "$quad" |cut -d: -f4 -s)
-	    generate_wrapper "$dir/setup.sh" ifort >"$DESTINATION/ifort-$version"
+	    generate_wrapper "$dir/setup.sh" ifort "$DESTINATION/ifort-$version"
 	    chmod 755 "$DESTINATION/ifort-$version"
 	fi
     )
