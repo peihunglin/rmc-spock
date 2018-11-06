@@ -1,0 +1,104 @@
+# Boost without python support
+package:        boost-nopy
+
+versions:       [ 1.50.0, 1.51.0, 1.52.0, 1.53.0, 1.54.0, 1.55.0,
+                  1.56.0, 1.57.0, 1.58.0, 1.59.0, 1.60.0, 1.61.0,
+                  1.62.0, 1.63.0, 1.64.0, 1.65.1, 1.66.0, 1.67.0,
+                  1.68.0 ]
+
+dependencies:
+  - version: ">=1.50"
+    aliases: [ boost ]
+    install: [ c++-compiler, zlib ]
+    build:   default-c
+
+variables:
+  - version: ">=1.50"
+    iostream_flags: -sNO_COMPRESSION=1 -sNO_ZLIB=1 -sNO_BZIP2=1
+    libraries: chrono date_time filesystem iostreams program_options random regex serialization signals system thread wave
+
+  - version: ">=1.54"
+    iostream_flags: "-sNO_BZIP2=1"
+
+download:
+  - version: ">=1.50"
+    shell: |
+        version_underscore=$(echo "$PACKAGE_VERSION" |sed 's/\./_/g')
+        wget -O - http://sourceforge.net/projects/boost/files/boost/$PACKAGE_VERSION/boost_$version_underscore.tar.bz2/download |\
+             tar xjf -
+        mv boost_$version_underscore download
+        tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=1.50"
+    shell: |
+        cc --spock-triplet
+        c++ --spock-triplet
+
+        # Initialization. Boost's bjam gives an error if parallelism is larger than 64.
+        [ "$PARALLELISM" -gt 64 ] && PARALLELISM=64
+        libraries_commas=$(echo "$libraries" |sed 's/  */,/g')
+
+        cd download
+
+        # Configuration.  It's unfortunate that boost uses a custom
+        # build script instead of something more popular like cmake or
+        # autoconf. Therefore, I'm not quite sure that these commands
+        # are actually building what I expect them to be building.
+        cxx_vendor=$(c++ --spock-triplet |cut -d: -f1)
+        cxx_version=$(c++ --spock-triplet |cut -d: -f3)
+        boost_toolset=
+        case "$cxx_vendor" in
+            gnu) boost_toolset=gcc ;;
+            llvm) boost_toolset=clang ;;
+            intel) boost_toolset=intel-linux ;;
+        esac
+        cxx_version=$(c++ --spock-triplet |cut -d: -f3)
+        (
+            echo "# Warning!!! Spaces are significant in the following strings."
+            echo "using $boost_toolset : $cxx_version : $(which c++) ;"
+            echo "using zlib : $ZLIB_VERSION : <include>$ZLIB_INCDIRS <search>$ZLIB_LIBDIRS ;"
+        ) >"user-config.jam"
+
+        # The BOOST_BUILD_PATH env. var must be set in order for boost
+        # to find "user-config.jam". We set it for each command to
+        # help people that cut-n-paste these commands not forget about
+        # it and then spend hours trying to figure out why b2 is
+        # running "icpc" instead of the specified compiler.
+        #
+        # I am unable to get bootstrap to compile b2 using the
+        # compiler specified in user-config.jam, but that's probably
+        # okay for two reasons: (1) the "icc" that it uses is the one
+        # matched by the dependencies.install above in this YAML file
+        # since Spock put it in the front of $PATH, and (2) we only
+        # use b2 to compile the rest of boost.
+        BOOST_BUILD_PATH=$(pwd) ./bootstrap.sh --prefix="$PACKAGE_ROOT" --with-libraries=$libraries_commas --with-toolset=$boost_toolset
+
+        # bootstrap.sh creates a project-config.jam file that contains
+        # a duplicate "using intel-linux" line. I'm not a boost build
+        # expert (nor do I know anyone who actually is), and I'm not
+        # sure why it causes a problem since it's protected with an
+        # "if" statement, but if we remove the entire "if" then ./b2
+        # works correctly.
+        sed --in-place '/^if/,/^}/ d' project-config.jam
+
+        # I could not find documentation about whether "b2" commands
+        # also need the --prefix switch. The generated
+        # project-config.jam file specifies a prefix, but I'm not sure
+        # if all versions of boost we support did this, so specify the
+        # prefix again here.
+        #
+        # I could not find documentation about whether adding the
+        # "using zlib" to user-config.jam is sufficient to cause that
+        # configuration of zlib to be used, or whether adding it only
+        # to b2 is sufficient (does bootstrap.sh need to know about
+        # zlib when building b2?). Therefore, I'm adding it in both
+        # places.
+        BOOST_BUILD_PATH=$(pwd) ./b2 --prefix="$PACKAGE_ROOT" $iostream_flags toolset=$boost_toolset -d+2 -s ZLIB_INCLUDE=$ZLIB_INCDIRS -s ZLIB_LIBPATH=$ZLIB_LIBDIRS -j$PARALLELISM
+        BOOST_BUILD_PATH=$(pwd) ./b2 --prefix="$PACKAGE_ROOT" $iostream_flags toolset=$boost_toolset -d+2 -s ZLIB_INCLUDE=$ZLIB_INCDIRS -s ZLIB_LIBPATH=$ZLIB_LIBDIRS install
+
+
+        spock-export BOOST_ROOT "$PACKAGE_ROOT"
+        spock-export BOOST_VERSION "$PACKAGE_VERSION"
+        spock-export BOOST_LIBDIRS "$PACKAGE_ROOT/lib"
+        spock-export BOOST_INCDIRS "$PACKAGE_ROOT/include"

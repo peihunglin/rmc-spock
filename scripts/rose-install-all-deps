@@ -323,9 +323,10 @@ using-these Python "${PYTHON_SPECS[@]}"
 === Boost
 ########################################################################################################################
 
-# Boost has C++ libraries and thus must be compiled with each C++ compiler. It also depends on Python since we're
+# Boost has C++ libraries and thus must be compiled with each C++ compiler. It might also depend on Python if we're
 # building the boost_python library. Iterating over the python specs is sufficient to grab all the C++ compiler specs.
-echo "*** Installing Boost versions (per python): $BOOST_VERSIONS"
+# If boost is compiled with python support, use "boost-py" otherwise use "boost-nopy", either of which provides "boost".
+echo "*** Installing Boost versions: $BOOST_VERSIONS"
 BOOST_SPECS=()
 if [ "$BOOST_VERSIONS" = "installed" ]; then
     die "boost \"installed\" setting is not implemented yet"
@@ -335,7 +336,7 @@ else
 	if [ "${#PYTHON_SPECS[*]}" -gt 0 ]; then
 	    # Boost with python support
 	    for python_spec in "${PYTHON_SPECS[@]}"; do
-		spec=$(install-package "$python_spec,default-c" "boost-$boost_version")
+		spec=$(install-package "$python_spec,default-c" "boost-py-$boost_version")
 		if [ "$spec" = "" ]; then
 		    cannot_install
 		else
@@ -345,7 +346,7 @@ else
 	else
 	    # Boost without python support
 	    for cxx_spec in "${CXX_COMPILER_SPECS[@]}"; do
-		spec=$(install-package "$cxx_spec,default-c" "boost-$boost_version")
+		spec=$(install-package "$cxx_spec,default-c" "boost-nopy-$boost_version")
 		if [ "$spec" = "" ]; then
                     cannot_install
 		else

@@ -1,4 +1,4 @@
-package:        boost
+package:        boost-py
 
 # List of all versions supported by this file
 versions:       [ 1.50.0, 1.51.0, 1.52.0, 1.53.0, 1.54.0, 1.55.0,
@@ -35,7 +35,7 @@ versions:       [ 1.50.0, 1.51.0, 1.52.0, 1.53.0, 1.54.0, 1.55.0,
 
 dependencies:
   - version: ">=1.50"
-    aliases: []
+    aliases: [ boost ]
 
     # "c++-compiler" means any C++ compiler from any vendor. This
     # could be a compiler that supports C++11 or a compiler (GCC or
@@ -203,14 +203,19 @@ install:
         # created when this package is employed by a user.  These
         # variables are set automatically (but they're not available
         # to use within this script itself):
-        #   BOOST_ROOT      - the same value as $PACKAGE_ROOT
-        #   BOOST_VERSION   - the same as $PACKAGE_VERSION
-        #   BOOST_LIBDIRS   - directories containing libraries
+        #   BOOST_PY_ROOT      - the same value as $PACKAGE_ROOT
+        #   BOOST_PY_VERSION   - the same as $PACKAGE_VERSION
+        #   BOOST_PY_LIBDIRS   - directories containing libraries
         #   ALL_LIBDIRS     - ditto, but for all packages
-        #   BOOST_INCDIRS   - directories containing include files
+        #   BOOST_PY_INCDIRS   - directories containing include files
         #   ALL_INCDIRS     - ditto, but for all packages
         #   LD_RUN_PATH     - directories containing shared libs
         #   PATH            - directories containing executables
+
+        spock-export BOOST_ROOT "$PACKAGE_ROOT"
+        spock-export BOOST_VERSION "$PACKAGE_VERSION"
+        spock-export BOOST_LIBDIRS "$PACKAGE_ROOT/lib"
+        spock-export BOOST_INCDIRS "$PACKAGE_ROOT/include"
 
 # The "post-install" script is available to run after Spock installs
 # the package.  Most packages don't need this, but you could use it to

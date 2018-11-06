@@ -198,6 +198,16 @@ package_spec() {
         rmc_pqxx) pkgname="libpqxx" ;;
         rmc_yaml) pkgname="yamlcpp" ;;
 
+	# For boost, if python is enabled use the normal boost package, otherwise use boost-nopy. Compiling Python
+	# with Intel compilers on RHEL is problematic.
+	rmc_boost)
+	    if [ "$RMC_PYTHON" = none -o "$RMC_PYTHON" = no -o "$RMC_PYTHON" = system ]; then
+		pkgname="boost-nopy"
+	    else
+		pkgname="boost-py"
+	    fi
+	    ;;
+
         # rmc_java is a bit weird because a vendor such as "oracle-java-" can precede the version number. If the
         # vendor is present, then it becomes the Spock package spec, otherwise we assume it should be "orical-java-".
         rmc_java)
