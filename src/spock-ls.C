@@ -235,7 +235,7 @@ main(int argc, char *argv[]) {
                     continue;
             }
             
-            std::cout <<pkg->toString();
+            std::cout <<pkg->toStringColored();
 
             if (showComments) {
                 if (pkg->isInstalled()) {

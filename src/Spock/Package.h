@@ -65,6 +65,9 @@ public:
     /** Name, version, and hash. */
     virtual std::string toString() const;
 
+    /** Name, version, and hash, with ANSI color escapes. */
+    virtual std::string toStringColored() const;
+
     /** Secondary names.
      *
      *  Every package has a primary name and zero or more secondary names (aliases).  When searching for packages, aliases work

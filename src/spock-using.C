@@ -66,7 +66,7 @@ main(int argc, char *argv[]) {
                 if (machineOutput) {
                     std::cout <<pkg->name() <<"\t" <<pkg->version().toString() <<"\t" <<pkg->hash() <<"\n";
                 } else {
-                    std::cout <<pkg->toString() <<"\n";
+                    std::cout <<pkg->toStringColored() <<"\n";
                 }
             }
         }

@@ -30,6 +30,29 @@ Package::toString() const {
     return s;
 }
 
+std::string
+Package::toStringColored() const {
+    bool useColor = isatty(1);
+    std::string s = name();
+    if (!version().isEmpty()) {
+        if (useColor) {
+            s += "\033[36m=" + version().toString() + "\033[0m";;
+        } else {
+            s += "=" + version().toString();
+        }
+    }
+    if (!hash().empty()) {
+        if (useColor) {
+            s += "\033[33m@" + hash() + "\033[0m";
+        } else {
+            s += "@" + hash();
+        }
+    }
+    if (s.empty())
+        s = "empty";
+    return s;
+}
+
 VersionNumbers
 Package::versions() const {
     VersionNumbers retval;
