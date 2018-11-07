@@ -1,0 +1,37 @@
+package:        glibc
+
+versions:       [ 2.20, 2.21, 2.22, 2.23, 2.24, 2.25, 2.26, 2.27, 2.28 ]
+
+dependencies:
+  - version: ">=2"
+    aliases: []
+    install: [ c-compiler ]
+    build: []
+
+download:
+  - version: ">=2"
+    shell: |
+      wget -O - https://ftp.gnu.org/gnu/glibc/glibc-$PACKAGE_VERSION.tar.gz |\
+          tar xzf -
+      mv glibc-$PACKAGE_VERSION download
+      tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=2"
+    shell: |
+        cc --spock-triplet
+
+        mkdir build
+        cd build
+        env CC=cc ../download/configure --prefix="$PACKAGE_ROOT"
+        make -j$PARALLELISM
+
+        # May fail with "cannot find -lstdc++". Glibc chapter 4.6 says
+        # "Experience has shown that there is little to be gained from
+        # running the test suites in Chapter 5. There can be no
+        # escaping the fact that the host system always exerts some
+        # influence on the tests in that chapter, often causing
+        # inexplicable failures.
+        #make -j$PARALLELISM check
+
+        make install

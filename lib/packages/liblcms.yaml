@@ -4,7 +4,7 @@ versions: [ 2.8 ]
 dependencies:
   - version: ">=2.8"
     # FIXME: also libGL and libglut
-    install: [ c-compiler, libjpeg, libtiff ]
+    install: [ c-compiler, libjpeg, libtiff, glibc ]
     build:   []
     
 download:

@@ -5,7 +5,7 @@ dependencies:
   - version: ">=1"
     aliases: []
     install: []
-    build:   [ c-compiler ]
+    build:   [ c-compiler, glibc ]
 
 download:
   - version: ">=1"

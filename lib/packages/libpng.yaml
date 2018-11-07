@@ -5,7 +5,7 @@ versions: [ 1.2.57, 1.4.20, 1.5.28, 1.6.29, 1.6.31, 1.6.32, 1.6.34 ]
 
 dependencies:
   - version: '>=1.2'
-    install: [ c-compiler, zlib ]
+    install: [ c-compiler, zlib, glibc ]
     build:   []
 
 variables:
@@ -47,7 +47,7 @@ install:
       env \
         CC=cc \
         LDFLAGS="$(spock-compiler-libdirs)" \
-        CPPFLAGS="$(spock-compiler-incdirs)" \
+        CPPFLAGS="-nostdinc $(spock-compiler-incdirs)" \
         ./configure \
         --prefix=$PACKAGE_ROOT \
         --with-zlib-prefix=$ZLIB_ROOT

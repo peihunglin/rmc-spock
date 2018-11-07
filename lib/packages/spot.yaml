@@ -10,15 +10,15 @@ versions: [ 1.2, 1.2.1, 1.2.2, 1.2.3, 1.2.4, 1.2.5, 1.2.6,
 
 dependencies:
   - version: ">=1.2"
-    install: boost
+    install: [boost, glibc]
     build: []
 
   - version: ">=1.99"
-    install: c++-compiler
+    install: [c++-compiler, glibc]
     build: []
 
   - version: ">=2"
-    install: c++11-compiler
+    install: [c++11-compiler, glibc]
     build: []
 
 variables:

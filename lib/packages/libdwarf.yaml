@@ -8,12 +8,12 @@ versions: [ 2016.06.13, 2016.10.01, 2016.10.21, 2016.11.24, 2017.04.16 ]
 dependencies:
   - version: ">=2016.06.13"
     aliases: []
-    install: [ c-compiler, "libelf<=0.164" ]
+    install: [ c-compiler, "libelf<=0.164", glibc ]
     build: []
 
   - version: ">=2017.04.16"
     aliases: []
-    install: [ c-compiler, libelf ]
+    install: [ c-compiler, libelf, glibc ]
     build: []
 
 download:

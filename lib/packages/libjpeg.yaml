@@ -7,7 +7,7 @@ versions: [9, 9.a, 9.b]
 
 dependencies:
   - version: ">=9"
-    install: c-compiler
+    install: [c-compiler, glibc]
     build: []
 
 download:
