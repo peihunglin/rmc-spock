@@ -127,7 +127,7 @@ install-package() {
 
     # First, see if this package exists (without depending on $extra_deps)
     local with="$(join-commas "$dependencies" "$pkg_ghost")"
-    local hash=$($SPOCK_BINDIR/spock-shell --with "$with" $SPOCK_BINDIR/spock-using --fields "$pkg_ghost" 2>/dev/null |cut -s -f3)
+    local hash=$($SPOCK_BINDIR/spock-shell --verbose --with "$with" $SPOCK_BINDIR/spock-using --fields "$pkg_ghost" 2>/dev/null |cut -s -f3)
     if [ "$hash" != "" ]; then
 	$SPOCK_BINDIR/spock-ls -1 "@$hash"
 	return 0
@@ -138,7 +138,7 @@ install-package() {
 	(
 	    local w="$(join-commas "$dependencies" "$extra_deps")"
 	    set -ex
-	    $SPOCK_BINDIR/spock-shell --with "$w" --install=yes --log '>=info' true >&2
+	    $SPOCK_BINDIR/spock-shell --verbose --with "$w" --install=yes --log '>=info' true >&2
 	) >&2 || return 1
     fi
     
@@ -147,11 +147,11 @@ install-package() {
     echo >&2
     (
 	set -ex
-	$SPOCK_BINDIR/spock-shell --install=yes --with "$with_extra" --log '>=info' true
+	$SPOCK_BINDIR/spock-shell --verbose --install=yes --with "$with_extra" --log '>=info' true
     )>&2 || return 1
 
     # Now we should be able to find it (without depending on $extra_deps)
-    local hash=$($SPOCK_BINDIR/spock-shell --with "$with" $SPOCK_BINDIR/spock-using --fields "$pkg_ghost" 2>/dev/null |cut -s -f3)
+    local hash=$($SPOCK_BINDIR/spock-shell --verbose --with "$with" $SPOCK_BINDIR/spock-using --fields "$pkg_ghost" 2>/dev/null |cut -s -f3)
     if [ "$hash" != "" ]; then
 	$SPOCK_BINDIR/spock-ls -1 "@$hash"
 	return 0
