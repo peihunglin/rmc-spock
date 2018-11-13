@@ -10,7 +10,7 @@ dependencies:
 
     # The cmake installation depends on a number of shared libraries that need to be compiled with the same compiler
     # as cmake, such as libstdc++.so.
-    install: [c++-compiler, c-compiler, glibc]
+    install: [c++-compiler, c-compiler]
     build:   []
 
 download:

@@ -7,7 +7,7 @@ versions: [                      0.133, 0.134, 0.135,        0.137, 0.138, 0.139
 dependencies:
   - version: ">=0.133"
     aliases: []
-    install: [ c-compiler, liblzma, zlib, glibc ]
+    install: [ c-compiler, liblzma, zlib ]
     build: []
 
 download:

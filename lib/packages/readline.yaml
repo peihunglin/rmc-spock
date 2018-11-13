@@ -3,7 +3,7 @@ versions: [ 5.0, 5.1, 5.2, 6.0, 6.1, 6.2, 6.3, 7.0 ]
 
 dependencies:
   - version: ">=4"
-    build: [gnu89-compiler, glibc]
+    build: gnu89-compiler
     install: []
 
 download:

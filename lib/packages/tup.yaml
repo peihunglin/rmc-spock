@@ -12,7 +12,7 @@ dependencies:
   - version: ">=0"
     aliases: []
     install: []
-    build: [default-c, glibc]
+    build: default-c
 
 variables:
   - version: ">=0"

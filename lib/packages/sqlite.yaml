@@ -4,7 +4,7 @@ versions: [ 3.6.10, 3.6.15, 3.7.2, 3.7.4, 3.7.5, 3.7.6, 3.7.6.1, 3.7.6.2, 3.7.6.
 dependencies:
   - version: ">=3"
     # Sqlite compilation errors with c89 compilers
-    install: [ gnu11-compiler, glibc ]
+    install: [ gnu11-compiler ]
     build:   []
 
 download:

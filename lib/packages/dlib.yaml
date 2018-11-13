@@ -6,8 +6,8 @@ versions:       [ 18.16, 18.17, 18.18, 19.0, 19.1, 19.2, 19.3, 19.4, 19.5, 19.6,
 
 dependencies:
   - version: ">=18"
-    install: [ c++-compiler, glibc ]
-    build: []
+    build: [ c++-compiler ]
+    install: [ c++-compiler ]
 
     # Versions 19.* require a C++11 or GNU++11 compiler or later, but spock can't currently
     # express alternative constraints or constraints based on language variant relationships.

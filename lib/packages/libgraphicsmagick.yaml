@@ -6,17 +6,7 @@ dependencies:
     #FIXME: aught to depend on libgomp, X libraries, libICE, libXext, libdps, -ldpstk,
     #       libjasper, libfreetype, libxml2, libwmflite
     #FIXME: libjbig's makefiles don't support shared libraries, so don't depend on it
-    install:
-      - c-compiler
-      - c++-compiler
-      - libbz2
-      - libjpeg
-      - liblcms
-      - liblzma
-      - libpng
-      - libtiff
-      - zlib
-      - glibc
+    install: [ c-compiler, c++-compiler, libbz2, libjpeg, liblcms, liblzma, libpng, libtiff, zlib ]
     build: []
 
 variables:

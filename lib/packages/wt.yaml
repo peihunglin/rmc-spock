@@ -5,14 +5,14 @@ versions:       [ 3.3.3, 3.3.4, 3.3.5, 3.3.6, 3.3.7, 3.3.8, 3.3.9,
 dependencies:
   - version: "=3.3.3"
     # The boost requirement was tried only with gcc-4.9.2
-    install: [ "boost<=1.55", libgraphicsmagick, c++-compiler, glibc ]
+    install: [ "boost<=1.55", libgraphicsmagick, c++-compiler ]
     build:   [ c-compiler ]
 
   - version: "=3.3.4"
     # gcc-4.9.2 boost-1.63 works
     # gcc-4.9.2 boost-1.60 works
     # gcc-4.9.2 boost-1.55 works
-    install: [ boost, libgraphicsmagick, c++-compiler, glibc ]
+    install: [ boost, libgraphicsmagick, c++-compiler ]
     build:   [ c-compiler ]
 
   - version: "=3.3.5"
@@ -23,31 +23,31 @@ dependencies:
     # gcc-5.1.0 boost-1.60 fails
     # gcc-5.4.0 boost-1.60 fails
     # gcc-6.2.0 boost-1.60 works
-    install: [ boost, libgraphicsmagick, c++-compiler, glibc ]
+    install: [ boost, libgraphicsmagick, c++-compiler ]
     build:   [ c-compiler ]
 
   - version: ">=3.3.6"
-    install: [ "boost>=1.41", libgraphicsmagick, c++-compiler, glibc ]
+    install: [ "boost>=1.41", libgraphicsmagick, c++-compiler ]
     build:   [ c-compiler ]
 
   - version: ">=3.3.8"
     # gnu-c++11-5.4.0 boost-1.67.0 fails
-    install: [ "boost>1.67.0", libgraphicsmagick, c++-compiler, glibc ]
+    install: [ "boost>1.67.0", libgraphicsmagick, c++-compiler ]
     build:   [ c-compiler ]
 
   - version: ">=4.0.1"
     # gnu-c++11-5.4.0 boost-1.67.0 fails
-    install: [ "boost>1.67.0", libgraphicsmagick, c++-compiler, glibc ]
+    install: [ "boost>1.67.0", libgraphicsmagick, c++-compiler ]
     build:   [ c-compiler ]
 
   - version: ">=4.0.2"
     # gnu-c++11-5.4.0 boost-1.67.0 fails
-    install: [ "boost>1.67.0", libgraphicsmagick, c++-compiler, glibc ]
+    install: [ "boost>1.67.0", libgraphicsmagick, c++-compiler ]
     build:   [ c-compiler ]
 
   - version: ">=4.0.3"
     # gnu-c++11-5.4.0 boost-1.67.0 works
-    install: [ boost, libgraphicsmagick, c++-compiler, glibc ]
+    install: [ boost, libgraphicsmagick, c++-compiler ]
     build:   [ c-compiler ]
 
 variables:

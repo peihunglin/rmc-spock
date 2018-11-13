@@ -5,7 +5,7 @@ versions: ["4.5.0", "4.6.0", "4.7.1", "4.8.1" ]
 dependencies:
   - version: ">=4.5.0"
     aliases: []
-    install: [ python, c++-compiler, c-compiler, glibc ]
+    install: [ python, c++-compiler, c-compiler ]
     build: [ default-c ]
 
 variables:

@@ -21,7 +21,7 @@ versions:
 
 dependencies:
   - version: ">=2"
-    install: [ c-compiler, glibc ]
+    install: c-compiler
     build: []
 
 download:

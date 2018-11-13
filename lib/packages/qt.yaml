@@ -9,7 +9,7 @@ versions: [ 5.10, 5.11 ]
 dependencies:
   - version: ">=5.10"
     aliases: []
-    install: [ c++-compiler, glibc ]
+    install: [ c++-compiler ]
     build: default-c
 
 variables:

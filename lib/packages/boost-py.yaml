@@ -40,7 +40,7 @@ dependencies:
     # "c++-compiler" means any C++ compiler from any vendor. This
     # could be a compiler that supports C++11 or a compiler (GCC or
     # LLVM) that supports the gnu++03 language, etc.
-    install: [ c++-compiler, zlib, python, glibc ]
+    install: [ c++-compiler, zlib, python ]
 
     # Standard C compilers (c89 c94 c11 etc) do not work: they fail to
     # compile during boost's bootstrap.sh phase. "gnu-default-c" is

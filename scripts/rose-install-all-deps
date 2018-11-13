@@ -12,9 +12,6 @@
 arg0="${0##*/}"
 dir0="${0%/*}"
 
-#TEMPORARY
-GLIBC_VERSIONS=2.20
-
 umask 022
 
 eval "$(spock-ls --shellvars)" || exit 1
@@ -269,28 +266,6 @@ if [ "${#CXX_COMPILER_SPECS[*]}" -eq 0 ]; then
     die "no point in continuing without a compiler"
 fi
 
-########################################################################################################################
-=== glibc
-########################################################################################################################
-echo "*** Installing glibc versions (per compiler): $GLIBC_VERSIONS"
-GLIBC_SPECS=()
-if [ "$GLIBC_VERSIONS" = "installed" ]; then
-    GLIBC_SPECS=($($SPOCK_BINDIR/spock-ls --usable -1 glibc))
-else
-    for glibc_version in $GLIBC_VERSIONS; do
-	[ "$glibc_version" = "none" ] && continue
-	for cxx_spec in "${CXX_COMPILER_SPECS[@]}"; do
-	    spec=$(install-package "$cxx_spec,default-c" "glibc-$glibc_version")
-	    if [ "$spec" = "" ]; then
-		cannot_install
-	    else
-		GLIBC_SPECS=("${GLIBC_SPECS[@]}" "$spec")
-	    fi
-	done
-    done
-fi
-
-using-these glibc "${GLIBC_SPECS[@]}"
 
 ########################################################################################################################
 === CMake
@@ -305,7 +280,7 @@ else
     for cmake_version in $CMAKE_VERSIONS; do
 	[ "$cmake_version" = "none" ] && continue
 	for cxx_spec in "${CXX_COMPILER_SPECS[@]}"; do
-	    spec=$(install-package "$cxx_spec,default-c,glibc" "cmake-$cmake_version")
+	    spec=$(install-package "$cxx_spec,default-c" "cmake-$cmake_version")
 	    if [ "$spec" = "" ]; then
 		cannot_install
 	    else
@@ -331,7 +306,7 @@ else
     for python_version in $PYTHON_VERSIONS; do
 	[ "$python_version" = "none" ] && continue
 	for cxx_spec in "${CXX_COMPILER_SPECS[@]}"; do
-	    spec=$(install-package "$cxx_spec,default-c,glibc" "python-$python_version")
+	    spec=$(install-package "$cxx_spec,default-c" "python-$python_version")
 	    if [ "$spec" = "" ]; then
 		cannot_install
 	    else
@@ -361,7 +336,7 @@ else
 	if [ "${#PYTHON_SPECS[*]}" -gt 0 ]; then
 	    # Boost with python support
 	    for python_spec in "${PYTHON_SPECS[@]}"; do
-		spec=$(install-package "$python_spec,default-c,glibc" "boost-py-$boost_version")
+		spec=$(install-package "$python_spec,default-c" "boost-py-$boost_version")
 		if [ "$spec" = "" ]; then
 		    cannot_install
 		else
@@ -371,7 +346,7 @@ else
 	else
 	    # Boost without python support
 	    for cxx_spec in "${CXX_COMPILER_SPECS[@]}"; do
-		spec=$(install-package "$cxx_spec,default-c,glibc" "boost-nopy-$boost_version")
+		spec=$(install-package "$cxx_spec,default-c" "boost-nopy-$boost_version")
 		if [ "$spec" = "" ]; then
                     cannot_install
 		else
@@ -397,14 +372,12 @@ if [ "$DLIB_VERSIONS" = "installed" ]; then
 else
     for dlib_version in $DLIB_VERSIONS; do
 	[ "$dlib_version" = "none" ] && continue
-	for cxx_spec in "${CXX_COMPILER_SPECS[@]}"; do
-	    spec=$(install-package "$cxx_spec,default-c,glibc" "dlib-$dlib_version")
-	    if [ "$spec" = "" ]; then
-		cannot_install
-	    else
-		DLIB_SPECS=("${DLIB_SPECS[@]}" "$spec")
-	    fi
-	done
+	spec=$(install-package "" "dlib-$dlib_version")
+	if [ "$spec" = "" ]; then
+	    cannot_install
+	else
+	    DLIB_SPECS=("${DLIB_SPECS[@]}" "$spec")
+	fi
     done
 fi
 
@@ -485,7 +458,7 @@ else
     for yamlcpp_version in $YAMLCPP_VERSIONS; do
 	[ "$yamlcpp_version" = "none" ] && continue
 	for boost_spec in "${BOOST_SPECS[@]}"; do
-	    spec=$(install-package "$boost_spec,glibc" "yamlcpp-$yamlcpp_version")
+	    spec=$(install-package "$boost_spec" "yamlcpp-$yamlcpp_version")
 	    if [ "$spec" = "" ]; then
 		cannot_install
 	    else
@@ -521,7 +494,7 @@ else
 	else
 	    # Version 1 (or if we don't know the version) depends on boost
 	    for boost_spec in "${BOOST_SPECS[@]}"; do
-		spec=$(install-package "$boost_spec,glibc" "spot-$spot_version")
+		spec=$(install-package "$boost_spec" "spot-$spot_version")
 		if [ "$spec" = "" ]; then
 		    cannot_install
 		else
@@ -549,7 +522,7 @@ else
     for jq_version in $JQ_VERSIONS; do
 	for cxx_spec in "${CXX_COMPILER_SPECS[@]}"; do
 	    [ "$jq_version" = "none" ] && continue
-	    spec=$(install-package "$cxx_spec,default-c,bison,libtool,glibc" "jq-$jq_version")
+	    spec=$(install-package "$cxx_spec,default-c,bison,libtool" "jq-$jq_version")
 	    if [ "$spec" = "" ]; then
 		cannot_install
 	    else
