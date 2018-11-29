@@ -72,6 +72,13 @@ int main() {
     #else
         std::cout <<"c++14\n";
     #endif
+#elif __cplusplus == 201703L
+    // These are based on c++17
+    #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+        std::cout <<"gnu++17\n";
+    #else
+        std::cout <<"c++17\n";
+    #endif
 #elif __cplusplus == 1
     std::cout <<"c++98\n";
 #else
@@ -107,6 +114,14 @@ int main() {
         printf("gnu11\n");
     #else
         printf("c11\n");
+    #endif
+#elif __STDC_VERSION__ == 201710L
+    /* Published in Jun 2018, C18 introduces no new language features, only
+     * technical corrections and clarifications of defects in C11. */
+    #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+        printf("gnu18\n");
+    #else
+        printf("c18\n");
     #endif
 #else
     printf("c-%ld\n", __STDC_VERSION__); /*unknown*/

@@ -376,7 +376,7 @@ read_config_file() {
     export RMC_OS_NAME_FILE="$($SPOCK_SCRIPTS/spock-os-name --file)"
 
     # Shell prompt adjustments
-    export PS1_STACK="${RG_BLD##*/} $PS1_STACK"
+    export PS1_STACK="$PS1_STACK RMC:${RG_BLD##*/}"
 
     # If ROSE is being installed, then make sure its lib dir is searched.
     case "$RMC_INSTALLED" in

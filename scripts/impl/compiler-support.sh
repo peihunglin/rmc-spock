@@ -380,12 +380,16 @@ spock-compiler-install-program() {
             spock-compiler-conditional-install-language "$collection_spec" c++ "-m32" "$exe" -std=c++11
             spock-compiler-conditional-install-language "$collection_spec" c++ ""     "$exe" -std=c++14
             spock-compiler-conditional-install-language "$collection_spec" c++ "-m32" "$exe" -std=c++14
+            spock-compiler-conditional-install-language "$collection_spec" c++ ""     "$exe" -std=c++17
+            spock-compiler-conditional-install-language "$collection_spec" c++ "-m32" "$exe" -std=c++17
             spock-compiler-conditional-install-language "$collection_spec" c++ ""     "$exe" -std=gnu++03
             spock-compiler-conditional-install-language "$collection_spec" c++ "-m32" "$exe" -std=gnu++03
             spock-compiler-conditional-install-language "$collection_spec" c++ ""     "$exe" -std=gnu++11
             spock-compiler-conditional-install-language "$collection_spec" c++ "-m32" "$exe" -std=gnu++11
-            spock-compiler-conditional-install-language "$collection_spec" c++ ""     "$exe" -std=gnu++14  
+            spock-compiler-conditional-install-language "$collection_spec" c++ ""     "$exe" -std=gnu++14
             spock-compiler-conditional-install-language "$collection_spec" c++ "-m32" "$exe" -std=gnu++14
+            spock-compiler-conditional-install-language "$collection_spec" c++ ""     "$exe" -std=gnu++17
+            spock-compiler-conditional-install-language "$collection_spec" c++ "-m32" "$exe" -std=gnu++17
             ;;
 
         gnu:c|llvm:c)
@@ -399,12 +403,16 @@ spock-compiler-install-program() {
             spock-compiler-conditional-install-language "$collection_spec" c "-m32" "$exe" -std=iso9899:1999
             spock-compiler-conditional-install-language "$collection_spec" c ""     "$exe" -std=iso9899:2011
             spock-compiler-conditional-install-language "$collection_spec" c "-m32" "$exe" -std=iso9899:2011
+            spock-compiler-conditional-install-language "$collection_spec" c ""     "$exe" -std=iso9899:2018
+            spock-compiler-conditional-install-language "$collection_spec" c "-m32" "$exe" -std=iso9899:2018
             spock-compiler-conditional-install-language "$collection_spec" c ""     "$exe" -std=gnu90
             spock-compiler-conditional-install-language "$collection_spec" c "-m32" "$exe" -std=gnu90
             spock-compiler-conditional-install-language "$collection_spec" c ""     "$exe" -std=gnu99
             spock-compiler-conditional-install-language "$collection_spec" c "-m32" "$exe" -std=gnu99
             spock-compiler-conditional-install-language "$collection_spec" c ""     "$exe" -std=gnu11
             spock-compiler-conditional-install-language "$collection_spec" c "-m32" "$exe" -std=gnu11
+            spock-compiler-conditional-install-language "$collection_spec" c ""     "$exe" -std=gnu18
+            spock-compiler-conditional-install-language "$collection_spec" c "-m32" "$exe" -std=gnu18
             ;;
 
 	nvidia:cuda)
@@ -420,6 +428,8 @@ spock-compiler-install-program() {
             spock-compiler-conditional-install-language "$collection_spec" c++ "-m32" "$exe" -std=c++11
             spock-compiler-conditional-install-language "$collection_spec" c++ ""     "$exe" -std=c++14
             spock-compiler-conditional-install-language "$collection_spec" c++ "-m32" "$exe" -std=c++14
+            spock-compiler-conditional-install-language "$collection_spec" c++ ""     "$exe" -std=c++17
+            spock-compiler-conditional-install-language "$collection_spec" c++ "-m32" "$exe" -std=c++17
             ;;
 
         *:c)
@@ -433,6 +443,8 @@ spock-compiler-install-program() {
             spock-compiler-conditional-install-language "$collection_spec" c "-m32" "$exe" -std=iso9899:1999
             spock-compiler-conditional-install-language "$collection_spec" c ""     "$exe" -std=iso9899:2011
             spock-compiler-conditional-install-language "$collection_spec" c "-m32" "$exe" -std=iso9899:2011
+            spock-compiler-conditional-install-language "$collection_spec" c ""     "$exe" -std=iso9899:2018
+            spock-compiler-conditional-install-language "$collection_spec" c "-m32" "$exe" -std=iso9899:2018
             ;;
 
         *)
