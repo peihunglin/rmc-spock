@@ -267,7 +267,7 @@ package_spec() {
 
         rmc_tup)
             if [ "$RMC_BUILD" = "tup" -a "$pkgvers" = "ambivalent" ]; then
-                pkgspec="tup=49fc3ff5" # 2017-12-19 version of git HEAD
+                pkgspec="tup>0" # latest version
             fi
             ;;
 

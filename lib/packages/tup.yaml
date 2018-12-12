@@ -1,12 +1,10 @@
 package: tup
 versions:
-  - 0.7
-  - 0.7.1
-  - 0.7.2
-  - 0.7.3
-  - 0.7.4
-  - 0.7.5
-  - 49fc3ff5 # 2017-12-19 master branch
+  - 0.7.5          # 2016-08-24
+  - 0.7.5.49fc3ff5 # 2017-12-19 master
+  - 0.7.6          # 2018-04-13
+  - 0.7.7          # 2018-07-27
+  - 0.7.8          # 2018-09-27
 
 dependencies:
   - version: ">=0"
@@ -21,17 +19,16 @@ variables:
 download:
   - version: ">=0"
     shell: |
-      if [ "${#PACKAGE_VERSION}" -eq 8 ]; then
-        committish="$PACKAGE_VERSION"
-      else
-        committish="v${PACKAGE_VERSION}"
-      fi
-
       git clone https://github.com/gittup/tup download
-      (cd download && git checkout -b download $committish)
-
+      (cd download && git checkout -b download v${PACKAGE_VERSION})
       tar cvf - download |gzip -9 >download.tar.gz
       
+  - version: "=0.7.5.49fc3ff5"
+    shell: |
+      git clone https://github.com/gittup/tup download
+      (cd download && git checkout -b download 49fc3ff5)
+      tar cvf - download |gzip -9 >download.tar.gz
+
 install:
   - version: ">=0"
     shell: |
