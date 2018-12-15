@@ -12,7 +12,7 @@ prefix=
 downloads=
 upgrade=yes
 boost_version=1.62.0
-cmake_version=3.8.2
+cmake_version=3.12.1
 yamlcpp_version=0.5.3
 sawyer_version=0.2.0
 have_network=yes
@@ -262,8 +262,9 @@ if [ ! -d "$boost_root" ]; then
 fi
 
 #-------------------- CMake --------------------
-cmake_version_2=$(echo "$cmake_version" |cut -d. -f1-2)
-: ${cmake_url:=https://cmake.org/files/v${cmake_version_2}/cmake-${cmake_version}.tar.gz}
+#cmake_version_2=$(echo "$cmake_version" |cut -d. -f1-2)
+#: ${cmake_url:=https://cmake.org/files/v${cmake_version_2}/cmake-${cmake_version}.tar.gz}
+: ${cmake_url:=https://github.com/Kitware/CMake/releases/download/v${cmake_version}/cmake-${cmake_version}.tar.gz}
 cmake_root="$prefix/dependencies/$SPOCK_HOSTNAME/cmake"
 if [ ! -d "$cmake_root" ]; then
     (

@@ -18,8 +18,9 @@ dependencies:
 download:
   - version: ">=3"
     shell: |
-        version2=$(echo $PACKAGE_VERSION |cut -d. -f1-2)
-        cmake_download_url=https://cmake.org/files/v${version2}/cmake-$PACKAGE_VERSION.tar.gz
+        #version2=$(echo $PACKAGE_VERSION |cut -d. -f1-2)
+        #cmake_download_url=https://cmake.org/files/v${version2}/cmake-$PACKAGE_VERSION.tar.gz
+        cmake_download_url=https://github.com/Kitware/CMake/releases/download/v${PACKAGE_VERSION}/cmake-${PACKAGE_VERSION}.tar.gz
         wget -O - $cmake_download_url |tar xzf -
         mv cmake* download
         tar cf - download |gzip -9 >download.tar.gz
