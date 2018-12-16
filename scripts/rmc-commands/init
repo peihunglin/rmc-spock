@@ -163,7 +163,7 @@ project_estcp() {
 	rmc_qt)            echo 5                     ;;
         rmc_wt)            echo 3.3.7                 ;;
         rmc_yaml)          echo 0.5.3                 ;;
-        rmc_z3)            echo 4.6                   ;;
+        rmc_z3)            echo 4.8                   ;;
     esac
 }
 
@@ -190,7 +190,7 @@ project_binaries() {
         rmc_magic)         echo 5                     ;;
         rmc_pqxx)          echo 5                     ;;
         rmc_yaml)          echo 0.5.3                 ;;
-        rmc_z3)            echo 4.7                   ;;
+        rmc_z3)            echo 4.8                   ;;
     esac
 }
 
