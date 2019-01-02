@@ -1,0 +1,8 @@
+#!/bin/bash
+#
+# This makes it a tiny bit easier to run ROSE's "build" script.
+arg0="rmc ${0##*/}"
+dir0="${0%/*}"
+source "$SPOCK_SCRIPTS/impl/basic-support.sh" || exit 1
+
+(cd "$RG_SRC" && ./build "$@")
