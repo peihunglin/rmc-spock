@@ -161,6 +161,7 @@ install(
 # RMC sub-commands
 install(
   PROGRAMS
+    scripts/rmc-commands/build
     scripts/rmc-commands/config
     scripts/rmc-commands/make
     scripts/rmc-commands/init
