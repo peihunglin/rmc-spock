@@ -301,8 +301,9 @@ config_property() {
     echo
     echo "# Software dependencies"
     config_property rmc_binwalk       "Binwalk firmware extraction tool (optional)"
+    config_property rmc_bison         "Bison version number (optional) [NOTE 2]"
     config_property rmc_boost         "Boost version number (required)"
-    config_property rmc_cmake         "CMake version number (required)"
+    config_property rmc_cmake         "CMake version number (required) [NOTE 1]"
     config_property rmc_cuda          "CUDA compiler version (optional)"
     config_property rmc_dlib          "DLib version number (optional)"
     config_property rmc_doxygen       "Doxygen version number (optional)"
@@ -327,6 +328,13 @@ config_property() {
     config_property rmc_yaml          "Yaml-cpp version number (optional)"
     config_property rmc_yices         "Yices version number (optional)"
     config_property rmc_z3            "Z3 SMT solver version number (optional)"
+    echo
+    echo '# NOTE-1: CMake versions 3.11.0 and later (up to and including at least 3.13.2) cannot'
+    echo '#         be compiled with a C++11 compiler because they they get a compiler error in'
+    echo '#         Source/cmAlgorithms.h: no member named "size" in namespace "std"'
+    echo
+    echo '# NOTE-2: Bison 3.1 and later (up to and including at least 3.2.2) cannot be compiled'
+    echo '#         with Intel C++ version 14.'
 ) >.rmc-main.cfg
 
 if [ "$do_batch_mode" = "" ]; then
