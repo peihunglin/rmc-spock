@@ -120,10 +120,10 @@ post-install:
       - gnu-gnu++11    gnu++11-compiler  c++-compiler
       - gnu-c++14      c++14-compiler    c++-compiler
       - gnu-gnu++14    gnu++14-compiler  c++-compiler
+      - gnu-c++201500  c++201500-compiler c++-compiler
       - gnu-c89        c89-compiler      c-compiler
       - gnu-gnu89      gnu89-compiler    c-compiler
       - gnu-c94        c94-compiler      c-compiler
-      #- gnu-gnu94      gnu94-compiler    c-compiler
       - gnu-c99        c99-compiler      c-compiler
       - gnu-gnu99      gnu99-compiler    c-compiler
       - gnu-c11        c11-compiler      c-compiler
