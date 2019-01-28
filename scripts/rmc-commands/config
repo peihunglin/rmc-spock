@@ -45,6 +45,31 @@ cxx_flags() {
             if [ "$cxx_major" -eq 4 -a "$cxx_minor" -ge 8 ] || [ "$cxx_major" -ge 5 ]; then
                 echo -n " -ftemplate-backtrace-limit=0"
             fi
+
+	    # See [https://access.redhat.com/blogs/766093/posts/3606481].
+	    echo -n " -D_FORTIFY_SOURCE=2"
+	    echo -n " -Wp,-D_GLIBCXX_ASSERTIONS"
+
+	    if [ "$cxx_major" -eq 4 -a "$cxx_minor" -ge 9 ] || [ "$cxx_major" -ge 5 ]; then
+		# See [https://lwn.net/Articles/584225/]. Somewhat expensive, so commented out
+		: echo -n " -fstack-protector-strong"
+	    fi
+
+	    # See [https://securingsoftware.blogspot.com/2017/12/stack-clash-protection-in-gcc.html].
+	    # Commented out because it uses substantial memory.
+	    #echo -n " -fstack-clash-protection"
+
+	    # Position independendent executable. See [https://access.redhat.com/blogs/766093/posts/1975803].
+	    # Commented out because it makes debugging more difficult.
+	    #echo -n " -fPIE -fpie"
+
+	    # Disable execution on the stack
+	    echo -n " -Wl,-z,noexecstack"
+
+	    # Force linker to resolve all function references at startup, also making the GOT read-only.
+	    # See [https://blog.osiris.cyber.nyu.edu/exploitation%20mitigation%20techniques/exploitation%20techniques/2011/06/02/relro-relocation-read-only/]
+	    echo -n " -Wl,-z,relro -Wl,-z,now"
+
             ;;
     esac
 }
@@ -367,11 +392,9 @@ autoconf_command() {
 # Echo the cmake command-line to standard output
 cmake_command() {
     # These don't seem to be supported by cmake yet
-    cmake_error_if_specified dlib     "$RMC_DLIB"     "$DLIB_INCDIRS"
     cmake_error_if_specified doxygen  "$RMC_DOXYGEN"  "$DOXYGEN"
     cmake_error_if_specified dwarf    "$RMC_DWARF"    "$LIBDWARF_ROOT"
     cmake_error_if_specified elf      "$RMC_ELF"      "$LIBELF_ROOT"
-    cmake_error_if_specified gcrypt   "$RMC_GCRYPT"   "$LIBGCRYPT_ROOT"
     cmake_error_if_specified java     "$RMC_JAVA"     "$JAVA_COMPILER"
     cmake_error_if_specified magic    "$RMC_MAGIC"    "$LIBMAGIC_ROOT"
     cmake_error_if_specified pqxx     "$RMC_PQXX"     "$LIBPQXX_ROOT"
@@ -379,10 +402,7 @@ cmake_command() {
     cmake_error_if_specified raja     "$RMC_RAJA"
     cmake_error_if_specified readline "$RMC_READLINE" "$LIBREADLINE_ROOT"
     cmake_error_if_specified spot     "$RMC_SPOT"
-    cmake_error_if_specified sqlite   "$RMC_SQLITE"   "$SQLITE_ROOT"
     cmake_error_if_specified wt       "$RMC_WT"       "$WT_ROOT"
-    cmake_error_if_specified yaml     "$RMC_YAML"     "$YAMLCPP_ROOT"
-    cmake_error_if_specified z3       "$RMC_Z3"       "$Z3_ROOT"
 
     local cc_flags="$(cc_flags) $(cmake_optimize_flags) $(cmake_cc_warning_flags) $(cmake_debug_flags) $(code_coverage_flags)"
     local cxx_flags="$(cxx_flags) $(cmake_optimize_flags) $(cmake_cxx_warning_flags) $(cmake_debug_flags) $(code_coverage_flags)"
@@ -404,15 +424,82 @@ cmake_command() {
     [ -n "$PYTHON_INCDIRS" ] && echo -n " -DPYTHON_INCLUDE_DIRS='$PYTHON_INCDIRS'"
     [ -n "$PYTHON_LIBDIRS" ] && echo -n " -DPYTHON_LIBRARIES='$PYTHON_LIBDIRS'"
 
-    # Most user systems don't have cuda, so this should be the default
-    if [ "$RMC_CUDA" = "ambivalent" ]; then
-        : good
-    elif [ "$RMC_CUDA" = "no" -o "$RMC_CUDA" = "none" ]; then
-        echo -n " -Denable-cuda=OFF"
-    else
-        die "cmake does not support cuda '$RMC_CUDA'; try setting it to 'none' or 'ambivalent'"
-    fi
+    case "$RMC_BISON" in
+	ambivalent)
+	    : nothing
+	    ;;
+	no|none)
+	    echo -n " -DBISON_ROOT=no"
+	    ;;
+	*)
+	    echo -n " -DBISON_ROOT='$BISON_ROOT'"
+	    ;;
+    esac
 
+    case "$RMC_DLIB" in
+	ambivalent)
+	    : nothing
+	    ;;
+	no|none)
+	    echo -n " -DDLIB_ROOT=no"
+	    ;;
+	*)
+	    echo -n " -DDLIB_ROOT='$DLIB_ROOT'"
+	    ;;
+    esac
+
+    case "$RMC_GCRYPT" in
+	ambivalent)
+	    : nothing
+	    ;;
+	no|none)
+	    echo -n " -DGCRYPT_ROOT=no"
+	    ;;
+	*)
+	    echo -n " -DGCRYPT_ROOT='$LIBGCRYPT_ROOT'"
+	    ;;
+    esac
+    [ -n "$LIBGPG_ERROR_ROOT" ] && echo -n " -DGPGERROR_ROOT='$LIBGPG_ERROR_ROOT'"
+
+    case "$RMC_SQLITE" in
+	ambivalent)
+	    : nothing
+	    ;;
+	no|none)
+	    echo -n " -DSQLITE3_ROOT=no"
+	    ;;
+	*)
+	    echo -n " -DSQLITE3_ROOT='$SQLITE_ROOT'"
+	    ;;
+    esac
+
+    case "$RMC_YAML" in
+	ambivalent)
+	    : nothing
+	    ;;
+	no|none)
+	    echo -n " -DYAMLCPP_ROOT=no"
+	    ;;
+	*)
+	    echo -n " -DYAMLCPP_ROOT='$YAMLCPP_ROOT'"
+	    ;;
+    esac
+
+    case "$RMC_Z3" in
+	ambivalent)
+	    : nothing
+	    ;;
+	no|none)
+	    echo -n " -DZ3_ROOT=no"
+	    ;;
+	*)
+	    echo -n " -DZ3_ROOT='$Z3_ROOT'"
+	    ;;
+    esac
+
+    [ -n "$ZLIB_ROOT" ] && echo -n " -DZLIB_ROOT='$ZLIB_ROOT'";
+
+    echo -n " -DVERBOSE=TRUE"
     echo " $ROSE_SOURCE"
 }
 
