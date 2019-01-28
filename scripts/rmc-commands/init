@@ -123,7 +123,7 @@ project_none() {
         rmc_binwalk)       echo none                  ;;
         rmc_bison)         echo 3                     ;;
         rmc_boost)         echo 1.62                  ;;
-        rmc_cmake)         echo 3                     ;;
+        rmc_cmake)         echo system                ;;
         rmc_cuda)          echo none                  ;;
         rmc_dlib)          echo none                  ;;
         rmc_doxygen)       echo ambivalent            ;;
@@ -303,7 +303,7 @@ config_property() {
     config_property rmc_binwalk       "Binwalk firmware extraction tool (optional)"
     config_property rmc_bison         "Bison version number (optional) [NOTE 2]"
     config_property rmc_boost         "Boost version number (required)"
-    config_property rmc_cmake         "CMake version number (required) [NOTE 1]"
+    config_property rmc_cmake         "CMake version number (optional) [NOTE 1]"
     config_property rmc_cuda          "CUDA compiler version (optional)"
     config_property rmc_dlib          "DLib version number (optional)"
     config_property rmc_doxygen       "Doxygen version number (optional)"

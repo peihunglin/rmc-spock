@@ -8,7 +8,7 @@ versions:	[ 0.3.0,0.4.0 ]
 dependencies:
   - version: ">=0.0.0"
     install: [ "c++-compiler", blt ]
-    build: [ default-c, cmake ]
+    build: [ default-c ]
     aliases: [ "raja" ]
 
 variables:

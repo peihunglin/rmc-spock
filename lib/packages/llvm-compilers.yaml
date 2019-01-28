@@ -22,12 +22,12 @@ versions:
 
 dependencies:
   - version: '>=3.5.0'
-    build: [cmake]
+    build: []
     install: []
     aliases: compiler-collection
 
   - version: '>=3.9.0'
-    build: ['cmake>=3.4.3']
+    build: []
     install: []
     aliases: compiler-collection
 

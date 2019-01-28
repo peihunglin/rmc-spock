@@ -11,7 +11,7 @@ dependencies:
     #        automatically if a non-system compiler is being used.
 
     install: []
-    build: [ gnu-system-compilers, gnu89-compiler, c++-compiler, cmake, python, zlib ]
+    build: [ gnu-system-compilers, gnu89-compiler, c++-compiler, python, zlib ]
 
 download:
   - version: ">=1.8"

@@ -224,7 +224,11 @@ else
 		    # LLVM's build depends on cmake, so we build one using the same compiler that we use to compile
 		    # llvm. We'll install other user-requested versions of cmake later.
 		    if (echo "$COMPILER_COLLECTIONS" |grep llvm >/dev/null 2>&1); then
-			install-package "gnu-default-c,gnu-default-c++" cmake-3
+			for cmake_version in $CMAKE_VERSIONS; do
+		    	    if [ "$cmake_version" != system ]; then
+				install-package "gnu-default-c,gnu-default-c++" $cmake_version
+			    fi
+			done
 		    fi
 		    build_deps="gnu-system-compilers"
 		    ;;
@@ -276,6 +280,8 @@ echo "*** Installing CMake versions (per compiler): $CMAKE_VERSIONS"
 CMAKE_SPECS=()
 if [ "$CMAKE_VERSIONS" = "installed" ]; then
     CMAKE_SPECS=($($SPOCK_BINDIR/spock-ls --usable -1 cmake))
+elif [ "$CMAKE_VERSIONS" = "system" ]; then
+    CMAKE_VERSIONS=(system)
 else
     for cmake_version in $CMAKE_VERSIONS; do
 	[ "$cmake_version" = "none" ] && continue

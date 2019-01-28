@@ -277,7 +277,7 @@ package_spec() {
 
     if [ "$pkgspec" = "" ]; then
         case "$pkgvers" in
-            system) pkgspec="$pkgname" ;;
+            system) : nothing ;;
             no|none|ambivalent) pkgspec= ;;
 	    =*) pkgspec="$pkgname$pkgvers" ;;
             *) pkgspec="$pkgname-$pkgvers" ;;
@@ -540,7 +540,7 @@ preinstall() {
     env \
         COMPILER_COLLECTIONS="$cxx_vendor$cxx_version" \
         CXX_LANGUAGES="$cxx_lang" \
-        CMAKE_VERSIONS=$(echo "$RMC_CMAKE" |sed 's/system/installed/') \
+        CMAKE_VERSIONS="$RMC_CMAKE" \
         BOOST_VERSIONS="$RMC_BOOST" \
         DLIB_VERSIONS=$(echo "$RMC_DLIB" |sed 's/system/installed/') \
         JAVA_VERSIONS=$(echo "$RMC_JAVA" |sed 's/system/installed/') \
@@ -905,7 +905,7 @@ if [ "$RMC_HASH" = "" ]; then
     ) |sed '/^$/d' >"$depfile"
 
     # DEBUGGING
-    #cat $depfile
+    #cat $depfile; exit 1
 
     # The Spock --install switch doesn't quite work yet due to its build dependency resolution not being
     # implemented. Therefore, if installation is requested and packages are missing, run the rose-install-all-deps script

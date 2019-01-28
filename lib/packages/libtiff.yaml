@@ -7,7 +7,7 @@ versions: [ 3.9.7, 4.0.4, 4.0.5, 4.0.6, 4.0.7, 4.0.8, 4.0.9 ]
 dependencies:
   - version: '>=3'
     # FIXME: also libGL and libglut
-    install: [ c-compiler, cmake, zlib, libjpeg, liblzma ]
+    install: [ c-compiler, zlib, libjpeg, liblzma ]
     build:   []
     
 download:
