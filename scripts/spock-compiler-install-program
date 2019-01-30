@@ -4,4 +4,7 @@ dir0="${0%/*}"
 
 source "$SPOCK_SCRIPTS/impl/compiler-support.sh" || exit 1
 
+# DEBUGGING
+set -x
+
 spock-compiler-install-program "$@"
