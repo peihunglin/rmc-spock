@@ -407,7 +407,7 @@ cmake_command() {
     local cc_flags="$(cc_flags) $(cmake_optimize_flags) $(cmake_cc_warning_flags) $(cmake_debug_flags) $(code_coverage_flags)"
     local cxx_flags="$(cxx_flags) $(cmake_optimize_flags) $(cmake_cxx_warning_flags) $(cmake_debug_flags) $(code_coverage_flags)"
 
-    echo -n "$CMAKE_ROOT/bin/cmake"
+    echo -n "cmake"
     echo -n " -DCMAKE_C_COMPILER='$C_COMPILER'"
     echo -n " -DCMAKE_C_FLAGS='$cc_flags'"
     echo -n " -DCMAKE_CXX_COMPILER='$CXX_COMPILER'"
