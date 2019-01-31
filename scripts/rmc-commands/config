@@ -17,6 +17,9 @@ show_help_and_exit() {
     echo "         --dry-run | -n"
     echo "                 Show what commands would be run without running them."
     echo
+    echo "         --verbose | -v"
+    echo "                 Cause the configuration command to output debugging info."
+    echo
     echo "         --build | -b"
     echo "                 Run the 'build' script in the source tree. This is a"
     echo "                 shell script that runs tools such as automake if you"
@@ -386,6 +389,7 @@ autoconf_command() {
     autoconf_optional_with yices "$RMC_YICES" "$YICES_ROOT"
     autoconf_optional_with z3 "$RMC_Z3" "$Z3_ROOT"
     echo -n " $RMC_OTHER"
+    [ -n "$VERBOSE" ] && echo -n " --verbose"
     echo
 }
 
@@ -499,7 +503,7 @@ cmake_command() {
 
     [ -n "$ZLIB_ROOT" ] && echo -n " -DZLIB_ROOT='$ZLIB_ROOT'";
 
-    echo -n " -DVERBOSE=TRUE"
+    [ -n "$VERBOSE" ] && echo -n " -DVERBOSE=TRUE"
     echo " $ROSE_SOURCE"
 }
 
@@ -523,10 +527,12 @@ tup_command() {
 # Command-line args
 dry_run=
 run_build_script=
+: VERBOSE # (often an environment variable)
 while [ "$#" -gt 0 ]; do
     case "$1" in
         --) shift; break ;;
         -h|--help) show_help_and_exit; shift ;;
+	-v|--verbose) VERBOSE=yes; shift ;;
         -n|--dry-run) dry_run=yes; shift ;;
         -b|--build) run_build_script=yes; shift ;;
         *) echo "$0: unknown switch: $1" >&2; exit 1 ;;
