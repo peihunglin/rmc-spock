@@ -26,7 +26,11 @@ show_help_and_exit() {
     echo "                 need to regenerate the Makefile.in files (and some"
     echo "                 others) in the source tree."
     echo
-    echo "         All other configuration comes from the .rmc-main.cfg file"
+    echo "         others"
+    echo "                 All other command-line arguments are passed through to the"
+    echo "                 underlying configuration command without modification."
+    echo
+    echo "         Additional configuration settings come from the .rmc-main.cfg file"
     echo "         located at the top of the build tree."
     echo
     exit 0
@@ -348,7 +352,7 @@ cmake_frontend_languages() {
     done
 }
 
-# Echo the autoconf "configure" command-line to standard output
+# Echo the autoconf "configure" command-line to standard output.  Arguments are added to the end of the command as-is.
 autoconf_command() {
     echo -n "env CC='$C_COMPILER' CXX='$CXX_COMPILER' FC='$FORTRAN_COMPILER'"
     echo -n " CFLAGS='$(cc_flags)' CXXFLAGS='$(cxx_flags)'"
@@ -390,10 +394,10 @@ autoconf_command() {
     autoconf_optional_with z3 "$RMC_Z3" "$Z3_ROOT"
     echo -n " $RMC_OTHER"
     [ -n "$VERBOSE" ] && echo -n " --verbose"
-    echo
+    echo "$@"
 }
 
-# Echo the cmake command-line to standard output
+# Echo the cmake command-line to standard output. Arguments are added to the end of the command as-is.
 cmake_command() {
     # These don't seem to be supported by cmake yet
     cmake_error_if_specified doxygen  "$RMC_DOXYGEN"  "$DOXYGEN"
@@ -504,12 +508,13 @@ cmake_command() {
     [ -n "$ZLIB_ROOT" ] && echo -n " -DZLIB_ROOT='$ZLIB_ROOT'";
 
     [ -n "$VERBOSE" ] && echo -n " -DVERBOSE=TRUE"
+    echo -n "$@"
     echo " $ROSE_SOURCE"
 }
 
 # Echo the tup commands to standard output
 tup_command() {
-    autoconf_command |sed "s%$ROSE_SOURCE/configure%$ROSE_SOURCE/scripts/tup/rose-configure-tup%"
+    autoconf_command "$@" |sed "s%$ROSE_SOURCE/configure%$ROSE_SOURCE/scripts/tup/rose-configure-tup%"
 }
 
 ########################################################################################################################
@@ -527,6 +532,7 @@ tup_command() {
 # Command-line args
 dry_run=
 run_build_script=
+pass_throug=()
 : VERBOSE # (often an environment variable)
 while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -535,7 +541,7 @@ while [ "$#" -gt 0 ]; do
 	-v|--verbose) VERBOSE=yes; shift ;;
         -n|--dry-run) dry_run=yes; shift ;;
         -b|--build) run_build_script=yes; shift ;;
-        *) echo "$0: unknown switch: $1" >&2; exit 1 ;;
+	*) pass_through=("${pass_through[@]}" "$1"); shift ;;
     esac
 done
 
@@ -555,13 +561,13 @@ fi
 
 case "$RMC_BUILD" in
     autoconf)
-        autoconf_command >>"$script"
+        autoconf_command "${pass_through[@]}" >>"$script"
         ;;
     cmake)
-        cmake_command >>"$script"
+        cmake_command "${pass_through[@]}" >>"$script"
         ;;
     tup)
-        tup_command >>"$script"
+        tup_command "${pass_through[@]}" >>"$script"
         ;;
     *)
         die "unknown build system: $RMC_BUILD"
