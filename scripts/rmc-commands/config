@@ -377,7 +377,7 @@ autoconf_command() {
     echo -n " --with-ROSE_LONG_MAKE_CHECK_RULE=yes"
     echo -n " --with-boost='$BOOST_ROOT'"
     autoconf_optional_with dlib "$RMC_DLIB" "$DLIB_INCDIRS"
-    autoconf_optional_with doxygen "$RMC_DOXYGEN" "$DOXYGEN"
+    autoconf_optional_with doxygen "$RMC_DOXYGEN" "$DOXYGEN_ROOT/bin/doxygen"
     autoconf_optional_with dwarf "$RMC_DWARF" "$LIBDWARF_ROOT"
     autoconf_optional_with cuda "$RMC_CUDA" "$CUDA_ROOT/bin"
     autoconf_optional_with elf "$RMC_ELF" "$LIBELF_ROOT"
