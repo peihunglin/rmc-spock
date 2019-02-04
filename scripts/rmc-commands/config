@@ -266,6 +266,9 @@ autoconf_optional_with() {
         ""|ambivalent)
             : nothing
             ;;
+	system)
+	    echo -n " --with-$name"
+	    ;;
         *)
             [ -n "$if_true" ] && value="$if_true"
             echo -n " --with-$name='$value'"
