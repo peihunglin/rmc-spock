@@ -27,7 +27,7 @@ dependencies:
 
     install: []
     #build: [ gnu-system-compilers, gnu89-compiler, c++-compiler, python, zlib ]
-    build: [ gnu-system-compilers, c-compiler, c++-compiler, python, zlib ]
+    build: [ c-compiler, c++-compiler, python, zlib ]
 
 download:
   - version: ">=1.8"
