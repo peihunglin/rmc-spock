@@ -165,6 +165,7 @@ install(
     scripts/rmc-commands/config
     scripts/rmc-commands/make
     scripts/rmc-commands/init
+    scripts/rmc-commands/install
     scripts/rmc-commands/debug
   DESTINATION scripts/rmc-commands
 )

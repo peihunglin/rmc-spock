@@ -1,0 +1,53 @@
+#!/bin/bash
+# This runs whatever command is necessary to get ROSE installed.
+
+dir0="${0%/*}"
+arg0="rmc ${0##*/}"
+
+source "$SPOCK_SCRIPTS/impl/basic-support.sh" || exit 1
+
+show_help_and_exit() {
+    #     --------------------------------------------------------------------------------
+    echo "Usage:   $arg0 [SWITCHES]"
+    echo
+    echo "Purpose: Runs an installation command that installs the ROSE library. This does"
+    echo "         not include configuring the build tree, but it does run all the"
+    echo "         subsequent tests to build the ROSE library, test the library, and"
+    echo "         install the library."
+    echo
+    echo "Switches:"
+    echo "         No switches at this time."
+    echo
+    exit 0
+}
+
+dry_run=
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+	--) shift; break ;;
+	-h|--help) show_help_and_exit; shift ;;
+	-n|--dry-run) dry_run=--dry-run; shift ;;
+	-*) die "unknown command-line switch \"$1\"" ;;
+	*) die "incorrect usage; see --help" ;;
+    esac
+done
+
+case "$RMC_BUILD" in
+    autoconf)
+	"$dir0/make" -C "$RG_BLD/src" $dry_run
+	"$dir0/make" -C "$RG_BLD" $dry_run check
+	"$dir0/make" -C "$RG_BLD" $dry_run install-rose-library
+	;;
+    cmake)
+	"$dir0/make" -C "$RG_BLD/src" $dry_run
+	die "I don't know how to run ROSE tests with CMake"
+	"$dir0/make" -C "$RG_BLD" install
+	;;
+    tup)
+	# Tup install automatically runs tests
+	"$dir0/make" -C "$RG_BLD" install
+	;;
+    *)
+	die "unknown build system: $RMC_BUILD"
+	;;
+esac
