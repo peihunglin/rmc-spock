@@ -1,5 +1,5 @@
 package:        rpath
-versions:       [ 1.1 ]
+versions:       [ 1.1, 1.2 ]
 
 dependencies:
   - version: ">=1"
