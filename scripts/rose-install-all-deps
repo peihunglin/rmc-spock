@@ -476,7 +476,9 @@ else
 	[ "$yamlcpp_version" = "system" ] && continue
 	[ "$yamlcpp_version" = "ambivalent" ] && continue
 	for boost_spec in "${BOOST_SPECS[@]}"; do
-	    spec=$(install-package "$boost_spec" "yamlcpp-$yamlcpp_version")
+	    deps="$boost_spec"
+	    [ -n "${CMAKE_SPECS[0]}" ] && deps="$deps,${CMAKE_SPECS[0]}"
+	    spec=$(install-package "$deps" "yamlcpp-$yamlcpp_version")
 	    if [ "$spec" = "" ]; then
 		cannot_install
 	    else
