@@ -75,7 +75,8 @@ cxx_flags() {
 
 	    # Force linker to resolve all function references at startup, also making the GOT read-only.
 	    # See [https://blog.osiris.cyber.nyu.edu/exploitation%20mitigation%20techniques/exploitation%20techniques/2011/06/02/relro-relocation-read-only/]
-	    echo -n " -Wl,-z,relro -Wl,-z,now"
+	    #  - Note 2019-03-02: removed because it causes problems when linking with oracle-java-sdk
+	    #echo -n " -Wl,-z,relro -Wl,-z,now"
 
             ;;
     esac
