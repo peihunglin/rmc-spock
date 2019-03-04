@@ -62,13 +62,13 @@ install:
 
         case "$(uname -m)" in
             x86_64)
-	        spock-export LD_RUN_PATH "$PACKAGE_ROOT/lib64"
-	        spock-export LD_LIBRARY_PATH "$PACKAGE_ROOT/lib64"
-		;;
+                spock-export LD_RUN_PATH "$PACKAGE_ROOT/lib64"
+                spock-export LD_LIBRARY_PATH "$PACKAGE_ROOT/lib64"
+                ;;
             i686)
-	        spock-export LD_RUN_PATH "$PACKAGE_ROOT/lib32"
-	        spock-export LD_LIBRARY_PATH "$PACKAGE_ROOT/lib32"
-		;;
+                spock-export LD_RUN_PATH "$PACKAGE_ROOT/lib32"
+                spock-export LD_LIBRARY_PATH "$PACKAGE_ROOT/lib32"
+                ;;
         esac
 
 post-install:

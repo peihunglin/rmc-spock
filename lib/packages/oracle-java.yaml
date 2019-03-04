@@ -2,7 +2,7 @@ package:  oracle-java
 
 # Oracle keeps removing versions
 #versions: [7.51, 8.121, 8.131, 8.144, 8.151, 8.161]
-versions: [8.131, 8.161, 9.0.4, 10]
+versions: [8.131, 8.161, 8.201, 9.0.4, 10]
 
 
 # See [https://stackoverflow.com/questions/10268583/downloading-java-jdk-on-linux-via-wget-is-shown-license-page-instead]
@@ -21,6 +21,9 @@ variables:
 
   - version: "=8.161"
     url: "http://download.oracle.com/otn-pub/java/jdk/8u161-b12/2f38c3b165be4555a1fa6e98c45e0808/jdk-8u161-linux-x64.tar.gz"
+
+  - version: "=8.201"
+    url: "https://download.oracle.com/otn-pub/java/jdk/8u201-automated-downloads-not-allowed--obtain-from-cache-instead"
 
   - version: "=9.0.4"
     url: "http://download.oracle.com/otn-pub/java/jdk/9.0.4+11/c2514751926b4512b076cc82f959763f/jdk-9.0.4_linux-x64_bin.tar.gz"
