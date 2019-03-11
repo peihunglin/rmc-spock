@@ -48,7 +48,7 @@ cxx_flags() {
     local cxx_minor=$(echo "$CXX_VERSION" |cut -d. -f2)
 
     case "$CXX_VENDOR" in
-        gnu|llvm)
+        gnu)
             if [ "$cxx_major" -eq 4 -a "$cxx_minor" -ge 8 ] || [ "$cxx_major" -ge 5 ]; then
                 echo -n " -ftemplate-backtrace-limit=0"
             fi
@@ -79,6 +79,13 @@ cxx_flags() {
 	    #echo -n " -Wl,-z,relro -Wl,-z,now"
 
             ;;
+	llvm)
+            echo -n " -ftemplate-backtrace-limit=0"
+
+	    # See [https://access.redhat.com/blogs/766093/posts/3606481].
+	    echo -n " -D_FORTIFY_SOURCE=2"
+	    echo -n " -Wp,-D_GLIBCXX_ASSERTIONS"
+            ;;
     esac
 }
 
@@ -89,7 +96,7 @@ cc_warning_flags() {
     case "$RMC_WARNINGS" in
         yes)
             case "$C_VENDOR" in
-                gnu|llvm)
+                gnu)
                     echo -n "-Wall"
                     echo -n " -Wno-attributes"
 
@@ -106,6 +113,12 @@ cc_warning_flags() {
                         echo -n " -Wno-nonnull-compare" # because ROSE has lots of "assert(this)"
                     fi
                     ;;
+		llvm)
+                    echo -n "-Wall"
+                    echo -n " -Wno-attributes"
+                    echo -n " -Wno-unused-local-typedefs" # common warning from boost
+                    echo -n " -fdiagnostics-color=always" # colorized within tools like emacs
+                    ;;
             esac
             ;;
         no|ambivalent)
@@ -120,7 +133,7 @@ cxx_warning_flags() {
     case "$RMC_WARNINGS" in
         yes)
             case "$CXX_VENDOR" in
-                gnu|llvm)
+                gnu)
                     echo -n "-Wall"
                     echo -n " -Wno-attributes"
                     echo -n " -Wno-deprecated-declarations" # common warning from dlib using std::auto_ptr
@@ -138,6 +151,13 @@ cxx_warning_flags() {
                         echo -n " -Wno-misleading-indentation" # common warning from ROSE generated header files
                         echo -n " -Wno-nonnull-compare" # because ROSE has lots of "assert(this)"
                     fi
+                    ;;
+		llvm)
+                    echo -n "-Wall"
+                    echo -n " -Wno-attributes"
+                    echo -n " -Wno-deprecated-declarations" # common warning from dlib using std::auto_ptr
+                    echo -n " -Wno-unused-local-typedefs" # common warning from boost
+                    echo -n " -fdiagnostics-color=always" # colorized within tools like emacs
                     ;;
             esac
             ;;
