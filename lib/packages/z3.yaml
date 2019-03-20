@@ -8,6 +8,11 @@ dependencies:
     install: [ python, c++-compiler, c-compiler ]
     build: [ default-c ]
 
+  - version: ">=4.6.0"
+    aliases: []
+    install: [ c++-compiler, c-compiler ]
+    build: [ default-c ]
+
 variables:
   - version: ">=4.5.0"
     url: https://github.com/Z3Prover/z3
@@ -34,3 +39,24 @@ install:
       cd build
       make -j$PARALLELISM
       make install
+
+  - version: ">=4.6.0"
+    shell: |
+      cc --spock-triplet
+      mkdir download/_build
+      cd download/_build
+
+      # Build shared libraries
+      cmake .. -DCMAKE_C_COMPILER=cc -DCMAKE_CXX_COMPILER=c++ -DCMAKE_INSTALL_PREFIX="$PACKAGE_ROOT" \
+        -DBUILD_LIBZ3_SHARED:BOOL=YES -DBUILD_PYTHON_BINDINGS:BOOL=NO -DBUILD_JAVA_BINDINGS:BOOL=NO \
+        -DBUILD_DOCUMENTATION:BOOL=NO
+      make -j$PARALLELISM
+      make install
+
+      # Build static libraries
+      cmake .. -DCMAKE_C_COMPILER=cc -DCMAKE_CXX_COMPILER=c++ -DCMAKE_INSTALL_PREFIX="$PACKAGE_ROOT" \
+        -DBUILD_LIBZ3_SHARED:BOOL=NO -DBUILD_PYTHON_BINDINGS:BOOL=NO -DBUILD_JAVA_BINDINGS:BOOL=NO \
+        -DBUILD_DOCUMENTATION:BOOL=NO
+      make -j$PARALLELISM
+      make install
+      
