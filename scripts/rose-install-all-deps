@@ -302,6 +302,7 @@ using-these CMake "${CMAKE_SPECS[@]}"
 ########################################################################################################################
 === Python
 ########################################################################################################################
+install-package "default-c,default-c++" patchelf
 
 # Python creates C++ libraries and thus has a C++ compiler dependency
 echo "*** Installing Python versions: $PYTHON_VERSIONS"
