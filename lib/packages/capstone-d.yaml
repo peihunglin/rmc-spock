@@ -1,6 +1,6 @@
 # D wrapper for capstone
 package:        capstone-d
-versions:       [ "3.0.5-rc3", "4.0-alpha5" ]
+versions:       [ "3.0.5-rc3", "4.0-alpha5", "4.0.1" ]
 
 dependencies:
   - version:    "=3.0.5-rc3"
@@ -9,6 +9,10 @@ dependencies:
 
   - version:    "=4.0-alpha5"
     install:    ["capstone=4.0-alpha5", dstep]
+    build:      []
+
+  - version:    "=4.0.1"
+    install:    ["capstone=4.0.1", dstep]
     build:      []
 
 download:

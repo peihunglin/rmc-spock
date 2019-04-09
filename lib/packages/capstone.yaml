@@ -1,5 +1,5 @@
 package:        capstone
-versions:       ["3.0.5-rc3", "4.0-alpha5"]
+versions:       ["3.0.5-rc3", "4.0-alpha5", "4.0.1" ]
 
 dependencies:
   - version:    ">=0.0.0"
