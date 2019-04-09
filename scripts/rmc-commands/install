@@ -1,6 +1,7 @@
 #!/bin/bash
 # This runs whatever command is necessary to get ROSE installed.
 
+set -e
 dir0="${0%/*}"
 arg0="rmc ${0##*/}"
 
@@ -16,17 +17,23 @@ show_help_and_exit() {
     echo "         install the library."
     echo
     echo "Switches:"
-    echo "         No switches at this time."
+    echo "         --no-tests"
+    echo "             Don't run any tests first. This can be used to install a version"
+    echo "             of ROSE that doesn't pass and should only be used for development,"
+    echo "             not actual releases intended for users."
     echo
     exit 0
 }
 
+run_tests=yes
 dry_run=
 while [ "$#" -gt 0 ]; do
     case "$1" in
 	--) shift; break ;;
 	-h|--help) show_help_and_exit; shift ;;
 	-n|--dry-run) dry_run=--dry-run; shift ;;
+	--tests) run_tests=yes; shift ;;
+	--no-tests) run_tests=; shift ;;
 	-*) die "unknown command-line switch \"$1\"" ;;
 	*) die "incorrect usage; see --help" ;;
     esac
@@ -35,17 +42,26 @@ done
 case "$RMC_BUILD" in
     autoconf)
 	"$dir0/make" -C "$RG_BLD/src" $dry_run
-	"$dir0/make" -C "$RG_BLD" $dry_run check
+	[ -n "$run_tests" ] && "$dir0/make" -C "$RG_BLD" $dry_run check
 	"$dir0/make" -C "$RG_BLD" $dry_run install-rose-library
 	;;
     cmake)
 	"$dir0/make" -C "$RG_BLD/src" $dry_run
-	die "I don't know how to run ROSE tests with CMake"
+	[ -n "$run_tests" ] && die "I don't know how to run ROSE tests with CMake"
 	"$dir0/make" -C "$RG_BLD" install
 	;;
     tup)
 	# Tup install automatically runs tests
-	"$dir0/make" -C "$RG_BLD" install
+	if [ -n "$run_tests" ]; then
+	    "$dir0/make" -C "$RG_BLD" install
+	else
+	    "$dir0/make" -C "$RG_BLD/src"
+	    (
+		set -x
+		cd "$RG_BLD"
+		$RG_SRC/scripts/tup/install-staged --next --build-type=untested --exclude='projects/MatrixTestingProject/*'
+	    )
+	fi
 	;;
     *)
 	die "unknown build system: $RMC_BUILD"
