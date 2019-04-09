@@ -123,6 +123,7 @@ project_none() {
         rmc_binwalk)       echo none                  ;;
         rmc_bison)         echo 3                     ;;
         rmc_boost)         echo 1.67                  ;;
+	rmc_capstone)      echo none                  ;;
         rmc_cmake)         echo system                ;;
         rmc_cuda)          echo none                  ;;
         rmc_dlib)          echo none                  ;;
@@ -183,6 +184,7 @@ project_binaries() {
     case "$rmc_command" in
         rmc_languages)     echo binaries              ;;
         rmc_binwalk)       echo 2                     ;;
+	rmc_capstone)      echo 4.0.1                 ;;
         rmc_dlib)          echo 18.17                 ;;
 	rmc_doxygen)       echo 1.8.15                ;;
         rmc_gcrypt)        echo 1.7                   ;;
@@ -221,6 +223,7 @@ project_envars() {
         rmc_binwalk)       echo "$BINWALK"            ;;
         rmc_bison)         echo "$BISON"              ;;
         rmc_boost)         echo "$BOOST"              ;;
+	rmc_capstone)      echo "$CAPSTONE"           ;;
         rmc_cmake)         echo "$CMAKE"              ;;
         rmc_cuda)          echo "$CUDA"               ;;
         rmc_dlib)          echo "$DLIB"               ;;
@@ -303,6 +306,7 @@ config_property() {
     config_property rmc_binwalk       "Binwalk firmware extraction tool (optional)"
     config_property rmc_bison         "Bison version number (optional) [NOTE 2]"
     config_property rmc_boost         "Boost version number (required)"
+    config_property rmc_capstone      "Capstone disassembler (optional)"
     config_property rmc_cmake         "CMake version number (optional) [NOTE 1]"
     config_property rmc_cuda          "CUDA compiler version (optional)"
     config_property rmc_dlib          "DLib version number (optional)"

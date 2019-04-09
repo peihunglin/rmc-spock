@@ -397,6 +397,7 @@ autoconf_command() {
     echo -n " --prefix='$ROSE_INSTALLED'"
     echo -n " --with-ROSE_LONG_MAKE_CHECK_RULE=yes"
     echo -n " --with-boost='$BOOST_ROOT'"
+    autoconf_optional_with capstone "$RMC_CAPSTONE" "$CAPSTONE_ROOT"
     autoconf_optional_with dlib "$RMC_DLIB" "$DLIB_INCDIRS"
     autoconf_optional_with doxygen "$RMC_DOXYGEN" "$DOXYGEN_ROOT/bin/doxygen"
     autoconf_optional_with dwarf "$RMC_DWARF" "$LIBDWARF_ROOT"
@@ -424,6 +425,7 @@ autoconf_command() {
 # Echo the cmake command-line to standard output. Arguments are added to the end of the command as-is.
 cmake_command() {
     # These don't seem to be supported by cmake yet
+    cmake_error_if_specified capstone "$RMC_CAPSTONE" "$CAPSTONE_ROOT"
     cmake_error_if_specified doxygen  "$RMC_DOXYGEN"  "$DOXYGEN"
     cmake_error_if_specified dwarf    "$RMC_DWARF"    "$LIBDWARF_ROOT"
     cmake_error_if_specified elf      "$RMC_ELF"      "$LIBELF_ROOT"

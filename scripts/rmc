@@ -326,6 +326,7 @@ read_config_file() {
     export RMC_BINWALK=none
     export RMC_BISON=3
     export RMC_BOOST=
+    export RMC_CAPSTONE=none
     export RMC_CMAKE=3
     export RMC_CUDA=none
     export RMC_DLIB=none
@@ -685,6 +686,11 @@ rmc_boost() {
     RMC_BOOST="$1"
 }
 
+rmc_capstone() {
+    check_one_arg rmc_capstone "$@"
+    RMC_CAPSTONE="$1"
+}
+
 rmc_cmake() {
     check_one_arg rmc_cmake "$@"
     RMC_CMAKE="$1"
@@ -878,6 +884,7 @@ if [ "$RMC_HASH" = "" ]; then
         package_spec rmc_binwalk  "$RMC_BINWALK"
         package_spec rmc_bison    "$RMC_BISON"
         package_spec rmc_boost    "$RMC_BOOST"
+	package_spec rmc_capstone "$RMC_CAPSTONE"
         package_spec rmc_cmake    "$RMC_CMAKE"
         package_spec rmc_cuda     "$RMC_CUDA"
         package_spec rmc_dlib     "$RMC_DLIB"
