@@ -32,3 +32,4 @@ fi
     echo "$arg0: or"
     echo "$arg0:   \$ $dir0/install-spock"
 ) >&2
+exit 1
