@@ -333,6 +333,7 @@ read_config_file() {
     export RMC_DOXYGEN=none
     export RMC_DWARF=none
     export RMC_EDG=ambivalent
+    export RMC_EDG_COMPILE=ambivalent
     export RMC_ELF=none
     export RMC_GCRYPT=none
     export RMC_JAVA=none
@@ -719,6 +720,11 @@ rmc_dwarf() {
 rmc_edg() {
     check_one_arg rmc_edg "$@"
     RMC_EDG="$1"
+}
+
+rmc_edg_compile() {
+    check_one_arg rmc_edg_compile "$@"
+    RMC_EDG_COMPILE="$1"
 }
 
 rmc_elf() {

@@ -391,7 +391,15 @@ autoconf_command() {
     echo -n " --disable-boost-version-check"
     echo -n " --disable-gcc-version-check"
     autoconf_optional_enable assertion-behavior "$RMC_ASSERTIONS"
-    autoconf_optional_enable edg_version "$RMC_EDG"
+    autoconf_optional_enable edg-version "$RMC_EDG"
+    case "$RMC_EDG_COMPILE" in
+	yes)
+	    echo -n " --enable-edg-compile=yes"
+	    ;;
+	no)
+	    echo -n " --enable-edg-compile=no"
+	    ;;
+    esac
     local languages=$(normalize_languages $RMC_LANGUAGES |tr ' ' ',')
     autoconf_optional_enable languages "$languages" "$languages" "none"
     echo -n " --prefix='$ROSE_INSTALLED'"
@@ -425,18 +433,19 @@ autoconf_command() {
 # Echo the cmake command-line to standard output. Arguments are added to the end of the command as-is.
 cmake_command() {
     # These don't seem to be supported by cmake yet
-    cmake_error_if_specified capstone "$RMC_CAPSTONE" "$CAPSTONE_ROOT"
-    cmake_error_if_specified doxygen  "$RMC_DOXYGEN"  "$DOXYGEN"
-    cmake_error_if_specified dwarf    "$RMC_DWARF"    "$LIBDWARF_ROOT"
-    cmake_error_if_specified elf      "$RMC_ELF"      "$LIBELF_ROOT"
-    cmake_error_if_specified java     "$RMC_JAVA"     "$JAVA_COMPILER"
-    cmake_error_if_specified magic    "$RMC_MAGIC"    "$LIBMAGIC_ROOT"
-    cmake_error_if_specified pqxx     "$RMC_PQXX"     "$LIBPQXX_ROOT"
-    cmake_error_if_specified qt       "$RMC_QT"       "$QT_ROOT"
-    cmake_error_if_specified raja     "$RMC_RAJA"
-    cmake_error_if_specified readline "$RMC_READLINE" "$LIBREADLINE_ROOT"
-    cmake_error_if_specified spot     "$RMC_SPOT"
-    cmake_error_if_specified wt       "$RMC_WT"       "$WT_ROOT"
+    cmake_error_if_specified capstone 	 "$RMC_CAPSTONE"    "$CAPSTONE_ROOT"
+    cmake_error_if_specified doxygen  	 "$RMC_DOXYGEN"     "$DOXYGEN"
+    cmake_error_if_specified dwarf    	 "$RMC_DWARF"       "$LIBDWARF_ROOT"
+    cmake_error_if_specified elf      	 "$RMC_ELF"         "$LIBELF_ROOT"
+    cmake_error_if_specified edg-compile "$RMC_EDG_COMPILE"
+    cmake_error_if_specified java     	 "$RMC_JAVA"        "$JAVA_COMPILER"
+    cmake_error_if_specified magic    	 "$RMC_MAGIC"       "$LIBMAGIC_ROOT"
+    cmake_error_if_specified pqxx     	 "$RMC_PQXX"        "$LIBPQXX_ROOT"
+    cmake_error_if_specified qt       	 "$RMC_QT"          "$QT_ROOT"
+    cmake_error_if_specified raja     	 "$RMC_RAJA"
+    cmake_error_if_specified readline 	 "$RMC_READLINE"    "$LIBREADLINE_ROOT"
+    cmake_error_if_specified spot     	 "$RMC_SPOT"
+    cmake_error_if_specified wt       	 "$RMC_WT"          "$WT_ROOT"
 
     local cc_flags="$(cc_flags) $(cmake_optimize_flags) $(cmake_cc_warning_flags) $(cmake_debug_flags) $(code_coverage_flags)"
     local cxx_flags="$(cxx_flags) $(cmake_optimize_flags) $(cmake_cxx_warning_flags) $(cmake_debug_flags) $(code_coverage_flags)"

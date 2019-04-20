@@ -130,6 +130,7 @@ project_none() {
         rmc_doxygen)       echo ambivalent            ;;
         rmc_dwarf)         echo none                  ;;
         rmc_edg)           echo ambivalent            ;;
+	rmc_edg_compile)   echo ambivalent            ;;
         rmc_elf)           echo none                  ;;
         rmc_gcrypt)        echo none                  ;;
         rmc_java)          echo none                  ;;
@@ -230,6 +231,7 @@ project_envars() {
         rmc_doxygen)       echo "$DOXYGEN"            ;;
         rmc_dwarf)         echo "$DWARF"              ;;
         rmc_edg)           echo "$EDG"                ;;
+	rmc_edg_compile)   echo "$EDG_COMPILE"        ;;
         rmc_elf)           echo "$ELF"                ;;
         rmc_gcrypt)        echo "$GCRYPT"             ;;
         rmc_java)          echo "$JAVA"               ;;
@@ -313,6 +315,7 @@ config_property() {
     config_property rmc_doxygen       "Doxygen version number (optional)"
     config_property rmc_dwarf         "DWARF library version number (optional)"
     config_property rmc_edg           "EDG version number (optional)"
+    config_property rmc_edg_compile   "Compile EDG source code (optional)"
     config_property rmc_elf           "ELF library version number (needed by dwarf)"
     config_property rmc_gcrypt        "GNU gcrypt library version number (optional)"
     config_property rmc_java          "Oracle JDK version number (optional)"
