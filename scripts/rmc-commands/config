@@ -260,7 +260,7 @@ normalize_languages() {
     for lang in $languages; do
         case "$lang" in
             none)
-                : ignored
+		result=(none)
                 ;;
             all)
                 result=("${result[@]}" $(all_languages))
@@ -364,11 +364,13 @@ cmake_language_name() {
 cmake_frontend_languages() {
     declare -A languages
     for lang in $(normalize_languages "$RMC_LANGUAGES"); do
-        languages["$lang"]=yes
+        [ "$lang" != none ] && languages["$lang"]=yes
     done
 
     for lang in $(normalize_languages all); do
-        if [ -n "${languages[$lang]}" ]; then
+	if [ "$lang" = none ]; then
+	    : do nothing
+        elif [ -n "${languages[$lang]}" ]; then
             echo -n " -D$(cmake_language_name $lang)=ON"
         else
             echo -n " -D$(cmake_language_name $lang)=OFF"
