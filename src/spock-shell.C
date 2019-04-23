@@ -199,7 +199,8 @@ int
 main(int argc, char *argv[]) {
     Spock::initialize(mlog);
     DefinedPackage::mlog[INFO].enable();
-    Context::mlog[MARCH].enable();
+    if (isatty(1))
+        Context::mlog[MARCH].enable();
     Settings settings;
     std::vector<std::string> command = parseCommandLine(argc, argv, settings);
     boost::regex whitespace("\\s+");
