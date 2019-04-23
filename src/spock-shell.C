@@ -19,6 +19,8 @@ static const char *description =
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/regex.hpp>
 #include <Sawyer/LineVector.h>
 
 using namespace Spock;
@@ -38,9 +40,10 @@ struct Settings {
     bool showingWelcomeMessage;                             // show a welcome message if a shell-script is started
     AutoAnswer installMissing;                              // what to do about missing packages
     boost::filesystem::path graphVizDeps;                   // file in which to write dependency graph
+    size_t showingInstallationErrors;                       // number of tail lines to show from installation log
 
     Settings()
-        : showingWelcomeMessage(false), installMissing(ASSUME_NO) {}
+        : showingWelcomeMessage(false), installMissing(ASSUME_NO), showingInstallationErrors(30) {}
 };
 
 std::vector<std::string>
@@ -96,6 +99,10 @@ parseCommandLine(int argc, char *argv[], Settings &settings) {
                      "@named{yes}{Install missing packages using defaults for each choice. This has the same effect as using "
                      "\"ask\" and pressing enter to use the default value at each prompt, except the output will be less "
                      "verbose. This is the default when @s{install} is specified with no argument.}"));
+
+    tool.insert(Switch("installation-log")
+                .argument("n", nonNegativeIntegerParser(settings.showingInstallationErrors))
+                .doc("If an installation error occurs, show @v{n} lines of the end of the installation log."));
 
     ParserResult cmdline = p.with(tool).parse(argc, argv);
     std::vector<std::string> retval = cmdline.unreachedArgs();
@@ -169,6 +176,19 @@ askInstall(const Package::Ptr &pkg, AutoAnswer aa) {
             }
     }
     ASSERT_not_reachable("AutoAnswer not handled");
+}
+
+void
+showLinesFromFile(const std::string &packageName, const boost::filesystem::path &fileName, size_t nLines) {
+    if (0 == nLines || !boost::filesystem::is_regular_file(fileName))
+        return;
+    
+    Sawyer::Container::LineVector contents(fileName);
+    size_t startLine = 0;
+    if (contents.nLines() > nLines)
+        startLine = contents.nLines() - nLines;
+    for (size_t i = startLine; i < contents.nLines(); ++i)
+        std::cout <<"  " <<packageName <<"|" <<contents.lineString(i);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -332,7 +352,12 @@ main(int argc, char *argv[]) {
         }
     
     } catch (const Exception::SpockError &e) {
-        mlog[ERROR] <<e.what() <<"\n";
+        std::string mesg = e.what();
+        mlog[ERROR] <<mesg <<"\n";
+        boost::regex re("installation script failed for (\\w+); see (.*) for details");
+        boost::smatch result;
+        if (boost::regex_search(mesg, result, re))
+            showLinesFromFile(result[1].str(), result[2].str(), settings.showingInstallationErrors);
         exit(1);
     }
 }
