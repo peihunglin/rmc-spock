@@ -932,6 +932,8 @@ if [ "$RMC_HASH" = "" ]; then
     # Attempt to resolve the dependency constraints and cache the results for later.
     if ! "$SPOCK_BINDIR/spock-shell" --with-file "$depfile" --output "$blddir/.spock" \
          $do_install $do_graph --log="$do_debug" true; then
+	echo "Previous errors occurred when using these dependencies:"
+	sed 's/^/    /' "$depfile"
         rm -f "$depfile" "$blddir/.spock"
         exit 1
     fi
