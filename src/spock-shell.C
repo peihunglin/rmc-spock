@@ -88,13 +88,14 @@ parseCommandLine(int argc, char *argv[], Settings &settings) {
                 .argument("how", enumParser(settings.installMissing)
                           ->with("no", ASSUME_NO)
                           ->with("yes", ASSUME_YES)
-                          ->with("ask", ASK_USER))
+                          ->with("ask", ASK_USER),
+                          "yes")
                 .doc("Try to install missing packages that are missing?  The @v{how} value is one of the following words:"
                      "@named{no}{Do not try to install anything. If something is missing, show and error and exit.}"
                      "@named{ask}{Prompt the user for an answer at each step.}"
                      "@named{yes}{Install missing packages using defaults for each choice. This has the same effect as using "
                      "\"ask\" and pressing enter to use the default value at each prompt, except the output will be less "
-                     "verbose.}"));
+                     "verbose. This is the default when @s{install} is specified with no argument.}"));
 
     ParserResult cmdline = p.with(tool).parse(argc, argv);
     std::vector<std::string> retval = cmdline.unreachedArgs();
@@ -244,7 +245,11 @@ main(int argc, char *argv[]) {
                 mlog[INFO] <<"  using " <<pkg->toString() <<"\n";
             } else {
                 partsMissing = true;
-                mlog[ERROR] <<"missing " <<pkg->toString() <<"\n";
+                if (ASSUME_NO == settings.installMissing) {
+                    mlog[ERROR] <<"missing " <<pkg->toString() <<"\n";
+                } else {
+                    mlog[WARN] <<"missing " <<pkg->toString() <<"\n";
+                }
                 VersionNumbers vns = pkg->versions();
                 if (vns.size() > 1) {
                     mlog[INFO] <<"  " <<pkg->name() <<" available versions:";
