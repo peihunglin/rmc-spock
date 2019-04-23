@@ -521,7 +521,7 @@ parse_cxx_spec() {
                 local cxx_language="default-c++"
                 local cxx_version="$langvers"
                 ;;
-            esac
+        esac
     fi
 
     echo "$cxx_vendor:$cxx_language:$cxx_version"
