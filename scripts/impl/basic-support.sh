@@ -1,7 +1,7 @@
 # Basic shell programming support
 
 die() {
-    echo "$arg0:" "$@" >&2
+    echo "$arg0:" "error:" "$@" >&2
     exit 1
 }
 
