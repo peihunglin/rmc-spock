@@ -136,7 +136,12 @@ run_tup_command() {
 	doing_install=yes
 	targets=("$RG_BLD")
     fi
-    
+
+    # If the target is "check" then remove it; tup automatically runs tests
+    if [ "${#targets[*]}" -eq 1 -a "${targets[0]}" = "check" ]; then
+	targets=()
+    fi
+
     # If no target specified, use "." as the target in order to restrict the build to one directory.
     # BTW, the targets must come before other command-line switches.
     cmd="${cmd} ${targets[*]}"
