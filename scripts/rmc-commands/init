@@ -345,7 +345,7 @@ config_property() {
 ) >.rmc-main.cfg
 
 if [ "$do_batch_mode" = "" ]; then
-    "${EDITOR:-vi}" .rmc-main.cfg
+    ${EDITOR:-vi} .rmc-main.cfg
     echo "Now run $SPOCK_BINDIR/rmc to enter the build subshell"
 fi
 exit 0

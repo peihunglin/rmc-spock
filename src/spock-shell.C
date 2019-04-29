@@ -20,6 +20,7 @@ static const char *description =
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
 #include <Sawyer/LineVector.h>
 
@@ -43,7 +44,7 @@ struct Settings {
     size_t showingInstallationErrors;                       // number of tail lines to show from installation log
 
     Settings()
-        : showingWelcomeMessage(false), installMissing(ASSUME_NO), showingInstallationErrors(30) {}
+        : showingWelcomeMessage(false), installMissing(ASSUME_NO), showingInstallationErrors(60) {}
 };
 
 std::vector<std::string>
@@ -102,7 +103,8 @@ parseCommandLine(int argc, char *argv[], Settings &settings) {
 
     tool.insert(Switch("installation-log")
                 .argument("n", nonNegativeIntegerParser(settings.showingInstallationErrors))
-                .doc("If an installation error occurs, show @v{n} lines of the end of the installation log."));
+                .doc("If an installation error occurs, show @v{n} lines of the end of the installation log. Default is " +
+                     boost::lexical_cast<std::string>(settings.showingInstallationErrors) + "."));
 
     ParserResult cmdline = p.with(tool).parse(argc, argv);
     std::vector<std::string> retval = cmdline.unreachedArgs();
