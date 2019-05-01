@@ -16,14 +16,14 @@ ROSE with any combination of software dependencies, including any
 compiler, whether or not anyone has already installed those
 dependencies on the system. It is intended to run on the development
 platform of your choice, and currently supports RHEL 6 and 7; Debian 8
-and 9; Ubuntu 14.04, 16.04, 17.04, and 18.04; Mint 18 and 19; and
+and 9; Ubuntu 16.04, 18.04, 18.10, and 19.04; Mint 18 and 19; and
 Fedora 25 through 29. It may work on other Linux distributions as
 well.
 
 A secondary goal is to make it easier to test ROSE in automated
 systems like Jenkins and the ROSE Matrix, by avoiding what has
 historically been a long and frustrating process of installing
-multiple configurations of software packages and mixing chosen
+multiple configurations of software packages, and by mixing chosen
 packages into an environment in a way that's consistent and
 reproducible.
 
@@ -41,10 +41,12 @@ instead use the "rmc" tool. The basic idea of "rmc" is:
 
 1. Use "rmc init" to create and configure a new build directory
 2. Use "rmc" to install all dependencies and start a build subshell
-3. Use "rmc config" to configure ROSE
-4. Use "rmc make" to build ROSE
-5. Use "rmc make install" to install ROSE
-6. Don't forget to exit the "rmc" subshell when you're done
+3. Use "rmc build" to run any ROSE pre-configure steps (modifies ROSE
+   source tree)
+4. Use "rmc config" to configure ROSE
+5. Use "rmc make" to build ROSE
+6. Use "rmc make install" to install ROSE
+7. Don't forget to exit the "rmc" subshell when you're done
 
 Step 1 is performed once per build directory; the other steps can be
 done as often as you like in that build tree.  A ROSE developer can
