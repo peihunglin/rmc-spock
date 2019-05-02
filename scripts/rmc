@@ -328,7 +328,7 @@ read_config_file() {
     export RMC_BINWALK=none
     export RMC_BISON=3
     export RMC_BOOST=
-    export RMC_CAPSTONE=none
+    export RMC_CAPSTONE=ambivalent
     export RMC_CMAKE=3
     export RMC_CUDA=none
     export RMC_DLIB=none
