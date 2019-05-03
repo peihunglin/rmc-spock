@@ -269,7 +269,13 @@ package_spec() {
             if [ "$RMC_BUILD" = "tup" -a "$pkgvers" = "ambivalent" ]; then
                 pkgspec="tup>0" # latest version
 	    else
-		pkgspec="tup-$pkgvers"
+		case "$pkgvers" in
+		    no|none|ambivalent)
+			pkgspec=
+			;;
+		    *)
+			pkgspec="tup-$pkgvers"
+		esac
             fi
             ;;
 
