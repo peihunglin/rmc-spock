@@ -43,10 +43,11 @@ install:
   - version: ">=4.6.0"
     shell: |
       cc --spock-triplet
-      mkdir download/_build
-      cd download/_build
+      cd download
 
       # Build shared libraries
+      mkdir _build
+      cd _build
       cmake .. -DCMAKE_C_COMPILER=cc -DCMAKE_CXX_COMPILER=c++ -DCMAKE_INSTALL_PREFIX="$PACKAGE_ROOT" \
         -DBUILD_LIBZ3_SHARED:BOOL=YES -DBUILD_PYTHON_BINDINGS:BOOL=NO -DBUILD_JAVA_BINDINGS:BOOL=NO \
         -DBUILD_DOCUMENTATION:BOOL=NO
@@ -54,6 +55,10 @@ install:
       make install
 
       # Build static libraries
+      cd ..
+      rm -rf _build
+      mkdir _build
+      cd _build
       cmake .. -DCMAKE_C_COMPILER=cc -DCMAKE_CXX_COMPILER=c++ -DCMAKE_INSTALL_PREFIX="$PACKAGE_ROOT" \
         -DBUILD_LIBZ3_SHARED:BOOL=NO -DBUILD_PYTHON_BINDINGS:BOOL=NO -DBUILD_JAVA_BINDINGS:BOOL=NO \
         -DBUILD_DOCUMENTATION:BOOL=NO

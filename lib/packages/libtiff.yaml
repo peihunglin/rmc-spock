@@ -25,10 +25,10 @@ install:
       # Disable OpenGL support even if system-installed libraries are found
       sed -i~ 's/set(HAVE_OPENGL TRUE)/set(HAVE_OPENGL FALSE)/' download/CMakeLists.txt
 
-      mkdir build
-      cd build
 
       # First build static libraries
+      mkdir build
+      cd build
       cmake ../download \
         -DCMAKE_C_COMPILER=cc \
         -DCMAKE_INSTALL_PREFIX="$PACKAGE_ROOT" \
@@ -38,6 +38,10 @@ install:
       make install
 
       # Then build shared libraries
+      cd ..
+      rm -rf build
+      mkdir build
+      cd build
       cmake ../download \
         -DCMAKE_C_COMPILER=cc \
         -DCMAKE_INSTALL_PREFIX="$PACKAGE_ROOT" \
