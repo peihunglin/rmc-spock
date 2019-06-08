@@ -53,38 +53,38 @@ cxx_flags() {
                 echo -n " -ftemplate-backtrace-limit=0"
             fi
 
-	    # See [https://access.redhat.com/blogs/766093/posts/3606481].
-	    echo -n " -D_FORTIFY_SOURCE=2"
-	    echo -n " -Wp,-D_GLIBCXX_ASSERTIONS"
+            # See [https://access.redhat.com/blogs/766093/posts/3606481].
+            echo -n " -D_FORTIFY_SOURCE=2"
+            echo -n " -Wp,-D_GLIBCXX_ASSERTIONS"
 
-	    if [ "$cxx_major" -eq 4 -a "$cxx_minor" -ge 9 ] || [ "$cxx_major" -ge 5 ]; then
-		# See [https://lwn.net/Articles/584225/]. Somewhat expensive, so commented out
-		: echo -n " -fstack-protector-strong"
-	    fi
+            if [ "$cxx_major" -eq 4 -a "$cxx_minor" -ge 9 ] || [ "$cxx_major" -ge 5 ]; then
+                # See [https://lwn.net/Articles/584225/]. Somewhat expensive, so commented out
+                : echo -n " -fstack-protector-strong"
+            fi
 
-	    # See [https://securingsoftware.blogspot.com/2017/12/stack-clash-protection-in-gcc.html].
-	    # Commented out because it uses substantial memory.
-	    #echo -n " -fstack-clash-protection"
+            # See [https://securingsoftware.blogspot.com/2017/12/stack-clash-protection-in-gcc.html].
+            # Commented out because it uses substantial memory.
+            #echo -n " -fstack-clash-protection"
 
-	    # Position independendent executable. See [https://access.redhat.com/blogs/766093/posts/1975803].
-	    # Commented out because it makes debugging more difficult.
-	    #echo -n " -fPIE -fpie"
+            # Position independendent executable. See [https://access.redhat.com/blogs/766093/posts/1975803].
+            # Commented out because it makes debugging more difficult.
+            #echo -n " -fPIE -fpie"
 
-	    # Disable execution on the stack
-	    echo -n " -Wl,-z,noexecstack"
+            # Disable execution on the stack
+            echo -n " -Wl,-z,noexecstack"
 
-	    # Force linker to resolve all function references at startup, also making the GOT read-only.
-	    # See [https://blog.osiris.cyber.nyu.edu/exploitation%20mitigation%20techniques/exploitation%20techniques/2011/06/02/relro-relocation-read-only/]
-	    #  - Note 2019-03-02: removed because it causes problems when linking with oracle-java-sdk
-	    #echo -n " -Wl,-z,relro -Wl,-z,now"
+            # Force linker to resolve all function references at startup, also making the GOT read-only.
+            # See [https://blog.osiris.cyber.nyu.edu/exploitation%20mitigation%20techniques/exploitation%20techniques/2011/06/02/relro-relocation-read-only/]
+            #  - Note 2019-03-02: removed because it causes problems when linking with oracle-java-sdk
+            #echo -n " -Wl,-z,relro -Wl,-z,now"
 
             ;;
-	llvm)
+        llvm)
             echo -n " -ftemplate-backtrace-limit=0"
 
-	    # See [https://access.redhat.com/blogs/766093/posts/3606481].
-	    echo -n " -D_FORTIFY_SOURCE=2"
-	    echo -n " -Wp,-D_GLIBCXX_ASSERTIONS"
+            # See [https://access.redhat.com/blogs/766093/posts/3606481].
+            echo -n " -D_FORTIFY_SOURCE=2"
+            echo -n " -Wp,-D_GLIBCXX_ASSERTIONS"
             ;;
     esac
 }
@@ -113,7 +113,7 @@ cc_warning_flags() {
                         echo -n " -Wno-nonnull-compare" # because ROSE has lots of "assert(this)"
                     fi
                     ;;
-		llvm)
+                llvm)
                     echo -n "-Wall"
                     echo -n " -Wno-attributes"
                     echo -n " -Wno-unused-local-typedefs" # common warning from boost
@@ -152,7 +152,7 @@ cxx_warning_flags() {
                         echo -n " -Wno-nonnull-compare" # because ROSE has lots of "assert(this)"
                     fi
                     ;;
-		llvm)
+                llvm)
                     echo -n "-Wall"
                     echo -n " -Wno-attributes"
                     echo -n " -Wno-deprecated-declarations" # common warning from dlib using std::auto_ptr
@@ -260,7 +260,7 @@ normalize_languages() {
     for lang in $languages; do
         case "$lang" in
             none)
-		result=(none)
+                result=(none)
                 ;;
             all)
                 result=("${result[@]}" $(all_languages))
@@ -287,9 +287,9 @@ autoconf_optional_with() {
         ""|ambivalent)
             : nothing
             ;;
-	system)
-	    echo -n " --with-$name"
-	    ;;
+        system)
+            echo -n " --with-$name"
+            ;;
         *)
             [ -n "$if_true" ] && value="$if_true"
             echo -n " --with-$name='$value'"
@@ -368,8 +368,8 @@ cmake_frontend_languages() {
     done
 
     for lang in $(normalize_languages all); do
-	if [ "$lang" = none ]; then
-	    : do nothing
+        if [ "$lang" = none ]; then
+            : do nothing
         elif [ -n "${languages[$lang]}" ]; then
             echo -n " -D$(cmake_language_name $lang)=ON"
         else
@@ -395,12 +395,12 @@ autoconf_command() {
     autoconf_optional_enable assertion-behavior "$RMC_ASSERTIONS"
     autoconf_optional_enable edg-version "$RMC_EDG"
     case "$RMC_EDG_COMPILE" in
-	yes)
-	    echo -n " --enable-edg-compile=yes"
-	    ;;
-	no)
-	    echo -n " --enable-edg-compile=no"
-	    ;;
+        yes)
+            echo -n " --enable-edg-compile=yes"
+            ;;
+        no)
+            echo -n " --enable-edg-compile=no"
+            ;;
     esac
     local languages=$(normalize_languages $RMC_LANGUAGES |tr ' ' ',')
     autoconf_optional_enable languages "$languages" "$languages" "none"
@@ -435,19 +435,8 @@ autoconf_command() {
 # Echo the cmake command-line to standard output. Arguments are added to the end of the command as-is.
 cmake_command() {
     # These don't seem to be supported by cmake yet
-    cmake_error_if_specified capstone 	 "$RMC_CAPSTONE"    "$CAPSTONE_ROOT"
-    cmake_error_if_specified doxygen  	 "$RMC_DOXYGEN"     "$DOXYGEN"
-    cmake_error_if_specified dwarf    	 "$RMC_DWARF"       "$LIBDWARF_ROOT"
-    cmake_error_if_specified elf      	 "$RMC_ELF"         "$LIBELF_ROOT"
-    cmake_error_if_specified edg-compile "$RMC_EDG_COMPILE"
-    cmake_error_if_specified java     	 "$RMC_JAVA"        "$JAVA_COMPILER"
-    cmake_error_if_specified magic    	 "$RMC_MAGIC"       "$LIBMAGIC_ROOT"
-    cmake_error_if_specified pqxx     	 "$RMC_PQXX"        "$LIBPQXX_ROOT"
-    cmake_error_if_specified qt       	 "$RMC_QT"          "$QT_ROOT"
-    cmake_error_if_specified raja     	 "$RMC_RAJA"
-    cmake_error_if_specified readline 	 "$RMC_READLINE"    "$LIBREADLINE_ROOT"
-    cmake_error_if_specified spot     	 "$RMC_SPOT"
-    cmake_error_if_specified wt       	 "$RMC_WT"          "$WT_ROOT"
+    cmake_error_if_specified capstone    "$RMC_CAPSTONE"    "$CAPSTONE_ROOT"
+    cmake_error_if_specified elf         "$RMC_ELF"         "$LIBELF_ROOT"
 
     local cc_flags="$(cc_flags) $(cmake_optimize_flags) $(cmake_cc_warning_flags) $(cmake_debug_flags) $(code_coverage_flags)"
     local cxx_flags="$(cxx_flags) $(cmake_optimize_flags) $(cmake_cxx_warning_flags) $(cmake_debug_flags) $(code_coverage_flags)"
@@ -469,81 +458,32 @@ cmake_command() {
     [ -n "$PYTHON_INCDIRS" ] && echo -n " -DPYTHON_INCLUDE_DIRS='$PYTHON_INCDIRS'"
     [ -n "$PYTHON_LIBDIRS" ] && echo -n " -DPYTHON_LIBRARIES='$PYTHON_LIBDIRS'"
 
-    case "$RMC_BISON" in
-	ambivalent)
-	    : nothing
-	    ;;
-	no|none)
-	    echo -n " -DBISON_ROOT=no"
-	    ;;
-	*)
-	    echo -n " -DBISON_ROOT='$BISON_ROOT'"
-	    ;;
-    esac
-
-    case "$RMC_DLIB" in
-	ambivalent)
-	    : nothing
-	    ;;
-	no|none)
-	    echo -n " -DDLIB_ROOT=no"
-	    ;;
-	*)
-	    echo -n " -DDLIB_ROOT='$DLIB_ROOT'"
-	    ;;
-    esac
-
-    case "$RMC_GCRYPT" in
-	ambivalent)
-	    : nothing
-	    ;;
-	no|none)
-	    echo -n " -DGCRYPT_ROOT=no"
-	    ;;
-	*)
-	    echo -n " -DGCRYPT_ROOT='$LIBGCRYPT_ROOT'"
-	    ;;
+    cmake_optional BISON_ROOT   "$RMC_BISON"   "$BISON_ROOT"
+    cmake_optional DLIB_ROOT    "$RMC_DLIB"    "$DLIB_ROOT"
+    cmake_optional DOXYGEN_ROOT "$RMC_DOXYGEN" "$DOXYGEN_ROOT"
+    cmake_optional DWARF_ROOT   "$RMC_DWARF"   "$DWARF_ROOT"
+    cmake_optional GCRYPT_ROOT  "$RMC_GCRYPT"  "$LIBGCRYPT_ROOT"
+    case "$RMC_EDG_COMPILE" in
+        yes)
+            echo -n " -DEDG_COMPILE=yes"
+            ;;
+        no)
+            echo -n " -DEDG_COMPILE=no"
+            ;;
     esac
     [ -n "$LIBGPG_ERROR_ROOT" ] && echo -n " -DGPGERROR_ROOT='$LIBGPG_ERROR_ROOT'"
-
-    case "$RMC_SQLITE" in
-	ambivalent)
-	    : nothing
-	    ;;
-	no|none)
-	    echo -n " -DSQLITE3_ROOT=no"
-	    ;;
-	*)
-	    echo -n " -DSQLITE3_ROOT='$SQLITE_ROOT'"
-	    ;;
-    esac
-
-    case "$RMC_YAML" in
-	ambivalent)
-	    : nothing
-	    ;;
-	no|none)
-	    echo -n " -DYAMLCPP_ROOT=no"
-	    ;;
-	*)
-	    echo -n " -DYAMLCPP_ROOT='$YAMLCPP_ROOT'"
-	    ;;
-    esac
-
-    case "$RMC_Z3" in
-	ambivalent)
-	    : nothing
-	    ;;
-	no|none)
-	    echo -n " -DZ3_ROOT=no"
-	    ;;
-	*)
-	    echo -n " -DZ3_ROOT='$Z3_ROOT'"
-	    ;;
-    esac
-
+    cmake_optional JAVA_ROOT     "$RMC_JAVA"     "$RMC_JAVA_ROOT"
+    cmake_optional MAGIC_ROOT    "$RMC_MAGIC"    "$LIBMAGIC_ROOT"
+    cmake_optional PQXX_ROOT     "$RMC_PQXX"     "$LIBPQXX_ROOT"
+    cmake_optional QT_ROOT       "$RMC_QT"       "$QT_ROOT"
+    cmake_optional RAJA_ROOT     "$RMC_RAJA"     "$RAJA_ROOT"
+    cmake_optional READLINE_ROOT "$RMC_READLINE" "$LIBREADLINE_ROOT"
+    cmake_optional SPOT_ROOT     "$RMC_SPOT"     "$SPOT_ROOT"
+    cmake_optional SQLITE3_ROOT  "$RMC_SQLITE"   "$SQLITE_ROOT"
+    cmake_optional WT_ROOT       "$RMC_WT"       "$WT_ROOT"
+    cmake_optional YAMLCPP_ROOT  "$RMC_YAML"     "$YAMLCPP_ROOT"
+    cmake_optional Z3_ROOT       "$RMC_Z3"       "$Z3_ROOT"
     [ -n "$ZLIB_ROOT" ] && echo -n " -DZLIB_ROOT='$ZLIB_ROOT'";
-
     [ -n "$VERBOSE" ] && echo -n " -DVERBOSE=TRUE"
     echo -n "$@"
     echo " $ROSE_SOURCE"
@@ -575,10 +515,10 @@ while [ "$#" -gt 0 ]; do
     case "$1" in
         --) shift; break ;;
         -h|--help) show_help_and_exit; shift ;;
-	-v|--verbose) VERBOSE=yes; shift ;;
+        -v|--verbose) VERBOSE=yes; shift ;;
         -n|--dry-run) dry_run=yes; shift ;;
         -b|--build) run_build_script=yes; shift ;;
-	*) pass_through=("${pass_through[@]}" "$1"); shift ;;
+        *) pass_through=("${pass_through[@]}" "$1"); shift ;;
     esac
 done
 
