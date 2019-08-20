@@ -405,7 +405,7 @@ autoconf_command() {
     local languages=$(normalize_languages $RMC_LANGUAGES |tr ' ' ',')
     autoconf_optional_enable languages "$languages" "$languages" "none"
     echo -n " --prefix='$ROSE_INSTALLED'"
-    echo -n " --with-ROSE_LONG_MAKE_CHECK_RULE=yes"
+    #echo -n " --with-ROSE_LONG_MAKE_CHECK_RULE=yes" (tests enabled by this are not portable)
     echo -n " --with-boost='$BOOST_ROOT'"
     autoconf_optional_with capstone "$RMC_CAPSTONE" "$CAPSTONE_ROOT"
     autoconf_optional_with dlib "$RMC_DLIB" "$DLIB_INCDIRS"
