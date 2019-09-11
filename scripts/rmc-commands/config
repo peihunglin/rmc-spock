@@ -251,7 +251,7 @@ all_languages() {
 	local configfile="$RG_SRC/config/support-languages.m4"
 	sed -n '/^[ \t]*ALL_SUPPORTED_LANGUAGES/ { s/.*"\(.*\)"/\1/; s/[, \t]\+/ /g; p; q}' <"$configfile"
     elif [ -r "$RG_SRC/config/support-language-base.m4" ]; then
-	local configfile="$RG_SRC/config/support-language.base.m4"
+	local configfile="$RG_SRC/config/support-language-base.m4"
 	sed -n 's/^[ \t]*ALL_LANGUAGES="\(.*\)".*/\1/p' <"$configfile"
     fi
 }
