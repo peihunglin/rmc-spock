@@ -38,7 +38,7 @@ dependencies:
       
 variables:
   - version: ">=4"
-    download_url: "http://mirrors-usa.go-parts.com/gcc/releases/gcc-$PACKAGE_VERSION/gcc-$PACKAGE_VERSION.tar.gz"
+    download_url: "https://mirrors.kernel.org/gnu/gcc/gcc-$PACKAGE_VERSION/gcc-$PACKAGE_VERSION.tar.gz"
 
 download:
   - version: ">=4"

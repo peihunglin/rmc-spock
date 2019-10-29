@@ -247,12 +247,17 @@ cmake_debug_flags() {
 
 # Get the list of what ROSE uses for --enable-languages=all. The list is returned as space-separated list of words.
 all_languages() {
-    local configfile="$RG_SRC/config/support-languages.m4"
-    sed -n '/^[ \t]*ALL_SUPPORTED_LANGUAGES/ { s/.*"\(.*\)"/\1/; s/[, \t]\+/ /g; p; q}' <"$configfile"
+    if [ -r "$RG_SRC/config/support-languages.m4" ]; then
+	local configfile="$RG_SRC/config/support-languages.m4"
+	sed -n '/^[ \t]*ALL_SUPPORTED_LANGUAGES/ { s/.*"\(.*\)"/\1/; s/[, \t]\+/ /g; p; q}' <"$configfile"
+    elif [ -r "$RG_SRC/config/support-language-base.m4" ]; then
+	local configfile="$RG_SRC/config/support-language-base.m4"
+	sed -n 's/^[ \t]*ALL_LANGUAGES="\(.*\)".*/\1/p' <"$configfile"
+    fi
 }
 
 # Normalize the list of languages by removing "none", replacing "all" with the list from ROSE, and sorting them,
-# removing duplicates, and returning one per line. Also, the language 'c' is converted to 'c++' since ROSE requires
+# removing duplicates, and returning one per line. Also, 'c' and 'c++' enable both 'c' and 'c++' since ROSE requires
 # them to be either both enabled or both disabled.
 normalize_languages() {
     local languages="$(echo "$*" | sed 's/[, \t]\+/ /g')"
@@ -265,8 +270,8 @@ normalize_languages() {
             all)
                 result=("${result[@]}" $(all_languages))
                 ;;
-            c)
-                result=("${result[@]}" "c++")
+            c|c++)
+                result=("${result[@]}" "c" "c++")
                 ;;
             *)
                 result=("${result[@]}" "$lang")
@@ -405,7 +410,7 @@ autoconf_command() {
     local languages=$(normalize_languages $RMC_LANGUAGES |tr ' ' ',')
     autoconf_optional_enable languages "$languages" "$languages" "none"
     echo -n " --prefix='$ROSE_INSTALLED'"
-    echo -n " --with-ROSE_LONG_MAKE_CHECK_RULE=yes"
+    #echo -n " --with-ROSE_LONG_MAKE_CHECK_RULE=yes" (tests enabled by this are not portable)
     echo -n " --with-boost='$BOOST_ROOT'"
     autoconf_optional_with capstone "$RMC_CAPSTONE" "$CAPSTONE_ROOT"
     autoconf_optional_with dlib "$RMC_DLIB" "$DLIB_INCDIRS"

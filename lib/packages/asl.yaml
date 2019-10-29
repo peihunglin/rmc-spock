@@ -1,0 +1,56 @@
+# Assembler from john.ccac.rwth-aachen.de
+# Although that is an unversioned source, so we instead get a tagged
+# release from github.
+package:        asl
+
+versions:       [ 2019.08.22 ]
+
+dependencies:
+  - version: ">=2019.08.20"
+    aliases: [ ]
+    install: [ ]
+    build:   [ c-compiler, default-c ]
+
+variables:
+  - version: ">=2019.08.20"
+    url: "https://github.com/matzke1/asl"
+
+download:
+  - version: ">=2019.08.20"
+    shell: |
+        git clone $url download
+        cd download
+        git reset --hard v$PACKAGE_VERSION
+        git clean -dfx
+        git archive --format=tar --prefix=download/ HEAD |gzip -9 >../download.tar.gz
+
+install:
+  - version: ">=2019.08.20"
+    shell: |
+        cc --spock-triplet
+
+        cd download
+        (
+            echo "CC = cc"
+            echo "LD = cc"
+            echo "CFLAGS = -O3 -fomit-frame-pointer -Wall"
+            echo "TARG_OBJEXTENSION = .o"
+            echo "TARG_EXEXTENSION ="
+            echo "HOST_OBJEXTENSION = \$(TARG_OBJEXTENSION)"
+            echo "HOST_EXEXTENSION = \$(TARG_EXEXTENSION)"
+            echo "BINDIR = $PACKAGE_ROOT/bin"
+            echo "INCDIR = $PACKAGE_ROOT/include/asl"
+            echo "MANDIR = $PACKAGE_ROOT/man"
+            echo "LIBDIR = $PACKAGE_ROOT/lib/asl"
+            echo "DOCDIR = $PACKAGE_ROOT/doc/asl"
+            echo "CHARSET = CHARSET_ISO8859_1"
+        ) >Makefile.def
+        
+        make -j$PARALLELISM
+        make test
+        make install
+
+        # spock-export BOOST_ROOT "$PACKAGE_ROOT"
+        # spock-export BOOST_VERSION "$PACKAGE_VERSION"
+        # spock-export BOOST_LIBDIRS "$PACKAGE_ROOT/lib"
+        # spock-export BOOST_INCDIRS "$PACKAGE_ROOT/include"
