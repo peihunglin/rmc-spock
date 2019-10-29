@@ -40,4 +40,6 @@ install:
       # Also build and install the "amalgamation"
       make sqlite3.c
       mkdir -p $PACKAGE_ROOT/share
-      cp -p sqlite3.c shell.c sqlite3.h sqlite3ext.h $PACKAGE_ROOT/share
+      for f in sqlite3.c shell.c sqlite3.h sqlite3ext.h; do
+          [ -r "$f" ] && cp -p $f $PACKAGE_ROOT/share/.
+      done
