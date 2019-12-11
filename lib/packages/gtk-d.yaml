@@ -1,0 +1,23 @@
+# D wrapper for GTK+
+package:        gtk-d
+versions:       [ "3.9.0" ]
+
+dependencies:
+  - version:    ">=3.9.0"
+    install:    [ "dmd" ]
+    build:      []
+
+download:
+  - version:    ">=3.9.0"
+    shell: |
+      wget -O x.zip https://gtkd.org/Downloads/sources/GtkD-${PACKAGE_VERSION}.zip
+      mkdir download
+      (cd download && unzip ../x.zip)
+      tar cf - download |gzip -9 >download.tar.gz
+
+install:
+  - version:    ">=0.0.0"
+    shell: |
+      dmd --version
+      cd download
+      make -j"$PARALLELISM" prefix="$PACKAGE_ROOT" install
