@@ -1,11 +1,15 @@
 package:	sawyer
 
-versions:	[ 0.1.0, 0.2.0, 0.3.0, 0.3.1, 0.3.2, 0.3.3 ]
+versions:	[ 0.1.0, 0.2.0, 0.3.0, 0.3.1, 0.3.2, 0.3.3, 0.3.4 ]
 
 dependencies:
   - version: ">=0.0.0"
     install: [ boost ]
     build: [ ]
+
+  - version: ">=0.3.4"
+    install: [ boost ]
+    build: [ tup ]
 
 variables:
   - version: ">=0.0.0"
@@ -17,6 +21,18 @@ download:
       git clone --branch release-"$PACKAGE_VERSION" "$repo" sawyer
       cd sawyer
       git archive --format=tar --prefix=download/ HEAD |gzip -9 >../download.tar.gz
+
+  - version: ">=0.3.4"
+    shell: |
+      git clone --branch release-"$PACKAGE_VERSION" "$repo" sawyer
+      cd sawyer
+      git checkout -b download
+      git submodule init
+      git submodule update
+      git archive --format=tar --prefix=download/ HEAD >../download.tar
+      (git -C tup-scripts archive --format=tar --prefix=download/tup-scripts/ HEAD) >tup-scripts.tar
+      tar Af ../download.tar tup-scripts.tar
+      gzip -9 ../download.tar
 
 install:
   - version: ">=0.0.0"
@@ -34,3 +50,8 @@ install:
       make -j$PARALLELISM
       make install
 
+  - version: ">=0.3.4"
+    shell: |
+      cxx --spock-triplet
+      cd download
+      ./scripts/install "$PACKAGE_ROOT"
