@@ -29,7 +29,7 @@ install:
         cp -pdr download/dlib "$PACKAGE_ROOT/include/dlib"
 
         # Shared library
-        c++ -shared -fPIC -o libdlib.so -DDLIB_NO_GUI_SUPPORT "$PACKAGE_ROOT/include/dlib/all/source.cpp"
+        c++ -shared -fPIC -pthread -o libdlib.so -DDLIB_NO_GUI_SUPPORT "$PACKAGE_ROOT/include/dlib/all/source.cpp"
         mkdir -p "$PACKAGE_ROOT/lib"
         cp -p libdlib.so "$PACKAGE_ROOT/lib"
 
