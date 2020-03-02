@@ -155,7 +155,6 @@ else
     : ${do_debug:=">=warn"}
 fi
 
-
 ########################################################################################################################
 #                     _   _ _   _ _ _ _           _____                 _   _
 #                    | | | | |_(_) (_) |_ _   _  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___
@@ -880,6 +879,11 @@ fi
 blddir=$(find_build_tree)
 [ -n "$blddir" ] || die "you may need to run 'rmc init'; see 'rmc init --help'"
 
+
+if [ -n "$TMPDIR" -a "$TMPDIR" != "$TEMPDIR" ]; then
+    echo "$arg0: TMPDIR cannot be exported through Tup; using TEMPDIR instead." >&2
+    export TEMPDIR="$TMPDIR"
+fi
 
 # Figure out what environment to use
 config_sum=$(sha1sum <"$blddir/.rmc-main.cfg" |cut -d' ' -f1)
