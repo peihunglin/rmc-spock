@@ -65,5 +65,6 @@ install:
       make -j$PARALLELISM
       make install
       
-      # For backward compatibility
-      (cd "$PACKAGE_ROOT" && ln -s lib64 lib)
+      # For backward compatibility. It would be nice to use a symlink here, but ROSE's mkinstaller doesn't support
+      # symlinks.
+      (cd "$PACKAGE_ROOT" && cp -pdr lib64 lib)
