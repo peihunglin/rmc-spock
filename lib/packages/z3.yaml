@@ -67,4 +67,6 @@ install:
       
       # For backward compatibility. It would be nice to use a symlink here, but ROSE's mkinstaller doesn't support
       # symlinks.
-      (cd "$PACKAGE_ROOT" && cp -pdr lib64 lib)
+      if [ ! -d "$PACKAGE_ROOT/lib" ]; then
+          (cd "$PACKAGE_ROOT" && cp -pdr lib64 lib)
+      fi
