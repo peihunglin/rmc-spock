@@ -105,6 +105,18 @@ if [ "$COMPILER" = "" ]; then
     COMPILER="${cxx_vendor}-${cxx_lang}-${cxx_version}"
 fi
 
+# Default libgcrypt based on operating system
+default_gcrypt() {
+    case "$($SPOCK_SCRIPTS/spock-os-name --file)" in
+	Ubuntu_19.10)
+	    echo "1.8"
+	    ;;
+	*)
+	    echo "1.7"
+	    ;;
+    esac
+}
+
 # Defaults if no --project (or --project=none) was specified
 project_none() {
     local rmc_command="$1"
@@ -160,7 +172,7 @@ project_estcp() {
         rmc_languages)     echo binaries              ;;
         rmc_binwalk)       echo 2                     ;;
         rmc_dlib)          echo 18.17                 ;;
-        rmc_gcrypt)        echo 1.7                   ;;
+        rmc_gcrypt)        default_gcrypt             ;;
 	rmc_jq)            echo 1.5                   ;;
 	rmc_qt)            echo 5                     ;;
         rmc_yaml)          echo 0.6.2                 ;;
@@ -188,7 +200,7 @@ project_binaries() {
 	rmc_capstone)      echo 4.0.1                 ;;
         rmc_dlib)          echo 18.17                 ;;
 	rmc_doxygen)       echo 1.8.15                ;;
-        rmc_gcrypt)        echo 1.7                   ;;
+        rmc_gcrypt)        default_gcrypt             ;;
 	rmc_jq)            echo 1.5                   ;;
         rmc_magic)         echo 5                     ;;
         rmc_pqxx)          echo 5                     ;;
