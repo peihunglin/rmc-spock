@@ -18,6 +18,14 @@ dependencies:
     install: [ c-compiler, libgpg-error ]
     build:   []
 
+  - version: ">=1.8.0"
+    # 1.8.0 through at least 1.8.5 have compile errors in c11 mode (at least with LLVM/clang 10.0.0), but they
+    # compile successfully in gnu11 mode, which is the default for clang 10.0.0. Therefore we will now require
+    # a default C compiler to be used.
+    aliases: []
+    install: [ default-c, libgpg-error ]
+    build: []
+
 download:
   - version: ">=1.7.6"
     shell: |
