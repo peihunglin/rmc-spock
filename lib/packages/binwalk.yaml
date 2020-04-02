@@ -1,6 +1,10 @@
 package:        binwalk
 
-versions:       [ 2.0.0, 2.0.1, 2.1.1 ]
+versions:
+  - 2.0.0                       # 2014-07-26
+  - 2.0.1                       # 2014-07-26 (yes, same as 2.0.0)
+  - 2.1.1                       # 2015-12-23
+  - 2.2.0                       # 2019-09-06
 
 dependencies:
   - version: ">=2"
