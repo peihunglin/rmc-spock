@@ -38,9 +38,10 @@ while [ "$#" -gt 0 ]; do
                     echo "  * estcp    -- projects/ESTCP tools"
                     echo "  * gpu      -- working with GPUs"
                     echo "  * matrix   -- matrix testing tools"
+		    echo "  * robb     -- Robb's ROSE development config"
                     exit 0
                     ;;
-                binaries|estcp|gpu|matrix)
+                binaries|estcp|gpu|matrix|robb)
                     projects=("${projects[@]}" "${1#--project=}")
                     ;;
                 *)
@@ -96,26 +97,72 @@ rose_srcdir=$(spock-realpath "$1")
 [ "$(ls)" = "" -o -n "$do_force" ] ||
     die "the CWD must be a new (empty) build tree"
 
-# What C++ compiler are we using right now?
-if [ "$COMPILER" = "" ]; then
+# Name of this operating system distribution
+OS_NAME=$($SPOCK_SCRIPTS/spock-os-name --file |tr A-Z a-z)
+
+#------------------------------------------------------------------------------------------------------------------------
+# Default versions, often based on operating system distribution.
+#------------------------------------------------------------------------------------------------------------------------
+
+# Use whatever compiler is already installed
+default_compiler() {
     cxx_quad=$($SPOCK_SCRIPTS/impl/detect-compiler-characteristics --quad --baselang=c++ c++)
     cxx_vendor=$(echo $cxx_quad |cut -d: -f1)
     cxx_lang=$(echo $cxx_quad |cut -d: -f3)
     cxx_version=$(echo $cxx_quad |cut -d: -f4)
-    COMPILER="${cxx_vendor}-${cxx_lang}-${cxx_version}"
-fi
+    echo "${cxx_vendor}-${cxx_lang}-${cxx_version}"
+}
 
-# Default libgcrypt based on operating system
-default_gcrypt() {
-    case "$($SPOCK_SCRIPTS/spock-os-name --file)" in
-	Ubuntu_19.10)
-	    echo "1.8"
+default_cmake() {
+    case "$OS_NAME" in
+	centos_linux_6|centos_linux_7)
+	    # the system-installed cmake on CentOS-6 and CentOS-7 is too old
+	    echo 3.13
 	    ;;
 	*)
-	    echo "1.7"
+	    echo system
 	    ;;
     esac
 }
+
+default_doxygen() {
+    case "$OS_NAME" in
+	centos_linux_6|centos_linux_7)
+	    # doxygen is missing libxapian-dev, which seems to be unavailable on these systems
+	    echo none
+	    ;;
+	*)
+	    echo ambivalent
+	    ;;
+    esac
+}
+
+default_gcrypt() {
+    case "$OS_NAME" in
+	centos_linux_6|centos_linux_7)
+	    echo 1.7
+	    ;;
+	*)
+	    echo 1.8
+	    ;;
+    esac
+}
+
+default_jq() {
+    case "$OS_NAME" in
+	centos_linux_6|centos_linux_7)
+	    # Modern versions of Jq no longer compile with the old compilers on this OS
+	    echo 1.3
+	    ;;
+	*)
+	    echo 1
+	    ;;
+    esac
+}
+
+#------------------------------------------------------------------------------------------------------------------------
+# Settings per --project=X
+#------------------------------------------------------------------------------------------------------------------------
 
 # Defaults if no --project (or --project=none) was specified
 project_none() {
@@ -126,7 +173,7 @@ project_none() {
         rmc_build)         echo autoconf              ;;
         rmc_parallelism)   echo system                ;;
         rmc_codegen)       echo default               ;;
-        rmc_compiler)      echo no-compiler-specified ;;
+        rmc_compiler)      default_compiler           ;;
         rmc_debug)         echo yes                   ;;
         rmc_optimize)      echo ambivalent            ;;
         rmc_warnings)      echo yes                   ;;
@@ -134,19 +181,19 @@ project_none() {
         rmc_languages)     echo all                   ;;
         rmc_binwalk)       echo none                  ;;
         rmc_bison)         echo 3                     ;;
-        rmc_boost)         echo 1.67                  ;;
+        rmc_boost)         echo 1                     ;;
 	rmc_capstone)      echo none                  ;;
-        rmc_cmake)         echo system                ;;
+        rmc_cmake)         default_cmake              ;;
         rmc_cuda)          echo none                  ;;
         rmc_dlib)          echo none                  ;;
-        rmc_doxygen)       echo ambivalent            ;;
+        rmc_doxygen)       default_doxygen            ;;
         rmc_dwarf)         echo none                  ;;
         rmc_edg)           echo ambivalent            ;;
 	rmc_edg_compile)   echo ambivalent            ;;
         rmc_elf)           echo none                  ;;
         rmc_gcrypt)        echo none                  ;;
         rmc_java)          echo none                  ;;
-	rmc_jq)            echo none                  ;;
+	rmc_jq)            default_jq                 ;;
         rmc_lcov)          echo none                  ;;
         rmc_libtool)       echo ambivalent            ;;
         rmc_magic)         echo none                  ;;
@@ -173,7 +220,7 @@ project_estcp() {
         rmc_binwalk)       echo 2                     ;;
         rmc_dlib)          echo 18.17                 ;;
         rmc_gcrypt)        default_gcrypt             ;;
-	rmc_jq)            echo 1.5                   ;;
+	rmc_jq)            default_jq                 ;;
 	rmc_qt)            echo 5                     ;;
         rmc_yaml)          echo 0.6.2                 ;;
         rmc_z3)            echo 4.8                   ;;
@@ -191,21 +238,43 @@ project_matrix() {
     esac
 }
 
-# Defaults for binary analysis
+# Defaults for binary analysis. These are intentionally a bit more conversative than what Robb uses for
+# cutting edge development.
 project_binaries() {
     local rmc_command="$1"
     case "$rmc_command" in
         rmc_languages)     echo binaries              ;;
         rmc_binwalk)       echo 2                     ;;
-	rmc_capstone)      echo 4.0.1                 ;;
         rmc_dlib)          echo 18.17                 ;;
-	rmc_doxygen)       echo 1.8.15                ;;
-        rmc_gcrypt)        default_gcrypt             ;;
 	rmc_jq)            echo 1.5                   ;;
-        rmc_magic)         echo 5                     ;;
         rmc_pqxx)          echo 5                     ;;
         rmc_yaml)          echo 0.6.2                 ;;
         rmc_z3)            echo 4.8                   ;;
+    esac
+}
+
+# Defaults for Robb's development environment. Note that whenever only part of a version number is specified that
+# RMC/Spock will choose either the latest installed version or will install the latest available version. But note
+# that a non-dotted version number cannot be "0".
+project_robb() {
+    local rmc_command="$1"
+    case "$rmc_command" in
+	rmc_languages)	   echo binaries              ;;
+	rmc_compiler)      echo llvm-gnu++14-10.0.0   ;;
+	rmc_optimize)      echo yes                   ;;
+	rmc_build)         echo tup                   ;;
+	rmc_binwalk)       echo 2                     ;;
+	rmc_boost)         echo 1                     ;;
+	rmc_capstone)      echo 4                     ;;
+        rmc_dlib)          echo 19                    ;;
+	rmc_jq)            echo 1                     ;;
+        rmc_magic)         echo 5                     ;;
+        rmc_pqxx)          echo 6                     ;;
+	rmc_qt)            echo 5                     ;;
+        rmc_sqlite)        echo 3                     ;;
+        rmc_tup)           echo 0.7.8                 ;;
+        rmc_yaml)          echo 0.6                   ;;
+        rmc_z3)            echo 4                     ;;
     esac
 }
 
@@ -278,6 +347,8 @@ config_property() {
 
     printf '%-23s %-23s %s\n' "$rmc_command" "$value" "$comment"
 }
+
+#------------------------------------------------------------------------------------------------------------------------
 
 # Create a default .rmc-main.cfg
 (
