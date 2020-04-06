@@ -164,6 +164,12 @@ cxx_warning_flags() {
 			# various standards. These obviously won't always aligned on the architecture where the analysis is
 			# occuring. (FIXME: This switch probably works for older versions of clang++ also.)
 			echo -n " -Wno-address-of-packed-member"
+
+			# Boost 1.72.0 archive/basic_text_oprimitive.hpp has funny indentation around CPP directives: it
+			# indents CPP directives as if they were C++, which can lead to misleading indentation from the
+			# C++ compiler's perspective.  Other versions of Boost may also have this problem, and this
+			# switch can probably also be used for older versions of LLVM.
+			echo -n " -Wno-misleading-indentation"
 		    fi
                     ;;
             esac
