@@ -375,7 +375,6 @@ using-these Boost "${BOOST_SPECS[@]}"
 === DLib
 ########################################################################################################################
 
-# Dlib is a header-only library, so there's no install dependency on the C++ compiler.
 echo "*** Installing DLib versions: $DLIB_VERSIONS"
 DLIB_SPECS=()
 if [ "$DLIB_VERSIONS" = "installed" ]; then
@@ -385,7 +384,7 @@ else
 	[ "$dlib_version" = "none" ] && continue
 	[ "$dlib_version" = "system" ] && continue
 	[ "$dlib_version" = "ambivalent" ] && continue
-	spec=$(install-package "" "dlib-$dlib_version")
+	spec=$(install-package "$cxx_spec,default-c" "dlib-$dlib_version")
 	if [ "$spec" = "" ]; then
 	    cannot_install
 	else
