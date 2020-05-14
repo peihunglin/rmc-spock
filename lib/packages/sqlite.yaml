@@ -38,8 +38,9 @@ versions: [
 
 dependencies:
   - version: ">=3"
-    # Sqlite compilation errors with c89 compilers
-    install: [ gnu11-compiler ]
+    # Sqlite compilation errors with c89 compilers. But it also seems to need the default C compiler for any particular
+    # compiler collection version.
+    install: [ c-compiler ]
     build:   []
 
 download:
