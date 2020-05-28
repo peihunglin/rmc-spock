@@ -243,7 +243,7 @@ project_matrix() {
 project_binaries() {
     local rmc_command="$1"
     case "$rmc_command" in
-	rmc_capstone)      echo 4                     ;;
+	rmc_capstone)      echo ">=4.0.2"             ;;
         rmc_languages)     echo binaries              ;;
         rmc_binwalk)       echo 2                     ;;
         rmc_dlib)          echo 18.17                 ;;
@@ -267,7 +267,7 @@ project_robb() {
 	rmc_build)         echo tup                   ;;
 	rmc_binwalk)       echo 2                     ;;
 	rmc_boost)         echo 1                     ;;
-	rmc_capstone)      echo 4                     ;;
+	rmc_capstone)      echo ">=4.0.2"             ;;
         rmc_dlib)          echo 19                    ;;
 	rmc_jq)            echo 1                     ;;
         rmc_magic)         echo 5                     ;;
