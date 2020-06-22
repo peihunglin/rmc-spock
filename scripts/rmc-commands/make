@@ -191,12 +191,21 @@ run_tup_command() {
     fi
 }
 
+# Reads standard input and sends it through the blame-warnings filter if available.
+filter_warnings() {
+    if [ "$(which blame-warnings)" != "" ]; then
+	blame-warnings --repo="$RG_SRC"
+    else
+	cat
+    fi
+}
+
 case "$RMC_BUILD" in
     cmake|autoconf)
-	run_make_command
+	run_make_command 2>&1 |filter_warnings
 	;;
     tup)
-	run_tup_command
+	run_tup_command 2>&1 |filter_warnings
 	;;
     *)
 	die "\"$RMC_BUILD\" build system not supported"
