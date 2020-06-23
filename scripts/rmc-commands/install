@@ -62,6 +62,7 @@ case "$RMC_BUILD" in
 	"$dir0/make" -C "$RG_BLD/src" $dry_run
 	[ -n "$run_tests" ] && "$dir0/make" -C "$RG_BLD" $dry_run check
 	"$dir0/make" -C "$RG_BLD" $dry_run install-rose-library
+	"$dir0/make" -C "$RG_BLD/tools/BinaryAnalysis" $dry_run install
 	;;
 
     cmake)
