@@ -21,6 +21,6 @@ install:
       cc --spock-triplet
       cd download
       ./bootstrap.sh
-      CC=cc CXX=c++ LDFLAGS=-static ./configure --prefix="$PACKAGE_ROOT"
+      CC=cc CXX=c++ ./configure --prefix="$PACKAGE_ROOT"
       make -j$PARALLELISM
       make install
