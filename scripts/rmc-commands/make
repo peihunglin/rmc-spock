@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+set -o pipefail
 #
 # This runs make or tup in a slightly more friendly way for ROSE developers.  It must be invoked inside an RMC
 # environment (it checks for that). Most users will just run these commands directly instead (especially in the case of
@@ -202,10 +204,10 @@ filter_warnings() {
 
 case "$RMC_BUILD" in
     cmake|autoconf)
-	run_make_command 2>&1 |filter_warnings
+	run_make_command 2>&1 |filter_warnings --color=always
 	;;
     tup)
-	run_tup_command 2>&1 |filter_warnings
+	run_tup_command 2>&1 |filter_warnings --color=always
 	;;
     *)
 	die "\"$RMC_BUILD\" build system not supported"
