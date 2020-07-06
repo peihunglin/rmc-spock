@@ -38,7 +38,7 @@ while [ "$#" -gt 0 ]; do
                     echo "  * estcp    -- projects/ESTCP tools"
                     echo "  * gpu      -- working with GPUs"
                     echo "  * matrix   -- matrix testing tools"
-		    echo "  * robb     -- Robb's ROSE development config"
+                    echo "  * robb     -- Robb's ROSE development config"
                     exit 0
                     ;;
                 binaries|estcp|gpu|matrix|robb)
@@ -115,48 +115,48 @@ default_compiler() {
 
 default_cmake() {
     case "$OS_NAME" in
-	centos_linux_6|centos_linux_7)
-	    # the system-installed cmake on CentOS-6 and CentOS-7 is too old
-	    echo 3.13
-	    ;;
-	*)
-	    echo system
-	    ;;
+        centos_linux_6|centos_linux_7)
+            # the system-installed cmake on CentOS-6 and CentOS-7 is too old
+            echo 3.13
+            ;;
+        *)
+            echo system
+            ;;
     esac
 }
 
 default_doxygen() {
     case "$OS_NAME" in
-	centos_linux_6|centos_linux_7)
-	    # doxygen is missing libxapian-dev, which seems to be unavailable on these systems
-	    echo none
-	    ;;
-	*)
-	    echo ambivalent
-	    ;;
+        centos_linux_6|centos_linux_7)
+            # doxygen is missing libxapian-dev, which seems to be unavailable on these systems
+            echo none
+            ;;
+        *)
+            echo ambivalent
+            ;;
     esac
 }
 
 default_gcrypt() {
     case "$OS_NAME" in
-	centos_linux_6|centos_linux_7)
-	    echo 1.7
-	    ;;
-	*)
-	    echo 1.8
-	    ;;
+        centos_linux_6|centos_linux_7)
+            echo 1.7
+            ;;
+        *)
+            echo 1.8
+            ;;
     esac
 }
 
 default_jq() {
     case "$OS_NAME" in
-	centos_linux_6|centos_linux_7)
-	    # Modern versions of Jq no longer compile with the old compilers on this OS
-	    echo 1.3
-	    ;;
-	*)
-	    echo 1
-	    ;;
+        centos_linux_6|centos_linux_7)
+            # Modern versions of Jq no longer compile with the old compilers on this OS
+            echo 1.3
+            ;;
+        *)
+            echo 1
+            ;;
     esac
 }
 
@@ -182,18 +182,18 @@ project_none() {
         rmc_binwalk)       echo none                  ;;
         rmc_bison)         echo 3                     ;;
         rmc_boost)         echo 1                     ;;
-	rmc_capstone)      echo none                  ;;
+        rmc_capstone)      echo none                  ;;
         rmc_cmake)         default_cmake              ;;
         rmc_cuda)          echo none                  ;;
         rmc_dlib)          echo none                  ;;
         rmc_doxygen)       default_doxygen            ;;
         rmc_dwarf)         echo none                  ;;
         rmc_edg)           echo ambivalent            ;;
-	rmc_edg_compile)   echo ambivalent            ;;
+        rmc_edg_compile)   echo ambivalent            ;;
         rmc_elf)           echo none                  ;;
         rmc_gcrypt)        echo none                  ;;
         rmc_java)          echo none                  ;;
-	rmc_jq)            default_jq                 ;;
+        rmc_jq)            default_jq                 ;;
         rmc_lcov)          echo none                  ;;
         rmc_libtool)       echo ambivalent            ;;
         rmc_magic)         echo none                  ;;
@@ -220,8 +220,8 @@ project_estcp() {
         rmc_binwalk)       echo 2                     ;;
         rmc_dlib)          echo 18.17                 ;;
         rmc_gcrypt)        default_gcrypt             ;;
-	rmc_jq)            default_jq                 ;;
-	rmc_qt)            echo 5                     ;;
+        rmc_jq)            default_jq                 ;;
+        rmc_qt)            echo 5                     ;;
         rmc_yaml)          echo 0.6.2                 ;;
         rmc_z3)            echo 4.8                   ;;
     esac
@@ -243,13 +243,13 @@ project_matrix() {
 project_binaries() {
     local rmc_command="$1"
     case "$rmc_command" in
-	rmc_capstone)      echo ">=4.0.2"             ;;
+        rmc_capstone)      echo 4.0.2                 ;;
         rmc_languages)     echo binaries              ;;
         rmc_binwalk)       echo 2                     ;;
         rmc_dlib)          echo 18.17                 ;;
-	rmc_jq)            echo 1.5                   ;;
+        rmc_jq)            echo 1.5                   ;;
         rmc_pqxx)          echo 5                     ;;
-	rmc_sqlite)        echo 3                     ;;
+        rmc_sqlite)        echo 3                     ;;
         rmc_yaml)          echo 0.6.2                 ;;
         rmc_z3)            echo 4.8                   ;;
     esac
@@ -261,18 +261,18 @@ project_binaries() {
 project_robb() {
     local rmc_command="$1"
     case "$rmc_command" in
-	rmc_languages)	   echo binaries              ;;
-	rmc_compiler)      echo llvm-gnu++14-10.0.0   ;;
-	rmc_optimize)      echo yes                   ;;
-	rmc_build)         echo tup                   ;;
-	rmc_binwalk)       echo 2                     ;;
-	rmc_boost)         echo 1                     ;;
-	rmc_capstone)      echo ">=4.0.2"             ;;
+        rmc_languages)     echo binaries              ;;
+        rmc_compiler)      echo llvm-gnu++14-10.0.0   ;;
+        rmc_optimize)      echo yes                   ;;
+        rmc_build)         echo tup                   ;;
+        rmc_binwalk)       echo 2                     ;;
+        rmc_boost)         echo 1                     ;;
+        rmc_capstone)      echo 4.0.2                 ;;
         rmc_dlib)          echo 19                    ;;
-	rmc_jq)            echo 1                     ;;
+        rmc_jq)            echo 1                     ;;
         rmc_magic)         echo 5                     ;;
         rmc_pqxx)          echo 6                     ;;
-	rmc_qt)            echo 5                     ;;
+        rmc_qt)            echo 5                     ;;
         rmc_sqlite)        echo 3                     ;;
         rmc_tup)           echo 0.7.8                 ;;
         rmc_yaml)          echo 0.6                   ;;
@@ -307,18 +307,18 @@ project_envars() {
         rmc_binwalk)       echo "$BINWALK"            ;;
         rmc_bison)         echo "$BISON"              ;;
         rmc_boost)         echo "$BOOST"              ;;
-	rmc_capstone)      echo "$CAPSTONE"           ;;
+        rmc_capstone)      echo "$CAPSTONE"           ;;
         rmc_cmake)         echo "$CMAKE"              ;;
         rmc_cuda)          echo "$CUDA"               ;;
         rmc_dlib)          echo "$DLIB"               ;;
         rmc_doxygen)       echo "$DOXYGEN"            ;;
         rmc_dwarf)         echo "$DWARF"              ;;
         rmc_edg)           echo "$EDG"                ;;
-	rmc_edg_compile)   echo "$EDG_COMPILE"        ;;
+        rmc_edg_compile)   echo "$EDG_COMPILE"        ;;
         rmc_elf)           echo "$ELF"                ;;
         rmc_gcrypt)        echo "$GCRYPT"             ;;
         rmc_java)          echo "$JAVA"               ;;
-	rmc_jq)            echo "$JQ"                 ;;
+        rmc_jq)            echo "$JQ"                 ;;
         rmc_lcov)          echo "$LCOV"               ;;
         rmc_libtool)       echo "$LIBTOOL"            ;;
         rmc_magic)         echo "$MAGIC"              ;;
