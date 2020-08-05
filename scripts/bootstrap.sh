@@ -5,6 +5,10 @@
 set -e
 arg0="${0##*/}"
 
+# LLNL intercepts all SSL connections with a self-signed certificate
+wget() {
+    command wget --no-check-certificate "$@"
+}
 
 #-------------------- Commandline parsing --------------------
 
@@ -138,10 +142,6 @@ mkdir -p "$downloads" || exit 1
 #-------------------- Basic Setup --------------------
 if [ ! -e src/Spock/Spock.h -o ! -e scripts/bootstrap.sh ]; then
     echo "$arg0: error: invoke this script from the top of the Spock source tree" >&2
-    exit 1
-fi
-if [ "$(whoami)" = "root" ]; then
-    echo "$arg0: error: do not compile programs as root" >&2
     exit 1
 fi
 if ! mkdir _build; then
