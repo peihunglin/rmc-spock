@@ -144,10 +144,7 @@ if [ ! -e src/Spock/Spock.h -o ! -e scripts/bootstrap.sh ]; then
     echo "$arg0: error: invoke this script from the top of the Spock source tree" >&2
     exit 1
 fi
-if ! mkdir _build; then
-    echo "$arg0: please delete your old '_build' directory first" >&2
-    exit 1
-fi
+rm -rf _build
 [ "$SPOCK_HOSTNAME" = "" ] && SPOCK_HOSTNAME=$(hostname --short)
 
 if [ -n "$upgrade" ]; then
