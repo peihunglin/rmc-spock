@@ -48,6 +48,11 @@ download:
     shell: |
       fossil version
 
+      # Fossil has problems running in Docker containers because it
+      # "Cannot figure out who you are!" So make sure the USER
+      # environment variable is set.
+      [ -n "$USER" ] || export USER="root"
+
       fossil clone https://www.sqlite.org/src sqlite.fossil
       mkdir download
       (cd download && fossil open ../sqlite.fossil version-$PACKAGE_VERSION)
