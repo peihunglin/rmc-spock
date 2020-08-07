@@ -18,7 +18,7 @@ upgrade=yes
 boost_version=1.62.0
 cmake_version=3.12.1
 yamlcpp_version=0.5.3
-sawyer_version=0.2.0
+sawyer_version=0.3.9
 have_network=yes
 
 while [ "$#" -gt 0 ]; do
