@@ -612,6 +612,8 @@ DefinedPackage::install(Context &ctx, Settings &settings /*in,out*/) {
     // Create directories.  The installation prefix is temporary for now so it gets deleted if there's an error.
     bfs::path installDir = settings.installDirOverride.empty() ? ctx.optDirectory() : settings.installDirOverride;
     TemporaryDirectory installationPrefix(installDir / settings.hash);
+    if (settings.keepTempFiles)
+        installationPrefix.keep();
     bfs::path pkgRoot = installationPrefix.path() / name();
     bfs::create_directory(pkgRoot);
     TemporaryDirectory workingDir(ctx.buildDirectory() / bfs::unique_path("spock-build-%%%%%%%%"));

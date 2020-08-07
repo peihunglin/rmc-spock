@@ -160,6 +160,7 @@ GhostPackage::install(Context &ctx, const VersionNumber &version, Packages &para
     } else {
         DefinedPackage::Settings settings;
         settings.version = version;
+        settings.keepTempFiles = globalKeepTempFiles;
         retval = definition()->install(ctx, settings);
         parasites = settings.parasites;
     }
