@@ -121,9 +121,9 @@ run_make_command() {
 	export RMC_MAKE=running
 	export make_directory=()
 	[ -n "$directory" ] && make_directory=("-C" "$directory")
-	echo "+" make $parallelism $have_silent "${make_directory[@]}" "${make_switches[@]}" "$target" >&2
+	echo "+" make $parallelism $have_silent --output-sync "${make_directory[@]}" "${make_switches[@]}" "$target" >&2
 	if [ "$dry_run" != "yes" ]; then
-	    make $parallelism $have_silent "${make_directory[@]}" "${make_switches[@]}" "$target" \
+	    make $parallelism $have_silent --output-sync "${make_directory[@]}" "${make_switches[@]}" "$target" \
 		|| exit 1
 	fi
     done
