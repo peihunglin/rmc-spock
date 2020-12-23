@@ -12,6 +12,8 @@ versions:
   - 0.3.6
   - 0.3.7
   - 0.3.8
+  - 0.3.9
+  - 0.3.10
 
 dependencies:
   - version: ">=0.0.0"
