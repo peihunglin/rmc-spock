@@ -2,9 +2,19 @@ package: libelf
 versions: [                      0.133, 0.134, 0.135,        0.137, 0.138, 0.139,
             0.140, 0.141, 0.142, 0.143, 0.144, 0.145, 0.146, 0.147, 0.148, 0.149,
             0.150, 0.151, 0.152, 0.153, 0.154, 0.155, 0.156, 0.157, 0.158, 0.159,
-            0.160, 0.161, 0.162, 0.163, 0.164, 0.165, 0.166, 0.167, 0.168, 0.169 ]
+            0.160, 0.161, 0.162, 0.163, 0.164, 0.165, 0.166, 0.167, 0.168, 0.169,
+            0.170, 0.171, 0.172, 0.173, 0.174, 0.175, 0.176, 0.177, 0.178, 0.179,
+            0.180, 0.181, 0.182 ]
 
 dependencies:
+  # Note that libelf uses non-standard GNU extensions to the C language and therefore won't compile with some other C
+  # compilers (including LLVM/Clang) even when the "-std=gnu99" switch is specified.  See
+  # https://clang.llvm.org/docs/UsersManual.html#gcc-extensions-not-implemented-yet among others.  One of the
+  # non-standard features used by libelf is nested functions, of which the Clang team says "is a complex feature which
+  # is infrequently used, so it is unlikely to be implemented anytime soon."
+  #
+  # Versions <0.175 cannot be compiled by GCC-9.3.0 because of "missing attributes" in the source code, another case of
+  # libelf violating the C standard.
   - version: ">=0.133"
     aliases: []
     install: [ c-compiler, liblzma, zlib ]
@@ -23,6 +33,14 @@ download:
       mv elfutils-$PACKAGE_VERSION download
       tar cf - download |gzip -9 >download.tar.gz
 
+  - version: ">=0.169"
+    shell: |
+      git clone git://sourceware.org/git/elfutils.git download
+      cd download
+      git reset --hard elfutils-$PACKAGE_VERSION
+      git clean -dfx
+      git archive --format=tar --prefix=download/ HEAD |gzip -9 >../download.tar.gz
+
 install:
   - version: ">=0.133"
     shell: |
@@ -35,4 +53,17 @@ install:
       # We only want to install the libelf and its header files because libdw/dwarf.h conflicts with the one in libdwarf
       cd libelf
       make -j$PARALLELISM
+      make -j$PARALLELISM install
+
+  - version: ">=0.169"
+    shell: |
+      cc --spock-triplet
+      cd download
+
+      autoreconf -i -f
+      CC=cc CPPFLAGS="$(spock-compiler-incdirs)" LDFLAGS="$(spock-compiler-libdirs)" ./configure --enable-maintainer-mode --disable-libdebuginfod --disable-debuginfod --prefix="$PACKAGE_ROOT"
+
+      # We only want to install the libelf and its header files because libdw/dwarf.h conflicts with the one in libdwarf
+      make -j$PARALLELISM -C lib
+      make -j$PARALLELISM -C libelf
       make -j$PARALLELISM install
