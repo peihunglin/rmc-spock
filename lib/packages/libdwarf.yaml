@@ -3,9 +3,39 @@ package: libdwarf
 # Versions before 2016.06.13 are unable to use the correct libelf because
 # the makefile ignores CPPFLAGS and LDFLAGS values given to the configure script.
 # Version 2016.05.07 is the first version to use the ".1" in libdwarf.so.1
-versions: [ 2016.06.13, 2016.10.01, 2016.10.21, 2016.11.24, 2017.04.16 ]
+versions:
+  - 2016.06.13
+  - 2016.10.01
+  - 2016.10.21
+  - 2016.11.24
+  - 2017.04.16
+  - 2017.07.09
+  - 2018.01.29
+  - 2018.05.27
+  - 2018.07.23
+  - 2018.07.24
+  - 2018.08.09
+  - 2018.10.24
+  - 2019.01.04
+  - 2019.01.10
+  - 2019.05.05
+  - 2019.05.29
+  - 2019.10.02
+  - 2019.11.04
+  - 2020.01.14
+  - 2020.07.03
+  - 2020.07.19
+  - 2020.08.25
+  - 2020.10.20
+  - 2020.12.01
 
 dependencies:
+  # 2020.08.25 fails because aclocal-1.15 is a dependency
+  # 2020.07.19 ditto
+  # 2020.07.03 ditto
+  # 2020.01.14 ditto
+  # and probably a lot more....
+
   - version: ">=2016.06.13"
     aliases: []
     install: [ c-compiler, "libelf<=0.164" ]
@@ -13,7 +43,7 @@ dependencies:
 
   - version: ">=2017.04.16"
     aliases: []
-    install: [ c-compiler, libelf ]
+    install: [ c-compiler, libelf, zlib ]
     build: []
 
 download:
@@ -23,6 +53,16 @@ download:
       wget -O - https://www.prevanders.net/libdwarf-$version_no_dots.tar.gz |tar xzf -
       mv dwarf-$version_no_dots download
       tar cf - download |gzip -9 >download.tar.gz
+
+  - version: ">=2017.07.09"
+    shell: |
+      # Shitty sourceforge that takes minutes to clone something that should take seconds
+      version_no_dots=$(echo $PACKAGE_VERSION |tr -d .)
+      git clone https://git.code.sf.net/p/libdwarf/code download
+      cd download
+      git reset --hard $version_no_dots
+      git clean -dfx
+      git archive --format=tar --prefix=download/ HEAD |gzip -9 >../download.tar.gz
 
 install:
   - version: ">=2010"
@@ -42,3 +82,14 @@ install:
       (cd "$PACKAGE_ROOT/lib" && ln -s libdwarf.so.1 libdwarf.so)
       mkdir -p "$PACKAGE_ROOT/include"
       cp dwarf.h libdwarf.h "$PACKAGE_ROOT/include/."
+
+  - version: ">=2017.07.09"
+    shell: |
+      cc --spock-triplet
+      cd download
+
+      CC=cc CPPFLAGS="$(spock-compiler-incdirs)" LDFLAGS="$(spock-compiler-libdirs)" \
+        ./configure --enable-shared --prefix="$PACKAGE_ROOT"
+
+      make -j$PARALLELISM
+      make -j$PARALLELISM install
