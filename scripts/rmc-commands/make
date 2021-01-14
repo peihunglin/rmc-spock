@@ -31,73 +31,73 @@ make_switches=()
 directory= have_j= have_silent=--silent do_make_help= dry_run= do_environ=
 while [ "$#" -gt 0 ]; do
     case "$1" in
-	-n|--dry-run)
-	    dry_run=yes
-	    shift
-	    ;;
-	-C|--directory)
-	    directory="$2"
-	    shift 2
-	    ;;
-	-C*)
-	    directory="${1#-C}"
-	    shift
-	    ;;
-	--directory=*)
-	    directory="${1#--directory=}"
-	    shift
-	    ;;
-	--environ)
-	    # Perform tup environment check (i.e., no --no-environ-check)
-	    do_environ=yes
-	    shift
-	    ;;
-	-j|--jobs)
-	    case "$2" in
-		[0-9]*[0-9])
-		    have_j="$1 $2"
-		    shift 2
-		    ;;
-		*)
-		    have_j="$1"
-		    shift
-		    ;;
-	    esac
-	    ;;
-	-j*)
-	    have_j="$1"
-	    shift
-	    ;;
-	--jobs=*)
-	    have_j="$1"
-	    shift
-	    ;;
-	--silent)
-	    have_silent=--silent
-	    shift
-	    ;;
-	--no-silent|--verbose|-v)
-	    have_silent=
-	    shift
-	    ;;
-	--debug|-f|--file|--makefile|-I|--include-dir|-l|--load-average|-o|--old-file|--assume-old|-O|--output-sync|-W|--what-if|--new-file|--assume-new)
-	    # These all take an argument
-	    make_switches=("${make_swithces[@]}" "$1" "$2")
-	    shift 2
-	    ;;
-	-*)
-	    # These take no arguments
-	    make_switches=("${make_switches[@]}" "$1")
-	    shift
-	    ;;
-	*=*)
-	    # These are make variables, not targets
-	    make_switches=("${make_switches[@]}" "$1")
-	    shift
-	    ;;
-	*)
-	    break
-	    ;;
+        -n|--dry-run)
+            dry_run=yes
+            shift
+            ;;
+        -C|--directory)
+            directory="$2"
+            shift 2
+            ;;
+        -C*)
+            directory="${1#-C}"
+            shift
+            ;;
+        --directory=*)
+            directory="${1#--directory=}"
+            shift
+            ;;
+        --environ)
+            # Perform tup environment check (i.e., no --no-environ-check)
+            do_environ=yes
+            shift
+            ;;
+        -j|--jobs)
+            case "$2" in
+                [0-9]*[0-9])
+                    have_j="$1 $2"
+                    shift 2
+                    ;;
+                *)
+                    have_j="$1"
+                    shift
+                    ;;
+            esac
+            ;;
+        -j*)
+            have_j="$1"
+            shift
+            ;;
+        --jobs=*)
+            have_j="$1"
+            shift
+            ;;
+        --silent)
+            have_silent=--silent
+            shift
+            ;;
+        --no-silent|--verbose|-v)
+            have_silent=
+            shift
+            ;;
+        --debug|-f|--file|--makefile|-I|--include-dir|-l|--load-average|-o|--old-file|--assume-old|-O|--output-sync|-W|--what-if|--new-file|--assume-new)
+            # These all take an argument
+            make_switches=("${make_swithces[@]}" "$1" "$2")
+            shift 2
+            ;;
+        -*)
+            # These take no arguments
+            make_switches=("${make_switches[@]}" "$1")
+            shift
+            ;;
+        *=*)
+            # These are make variables, not targets
+            make_switches=("${make_switches[@]}" "$1")
+            shift
+            ;;
+        *)
+            break
+            ;;
     esac
 done
 targets=("$@")
@@ -135,13 +135,13 @@ run_tup_command() {
     # If the target is "install" then we do something special
     local doing_install=
     if [ "${#targets[*]}" -eq 1 -a "${targets[0]}" = "install" ]; then
-	doing_install=yes
-	targets=("$RG_BLD")
+        doing_install=yes
+        targets=("$RG_BLD")
     fi
 
     # If the target is "check" then remove it; tup automatically runs tests
     if [ "${#targets[*]}" -eq 1 -a "${targets[0]}" = "check" ]; then
-	targets=()
+        targets=()
     fi
 
     # If no target specified, use "." as the target in order to restrict the build to one directory.
@@ -157,7 +157,7 @@ run_tup_command() {
 
     # Tup is parallel by default, so there is no plain "-j" (but -jN is allowed)
     [ "$parallelism" != "-j" ] && cmd="$cmd $parallelism"
-    
+
     # Tup is rather quiet by default, so --no-silent should make tup more verbose than usual.
     [ -n "$have_silent" ] || cmd="$cmd --verbose"
 
@@ -169,36 +169,36 @@ run_tup_command() {
     # Run the command
     echo "+ $cmd" >&2
     if [ "$dry_run" != "yes" ]; then
-	eval "$cmd" || exit 1
+        eval "$cmd" || exit 1
     fi
 
     # Copy files to final locations?  The only ELF files in the MatrixTestingProject are sample inputs and therefore we
     # should not monkey with their rpaths, but rather install them as-is.
     if [ -n "$doing_install" ]; then
-	prefix=
-	case "$RMC_INSTALLED" in
-	    yes|no|ambivalent)
-		prefix=
-		;;
-	    *)
-		prefix="$RMC_INSTALLED"
-		;;
-	esac
+        prefix=
+        case "$RMC_INSTALLED" in
+            yes|no|ambivalent)
+                prefix=
+                ;;
+            *)
+                prefix="$RMC_INSTALLED"
+                ;;
+        esac
 
-	(
-	    set -x
-	    cd "$RG_BLD" && \
-		$RG_SRC/scripts/tup/install-staged --next --exclude='projects/MatrixTestingProject/*' $prefix
-	) || exit 1
+        (
+            set -x
+            cd "$RG_BLD" && \
+                $RG_SRC/scripts/tup/install-staged --next --exclude='projects/MatrixTestingProject/*' $prefix
+        ) || exit 1
     fi
 }
 
 # Reads standard input and sends it through the blame-warnings filter if available.
 filter_warnings() {
-    if [ "$(which blame-warnings)" != "" ]; then
-	blame-warnings --repo="$RG_SRC"
+    if blame-warnings >/dev/null 2>&1; then
+        blame-warnings --repo="$RG_SRC"
     else
-	cat
+        cat
     fi
 }
 
@@ -210,7 +210,7 @@ case "$RMC_BUILD" in
 	run_tup_command 2>&1 |filter_warnings --color=always
 	;;
     *)
-	die "\"$RMC_BUILD\" build system not supported"
-	;;
+        die "\"$RMC_BUILD\" build system not supported"
+        ;;
 esac
 exit 0
