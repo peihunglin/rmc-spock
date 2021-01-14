@@ -210,11 +210,11 @@ filter_warnings() {
 
 case "$RMC_BUILD" in
     cmake|autoconf)
-	run_make_command 2>&1 |filter_warnings --color=always
-	;;
+        stdbuf -oL run_make_command 2>&1 |filter_warnings --color=always
+        ;;
     tup)
-	run_tup_command 2>&1 |filter_warnings --color=always
-	;;
+        stdbuf -oL run_tup_command 2>&1 |filter_warnings --color=always
+        ;;
     *)
         die "\"$RMC_BUILD\" build system not supported"
         ;;
