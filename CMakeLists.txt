@@ -104,12 +104,15 @@ target_link_libraries(spock-rm spock)
 add_executable(spock-download src/spock-download.C)
 target_link_libraries(spock-download spock)
 
+add_executable(spock-filter src/spock-filter.C)
+target_link_libraries(spock-filter spock)
+
 #################### Installation ####################
 
 # Binaries
 install(
   TARGETS
-    spock spock-shell spock-ls spock-compiler spock-using spock-rm spock-download
+    spock spock-shell spock-ls spock-compiler spock-using spock-rm spock-download spock-filter
   RUNTIME DESTINATION bin/${HOSTNAME}
   LIBRARY DESTINATION lib/${HOSTNAME}
   )
@@ -121,6 +124,7 @@ install(PROGRAMS scripts/spock-wrapper.sh DESTINATION bin RENAME spock-compiler)
 install(PROGRAMS scripts/spock-wrapper.sh DESTINATION bin RENAME spock-using)
 install(PROGRAMS scripts/spock-wrapper.sh DESTINATION bin RENAME spock-rm)
 install(PROGRAMS scripts/spock-wrapper.sh DESTINATION bin RENAME spock-download)
+install(PROGRAMS scripts/spock-wrapper.sh DESTINATION bin RENAME spock-filter)
 
 # Scripts for the bin directory so they're in $PATH
 install(
