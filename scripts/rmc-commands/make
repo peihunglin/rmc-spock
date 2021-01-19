@@ -119,20 +119,32 @@ run_make_command() {
         make_flags=--output-sync
     fi
 
-    # Run "make" for each target.
-    [ "${#targets[*]}" -eq 0 ] && targets=(all)
-    for target in "${targets[@]}"; do
-        # Use --silent because ROSE's autoconf- and cmake-generated maekfiles generally print their own output
-        # anyway. Otherwise "make" is so noisy that warning messages tend to get overlooked
-        export RMC_MAKE=running
-        export make_directory=()
-        [ -n "$directory" ] && make_directory=("-C" "$directory")
-        echo "+" make $parallelism $have_silent $make_flags "${make_directory[@]}" "${make_switches[@]}" "$target" >&2
-        if [ "$dry_run" != "yes" ]; then
-            make $parallelism $have_silent $make_flags "${make_directory[@]}" "${make_switches[@]}" "$target" \
-                || exit 1
-        fi
-    done
+    # Build a shell script that runs "make" for each target.
+    local script=$(tempfile)
+    trap "rm -f '$script'" EXIT
+    (
+	echo "set -e"
+	[ "${#targets[*]}" -eq 0 ] && targets=(all)
+	for target in "${targets[@]}"; do
+            # Use --silent because ROSE's autoconf- and cmake-generated makefiles generally print their own output
+            # anyway. Otherwise "make" is so noisy that warning messages tend to get overlooked
+            export RMC_MAKE=running
+            export make_directory=()
+            [ -n "$directory" ] && make_directory=("-C" "$directory")
+            echo "+" make $parallelism $have_silent $make_flags "${make_directory[@]}" "${make_switches[@]}" "$target" >&2
+	    echo make $parallelism $have_silent $make_flags "${make_directory[@]}" "${make_switches[@]}" "$target"
+	done
+    ) >"$script"
+
+    # Run the script, sending the output through a filter that highlights warnings
+    if [ "$dry_run" != "yes" ]; then
+	local filter_args=
+	if blame-warnings </dev/null >/dev/null 2>&1; then
+	    filter_args="--filter=blame-warnings -F--repo=$RG_SRC"
+	fi
+	echo "+ spock-filter $filter_args bash '$script'" >&2
+	spock-filter $filter_args bash "$script" || exit 1
+    fi
 }
 
 run_tup_command() {
@@ -169,13 +181,18 @@ run_tup_command() {
 
     [ "${#make_switches[*]}" -gt 0 ] && cmd="$cmd ${make_switches[*]}"
 
-    # Change directories first?
-    [ -n "$directory" ] && cmd="(cd '$directory' && $cmd)"
+    [ -n "$directory" ] || directory="."
+
+    # What filter should we use?
+    local filter_args=
+    if blame-warnings </dev/null >/dev/null 2>&1; then
+	filter_args="--filter=blame-warnings -F--repo=$RG_SRC"
+    fi
 
     # Run the command
-    echo "+ $cmd" >&2
+    echo "+ spock-filter -C $directory $filter_args $cmd" >&2
     if [ "$dry_run" != "yes" ]; then
-        eval "$cmd" || exit 1
+	spock-filter -C "$directory" $filter_args $cmd || exit 1
     fi
 
     # Copy files to final locations?  The only ELF files in the MatrixTestingProject are sample inputs and therefore we
@@ -199,21 +216,12 @@ run_tup_command() {
     fi
 }
 
-# Reads standard input and sends it through the blame-warnings filter if available.
-filter_warnings() {
-    if blame-warnings >/dev/null 2>&1; then
-        blame-warnings --repo="$RG_SRC"
-    else
-        cat
-    fi
-}
-
 case "$RMC_BUILD" in
     cmake|autoconf)
-        stdbuf -oL run_make_command 2>&1 |filter_warnings --color=always
+        run_make_command
         ;;
     tup)
-        stdbuf -oL run_tup_command 2>&1 |filter_warnings --color=always
+        run_tup_command
         ;;
     *)
         die "\"$RMC_BUILD\" build system not supported"
