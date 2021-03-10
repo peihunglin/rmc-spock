@@ -18,7 +18,7 @@ static const char *description =
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
-#include <memory>
+#include <boost/shared_ptr.hpp>
 #include <poll.h>
 #include <signal.h>
 #include <string>
@@ -54,8 +54,10 @@ now() {
 
 // Do something immediately, and then wait until either a certain time or until some condition is met.
 class DoThenWait {
-    time_t waitUntil_ = 0;                              // latest time that the next() function is called.
+    time_t waitUntil_;                                  // latest time that the next() function is called.
 public:
+    DoThenWait()
+        : waitUntil_(0) {}
     explicit DoThenWait(time_t until)
         : waitUntil_(until) {}
     virtual ~DoThenWait() {}
@@ -75,7 +77,7 @@ public:
     }
 };
 
-static std::shared_ptr<DoThenWait> nextEvent;
+static boost::shared_ptr<DoThenWait> nextEvent;
 
 // Send SIGKILL to filter
 class KillFilter: public DoThenWait {
@@ -106,7 +108,7 @@ public:
             SAWYER_MESG(mlog[DEBUG]) <<"sent SIGTERM to filter " <<filterPid <<"\n";
         }
     }
-    bool waitCondition() override {
+    bool waitCondition() /*override*/ {
         if (filterPid <= 0)
             return true;
         int status = 0;
@@ -126,10 +128,10 @@ public:
             return false;
         }
     }
-    void finalAction() override {
+    void finalAction() /*override*/ {
         if (filterPid > 0) {
             SAWYER_MESG(mlog[DEBUG]) <<"filter " <<filterPid <<" did not respond to SIGTERM\n";
-            nextEvent = std::make_shared<KillFilter>();
+            nextEvent = boost::make_shared<KillFilter>();
         } else {
             SAWYER_MESG(mlog[DEBUG]) <<"filter terminated\n";
             exit(programExitStatus);
@@ -148,7 +150,7 @@ public:
             SAWYER_MESG(mlog[DEBUG]) <<"sent SIGINT to filter " <<filterPid <<"\n";
         }
     }
-    bool waitCondition() override {
+    bool waitCondition() /*override*/ {
         if (filterPid <= 0)
             return true;
         int status = 0;
@@ -168,10 +170,10 @@ public:
             return false;
         }
     }
-    void finalAction() override {
+    void finalAction() /*override*/ {
         if (filterPid > 0) {
             SAWYER_MESG(mlog[DEBUG]) <<"filter " <<filterPid <<" did not respond to SIGINT\n";
-            nextEvent = std::make_shared<TermFilter>();
+            nextEvent = boost::make_shared<TermFilter>();
         } else {
             SAWYER_MESG(mlog[DEBUG]) <<"filter terminated\n";
             exit(programExitStatus);
@@ -190,12 +192,12 @@ public:
             primaryPid = -1;
         }
     }
-    bool waitCondition() override {
+    bool waitCondition() /*override*/ {
         return true;
     }
-    void finalAction() override {
+    void finalAction() /*override*/ {
         if (filterPid > 0) {
-            nextEvent = std::make_shared<IntFilter>();
+            nextEvent = boost::make_shared<IntFilter>();
         } else {
             exit(programExitStatus);
         }
@@ -208,12 +210,12 @@ public:
     TermPrimary(): DoThenWait(now() + 5) {
         if (primaryPid <= 0 || -1 == kill(primaryPid, SIGTERM)) {
             primaryPid = -1;
-            nextEvent = std::make_shared<IntFilter>();
+            nextEvent = boost::make_shared<IntFilter>();
         } else {
             SAWYER_MESG(mlog[DEBUG]) <<"sent SIGTERM to primary " <<primaryPid <<"\n";
         }
     }
-    bool waitCondition() override {
+    bool waitCondition() /*override*/ {
         if (primaryPid <= 0)
             return true;
         int status = 0;
@@ -232,13 +234,13 @@ public:
             return false;
         }
     }
-    void finalAction() override {
+    void finalAction() /*override*/ {
         if (primaryPid > 0) {
             SAWYER_MESG(mlog[DEBUG]) <<"primary " <<primaryPid <<" did not respond to SIGTERM\n";
-            nextEvent = std::make_shared<KillPrimary>();
+            nextEvent = boost::make_shared<KillPrimary>();
         } else {
             SAWYER_MESG(mlog[DEBUG]) <<"primary terminated\n";
-            nextEvent = std::make_shared<IntFilter>();
+            nextEvent = boost::make_shared<IntFilter>();
         }
     }
 };
@@ -250,12 +252,12 @@ public:
         if (primaryPid <= 0 || -1 == kill(primaryPid, SIGINT)) {
             programExitStatus = 1;
             primaryPid = -1;
-            nextEvent = std::make_shared<IntFilter>();
+            nextEvent = boost::make_shared<IntFilter>();
         } else {
             SAWYER_MESG(mlog[DEBUG]) <<"sent SIGINT to primary " <<primaryPid <<"\n";
         }
     }
-    bool waitCondition() override {
+    bool waitCondition() /*override*/ {
         if (primaryPid <= 0)
             return true;
         int status = 0;
@@ -274,13 +276,13 @@ public:
             return false;
         }
     }
-    void finalAction() override {
+    void finalAction() /*override*/ {
         if (primaryPid > 0) {
             SAWYER_MESG(mlog[DEBUG]) <<"primary " <<primaryPid <<" did not respond to SIGINT\n";
-            nextEvent = std::make_shared<TermPrimary>();
+            nextEvent = boost::make_shared<TermPrimary>();
         } else {
             SAWYER_MESG(mlog[DEBUG]) <<"primary terminated\n";
-            nextEvent = std::make_shared<IntFilter>();
+            nextEvent = boost::make_shared<IntFilter>();
         }
     }
 };
@@ -289,7 +291,7 @@ public:
 class WaitForNaturalExit: public DoThenWait {
 public:
     WaitForNaturalExit(): DoThenWait(now() + 60) {}
-    bool waitCondition() override {
+    bool waitCondition() /*override*/ {
         Stream debug(mlog[DEBUG]);
         SAWYER_MESG(debug) <<"wait for natural exit\n";
         int status = 0;
@@ -338,13 +340,13 @@ public:
         return primaryPid <= 0 && filterPid <= 0;
     }
 
-    void finalAction() override {
+    void finalAction() /*override*/ {
         Stream debug(mlog[DEBUG]);
         if (primaryPid <= 0 && filterPid <= 0) {
             exit(programExitStatus);
         } else {
             SAWYER_MESG(debug) <<"  primary and/or filter did not terminate naturally\n";
-            nextEvent = std::make_shared<IntPrimary>();
+            nextEvent = boost::make_shared<IntPrimary>();
         }
     }
 };
@@ -378,7 +380,7 @@ execute(const std::vector<std::string> &cmd) {
     char **words = (char**)malloc((cmd.size()+1) * sizeof(char*));
     for (size_t i = 0; i < cmd.size(); ++i)
         words[i] = strdup(cmd[i].c_str());
-    words[cmd.size()] = nullptr;
+    words[cmd.size()] = NULL;
     execvp(words[0], words);
     perror("exec failed");
     exit(1);
@@ -513,10 +515,10 @@ mainLoop() {
         if (nextEvent) {
             nextEvent->process();
         } else if (wasInterrupted) {
-            nextEvent = std::make_shared<IntPrimary>();
+            nextEvent = boost::make_shared<IntPrimary>();
         } else if (fds[0].fd < 0 && fds[1].fd < 0) {
             close(filterInput[1]);
-            nextEvent = std::make_shared<WaitForNaturalExit>();
+            nextEvent = boost::make_shared<WaitForNaturalExit>();
         }
     }
 }
@@ -532,7 +534,7 @@ int main(int argc, char *argv[]) {
     sa.sa_handler = signalHandler;
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0;
-    if (sigaction(SIGINT, &sa, nullptr) == -1 || sigaction(SIGTERM, &sa, nullptr) == -1) {
+    if (sigaction(SIGINT, &sa, NULL) == -1 || sigaction(SIGTERM, &sa, NULL) == -1) {
         perror("sigaction failed");
         exit(1);
     }
