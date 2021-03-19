@@ -136,7 +136,10 @@ cxx_warning_flags() {
                 gnu)
                     echo -n "-Wall"
                     echo -n " -Wno-attributes"
-                    echo -n " -Wno-deprecated-declarations" # common warning from dlib using std::auto_ptr
+
+		    # More recent versions of boost have fixed this, and disabling the warning also disables
+		    # deprecation warnings in ROSE, so this is now commented out.
+                    #echo -n " -Wno-deprecated-declarations" # common warning from dlib using std::auto_ptr
 
                     if [ "$cxx_major" -eq 4 -a "$cxx_minor" -ge 5 ] || [ "$cxx_major" -gt 4 ]; then
                         echo -n " -Wno-unused-local-typedefs" # common warning from boost
@@ -155,7 +158,7 @@ cxx_warning_flags() {
                 llvm)
                     echo -n "-Wall"
                     echo -n " -Wno-attributes"
-                    echo -n " -Wno-deprecated-declarations" # common warning from dlib using std::auto_ptr
+                    #echo -n " -Wno-deprecated-declarations" # common warning from dlib using std::auto_ptr
                     echo -n " -Wno-unused-local-typedefs" # common warning from boost
                     echo -n " -fdiagnostics-color=always" # colorized within tools like emacs
 
