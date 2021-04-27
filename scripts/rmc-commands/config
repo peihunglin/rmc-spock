@@ -429,7 +429,7 @@ autoconf_command() {
     #echo -n " --with-ROSE_LONG_MAKE_CHECK_RULE=yes" (tests enabled by this are not portable)
     echo -n " --with-boost='$BOOST_ROOT'"
     autoconf_optional_with capstone "$RMC_CAPSTONE" "$CAPSTONE_ROOT"
-    autoconf_optional_with dlib "$RMC_DLIB" "$DLIB_INCDIRS"
+    autoconf_optional_with dlib "$RMC_DLIB" "$DLIB_ROOT"
     autoconf_optional_with doxygen "$RMC_DOXYGEN" "$DOXYGEN_ROOT/bin/doxygen"
     autoconf_optional_with dwarf "$RMC_DWARF" "$LIBDWARF_ROOT"
     autoconf_optional_with cuda "$RMC_CUDA" "$CUDA_ROOT/bin"
