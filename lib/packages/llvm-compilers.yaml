@@ -26,6 +26,11 @@ versions:
   - 9.0.0    # 2019-09-19
   - 9.0.1    # 2019-12-20
   - 10.0.0   # 2020-03-24
+  - 10.0.1   # 2020-07-21
+  - 11.0.0   # 2020-10-12
+  - 11.0.1   # 2021-01-05
+  - 11.1.0   # 2021-02-17
+  - 12.0.0   # 2021-04-14
 
 dependencies:
   - version: '>=3.5.0'
@@ -208,3 +213,31 @@ post-install:
           $SPOCK_SCRIPTS/spock-compiler-install-program "$PACKAGE_SPEC" c "$PACKAGE_ROOT/bin/clang"
           $SPOCK_SCRIPTS/spock-compiler-install-program "$PACKAGE_SPEC" c++ "$PACKAGE_ROOT/bin/clang++"
         ) >parasites
+
+  - version: ">=11"
+    parasites:
+      # PrimaryName     Specific-language Base-language Default-language
+      - llvm-c++03      c++03-compiler    c++-compiler
+      - llvm-gnu++03    gnu++03-compiler  c++-compiler
+      - llvm-c++11      c++11-compiler    c++-compiler
+      - llvm-gnu++11    gnu++11-compiler  c++-compiler
+      - llvm-c++14      c++14-compiler    c++-compiler
+      - llvm-gnu++14    gnu++14-compiler  c++-compiler  llvm-default-c++ default-c++
+      - llvm-c++17      c++17-compiler    c++-compiler
+      - llvm-gnu++17    gnu++17-compiler  c++-compiler
+      - llvm-c89        c89-compiler      c-compiler
+      - llvm-gnu89      gnu89-compiler    c-compiler
+      - llvm-c94        c94-compiler      c-compiler
+      - llvm-c99        c99-compiler      c-compiler
+      - llvm-gnu99      gnu99-compiler    c-compiler
+      - llvm-c11        c11-compiler      c-compiler
+      - llvm-gnu11      gnu11-compiler    c-compiler
+      - llvm-c18        c18-compiler      c-compiler
+      - llvm-gnu18      gnu18-compiler    c-compiler    llvm-default-c default-c
+    shell: |
+        source "$SPOCK_SCRIPTS/impl/compiler-support.sh"
+        (
+          $SPOCK_SCRIPTS/spock-compiler-install-program "$PACKAGE_SPEC" c "$PACKAGE_ROOT/bin/clang"
+          $SPOCK_SCRIPTS/spock-compiler-install-program "$PACKAGE_SPEC" c++ "$PACKAGE_ROOT/bin/clang++"
+        ) >parasites
+
