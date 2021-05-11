@@ -68,7 +68,8 @@ variables:
 
   - version: ">=1.64"
     iostream_flags: "-sNO_BZIP2=1"
-    distributor: bintray
+    #distributor: bintray
+    distributor: jfrog
 
   - version: ">=1.69"
     libraries: chrono date_time filesystem iostreams program_options python random regex serialization system thread wave
@@ -113,6 +114,9 @@ download:
             ;;
           bintray)
             wget -O - https://dl.bintray.com/boostorg/release/$PACKAGE_VERSION/source/boost_$version_underscore.tar.bz2 |tar xjf -
+            ;;
+          jfrog)
+            wget -O - https://boostorg.jfrog.io/artifactory/main/release/$PACKAGE_VERSION/source/boost_$version_underscore.tar.bz2 | tar xjf -
             ;;
           *)
             echo "don't know how to download from $distributor" >&2
