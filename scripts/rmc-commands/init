@@ -36,12 +36,13 @@ while [ "$#" -gt 0 ]; do
                     echo "Projects:"
                     echo "  * binaries -- binary analysis tools"
                     echo "  * estcp    -- projects/ESTCP tools"
+		    echo "  * jaccel   -- jaccel servers RHEL-7 GCC-6.1.0"
                     echo "  * gpu      -- working with GPUs"
                     echo "  * matrix   -- matrix testing tools"
                     echo "  * robb     -- Robb's ROSE development config"
                     exit 0
                     ;;
-                binaries|estcp|gpu|matrix|robb)
+                binaries|estcp|jaccel|gpu|matrix|robb)
                     projects=("${projects[@]}" "${1#--project=}")
                     ;;
                 *)
@@ -252,6 +253,20 @@ project_binaries() {
         rmc_sqlite)        echo 3                     ;;
         rmc_yaml)          echo 0.6.2                 ;;
         rmc_z3)            echo 4.8                   ;;
+    esac
+}
+
+# Defaults for Jaccel servers running RHEL-7 using GCC-6.1.0
+project_jaccel() {
+    local rmc_commands="$1"
+    case "$rmc_command" in
+	rmc_compiler)      echo gnu-c++11-6.1.0       ;;
+	rmc_optimize)      echo yes                   ;;
+	rmc_languages)     echo binaries              ;;
+	rmc_boost)         echo 1.73                  ;;
+	rmc_dlib)          echo 18.17                 ;;
+	rmc_yaml)          echo 0.6.3                 ;;
+	rmc_z3)            echo 4.8.7                 ;;
     esac
 }
 
