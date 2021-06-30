@@ -443,7 +443,7 @@ DefinedPackage::download(Context &ctx, const Settings &settings) {
     // Did we already download this file?
     bfs::path dest = cachedDownloadFile(ctx, settings);
     if (!bfs::exists(dest)) {
-        mlog[INFO] <<"downloading " <<name() <<"=" <<settings.version.toString() <<"\n";
+        mlog[INFO] <<"downloading " <<name() <<"=" <<settings.version.toString() <<" to " <<dest <<"\n";
         std::vector<std::string> extraVars;
         extraVars.push_back("PACKAGE_ACTION=download");
 
@@ -589,7 +589,7 @@ DefinedPackage::install(Context &ctx, Settings &settings /*in,out*/) {
 
     settings.hash = bfs::unique_path("%%%%%%%%").string();
     ASSERT_require(isHash(settings.hash));
-    mlog[INFO] <<"building " <<mySpec(settings) <<"\n";
+    mlog[INFO] <<"building " <<mySpec(settings) <<" from " <<tarball <<"\n";
 
     // Can install dependencies be satisfied? There's no point taking time to compile a package if we can't create its
     // installation YAML file due to not being able to meet all its install dependencies.
