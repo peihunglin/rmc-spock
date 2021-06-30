@@ -260,6 +260,7 @@ project_binaries() {
 project_jaccel() {
     local rmc_commands="$1"
     case "$rmc_command" in
+	rmc_cmake)         echo 3.13.2                ;;
 	rmc_compiler)      echo gnu-c++11-6.1.0       ;;
 	rmc_optimize)      echo yes                   ;;
 	rmc_languages)     echo binaries              ;;
