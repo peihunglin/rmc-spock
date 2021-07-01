@@ -224,9 +224,12 @@ if [ ! -d "$boost_root" ]; then
         set -ex
 	mkdir -p _build/boost
         cd _build/boost
-        if [ -e "$downloads/boost-${boost_version}.tar.gz" ]; then
-            tar xf "$downloads/boost-${boost_version}.tar.gz"
+        if [ -e "$downloads/boost-${boost_version}-nopy.tar.gz" ]; then
+            tar xf "$downloads/boost-${boost_version}-nopy.tar.gz"
             mv download boost_${boost_version_u}
+	elif [ -e "$downloads/boost-${boost_version}-py.tar.gz" ]; then
+	    tar xf "$downloads/boost-${boost_version}-py.tar.gz"
+	    mv download boost_${boost_version_u}
 	elif [ -e "$downloads/boost_${boost_version_u}.tar.bz2" ]; then
 	    tar xf "$downloads/boost_${boost_version_u}.tar.bz2"
         elif [ -n "$have_network" ]; then
@@ -235,9 +238,14 @@ if [ ! -d "$boost_root" ]; then
 	    echo "$arg0: cannot find boost-${boost_version}, and no network" >&2
 	    exit 1
         fi
-	if [ -n "$downloads" -a ! -e "$downloads/boost-${boost_version}.tar.gz" ]; then
+	if [ -n "$downloads" -a ! -e "$downloads/boost-${boost_version}-nopy.tar.gz" ]; then
 	    ln -s boost_$boost_version_u download
-	    tar cf - download/. |gzip -9 >"$downloads/boost-${boost_version}.tar.gz"
+	    tar cf - download/. |gzip -9 >"$downloads/boost-${boost_version}-nopy.tar.gz"
+	    rm download
+	fi
+	if [ -n "$downloads" -a ! -e "$downloads/boost-${boost_version}-py.tar.gz" ]; then
+	    ln -s boost_$boost_version_u download
+	    tar cf - download/. |gzip -9 >"$downloads/boost-${boost_version}-py.tar.gz"
 	    rm download
 	fi
         cd boost_${boost_version_u}
@@ -328,6 +336,11 @@ if [ ! -d "$yamlcpp_root" ]; then
 	else
 	    echo "$arg0: cannot find yamlcpp-${yamlcpp_version}, and no network" >&2
 	    exit 1
+	fi
+	if [ -n "$downloads" -a ! -e "$downloads/yamlcpp-${yamlcpp_version}.tar.gz" ]; then
+	    ln -s yamlcpp-src download
+	    tar cf - download/. |gzip -9 >"$downloads/yamlcpp-${yamlcpp_version}.tar.gz"
+	    rm download
 	fi
 
         mkdir yamlcpp-bld
