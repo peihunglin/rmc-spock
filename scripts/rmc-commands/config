@@ -261,6 +261,17 @@ cmake_debug_flags() {
     esac
 }
 
+# Flags for the linker. On RHEL GNU ld is *really* slow (as in over an hour to link the big SerialIo object). Therefore, if
+# we can find ld.gold, use it instead.  This only applies to autoconf builds because the Tupfiles already take care of it.
+autoconf_ld_flags() {
+    echo -n '-Wall $(code_coverage_flags)'
+    if [ "$RMC_BUILD" = autoconf ]; then
+	if ld.gold --version >/dev/null 2>&1; then
+	    echo -n " -fuse-ld=gold"
+	fi
+    fi
+}
+
 # Get the list of what ROSE uses for --enable-languages=all. The list is returned as space-separated list of words.
 all_languages() {
     if [ -r "$RG_SRC/config/support-languages.m4" ]; then
@@ -403,7 +414,7 @@ cmake_frontend_languages() {
 autoconf_command() {
     echo -n "env CC='$C_COMPILER' CXX='$CXX_COMPILER' FC='$FORTRAN_COMPILER'"
     echo -n " CFLAGS='$(cc_flags)' CXXFLAGS='$(cxx_flags)'"
-    echo -n " LDFLAGS='-Wall $(code_coverage_flags)'"
+    echo -n " LDFLAGS='$(autoconf_ld_flags)'"
     echo -n " $ROSE_SOURCE/configure"
     autoconf_optimize_flags --with-C_OPTIMIZE
     autoconf_optimize_flags --with-CXX_OPTIMIZE
