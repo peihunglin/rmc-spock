@@ -264,7 +264,7 @@ cmake_debug_flags() {
 # Flags for the linker. On RHEL GNU ld is *really* slow (as in over an hour to link the big SerialIo object). Therefore, if
 # we can find ld.gold, use it instead.  This only applies to autoconf builds because the Tupfiles already take care of it.
 autoconf_ld_flags() {
-    echo -n '-Wall $(code_coverage_flags)'
+    echo -n "-Wall $(code_coverage_flags)"
     if [ "$RMC_BUILD" = autoconf ]; then
 	if ld.gold --version >/dev/null 2>&1; then
 	    echo -n " -fuse-ld=gold"
