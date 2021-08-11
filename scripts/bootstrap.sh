@@ -378,7 +378,7 @@ if [ ! -d "$sawyer_root" ]; then
 	    fi
 	else
 	    echo "$arg0: cannot find sawyer-${sawyer_version}, and no network" >&2
-	    eixt 1
+	    exit 1
 	fi
 
         mkdir sawyer-bld
