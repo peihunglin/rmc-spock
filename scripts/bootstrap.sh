@@ -224,11 +224,11 @@ if [ ! -d "$boost_root" ]; then
         set -ex
 	mkdir -p _build/boost
         cd _build/boost
-        if [ -e "$downloads/boost-${boost_version}-nopy.tar.gz" ]; then
-            tar xf "$downloads/boost-${boost_version}-nopy.tar.gz"
+        if [ -e "$downloads/boost-nopy-${boost_version}.tar.gz" ]; then
+            tar xf "$downloads/boost-nopy-${boost_version}.tar.gz"
             mv download boost_${boost_version_u}
-	elif [ -e "$downloads/boost-${boost_version}-py.tar.gz" ]; then
-	    tar xf "$downloads/boost-${boost_version}-py.tar.gz"
+	elif [ -e "$downloads/boost-py-${boost_version}.tar.gz" ]; then
+	    tar xf "$downloads/boost-py-${boost_version}.tar.gz"
 	    mv download boost_${boost_version_u}
 	elif [ -e "$downloads/boost_${boost_version_u}.tar.bz2" ]; then
 	    tar xf "$downloads/boost_${boost_version_u}.tar.bz2"
@@ -238,14 +238,14 @@ if [ ! -d "$boost_root" ]; then
 	    echo "$arg0: cannot find boost-${boost_version}, and no network" >&2
 	    exit 1
         fi
-	if [ -n "$downloads" -a ! -e "$downloads/boost-${boost_version}-nopy.tar.gz" ]; then
+	if [ -n "$downloads" -a ! -e "$downloads/boost-nopy-${boost_version}.tar.gz" ]; then
 	    ln -s boost_$boost_version_u download
-	    tar cf - download/. |gzip -9 >"$downloads/boost-${boost_version}-nopy.tar.gz"
+	    tar cf - download/. |gzip -9 >"$downloads/boost-nopy-${boost_version}.tar.gz"
 	    rm download
 	fi
-	if [ -n "$downloads" -a ! -e "$downloads/boost-${boost_version}-py.tar.gz" ]; then
+	if [ -n "$downloads" -a ! -e "$downloads/boost-py-${boost_version}.tar.gz" ]; then
 	    ln -s boost_$boost_version_u download
-	    tar cf - download/. |gzip -9 >"$downloads/boost-${boost_version}-py.tar.gz"
+	    tar cf - download/. |gzip -9 >"$downloads/boost-py-${boost_version}.tar.gz"
 	    rm download
 	fi
         cd boost_${boost_version_u}
