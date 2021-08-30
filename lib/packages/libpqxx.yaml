@@ -42,7 +42,7 @@ versions:
 dependencies:
   - version: ">=3"
     aliases: []
-    install: [ c++-compiler ]
+    install: [ c++-compiler, python ]
     build: [ default-c ]
 
 variables:
