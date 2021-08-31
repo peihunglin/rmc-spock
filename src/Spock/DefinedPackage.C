@@ -472,7 +472,9 @@ DefinedPackage::download(Context &ctx, const Settings &settings) {
     // Make sure all downloaded files (that this tool downloaded or that were placed in the download area by other tools), are
     // group and world readable. This facilitates sharing of downloaded files and thus reduces costs for the upstream providers
     // of this software.
-    for (auto dentry = bfs::directory_iterator(ctx.downloadDirectory()); dentry != bfs::directory_iterator(); ++dentry) {
+    for (bfs::directory_iterator dentry = bfs::directory_iterator(ctx.downloadDirectory());
+         dentry != bfs::directory_iterator();
+         ++dentry) {
         if (!bfs::is_symlink(dentry->path())) {
             boost::system::error_code ec;
             bfs::permissions(dentry->path(), bfs::add_perms | bfs::perms::group_read | bfs::perms::others_read, ec /*out*/);
