@@ -224,7 +224,7 @@ project_estcp() {
         rmc_jq)            default_jq                 ;;
         rmc_qt)            echo 5                     ;;
         rmc_yaml)          echo 0.6.2                 ;;
-        rmc_z3)            echo 4.8                   ;;
+        rmc_z3)            echo 4.8.12                ;;
     esac
 }
 
@@ -252,7 +252,7 @@ project_binaries() {
         rmc_pqxx)          echo 5                     ;;
         rmc_sqlite)        echo 3                     ;;
         rmc_yaml)          echo 0.6.2                 ;;
-        rmc_z3)            echo 4.8                   ;;
+        rmc_z3)            echo 4.8.12                ;;
     esac
 }
 
@@ -268,7 +268,7 @@ project_jaccel() {
 	rmc_boost)         echo 1.73                  ;;
 	rmc_dlib)          echo 18.17                 ;;
 	rmc_yaml)          echo 0.6.3                 ;;
-	rmc_z3)            echo 4.8.7                 ;;
+	rmc_z3)            echo 4.8.12                ;;
     esac
 }
 
@@ -293,7 +293,7 @@ project_robb() {
         rmc_sqlite)        echo 3                     ;;
         rmc_tup)           echo 0.7.8                 ;;
         rmc_yaml)          echo 0.6                   ;;
-        rmc_z3)            echo 4                     ;;
+        rmc_z3)            echo 4.8.12                ;;
     esac
 }
 
