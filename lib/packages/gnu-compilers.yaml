@@ -51,6 +51,10 @@ variables:
   - version: ">=4"
     download_url: "https://mirrors.kernel.org/gnu/gcc/gcc-$PACKAGE_VERSION/gcc-$PACKAGE_VERSION.tar.gz"
 
+    # GCC 6.1.0 doesn't compile on RedHat 8, so use a patched version instead.
+  - version: "=6.1.0"
+    download_url: "https://rmc-spock.s3.us-west-2.amazonaws.com/gcc-6.1.0-rh8.tar.gz"
+
 download:
   - version: ">=4"
     shell: |
@@ -58,6 +62,10 @@ download:
         (cd gcc-* && ./contrib/download_prerequisites)
         mv gcc-* download
         tar cf - download |gzip -9 >download.tar.gz
+
+  - version: "=6.1.0"
+    shell: |
+      wget -O download.tar.gz "$download_url"
 
 install:
   - version: ">=4"
