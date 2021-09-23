@@ -477,7 +477,7 @@ DefinedPackage::download(Context &ctx, const Settings &settings) {
          ++dentry) {
         if (!bfs::is_symlink(dentry->path())) {
             boost::system::error_code ec;
-            bfs::permissions(dentry->path(), bfs::add_perms | bfs::perms::group_read | bfs::perms::others_read, ec /*out*/);
+            bfs::permissions(dentry->path(), bfs::add_perms | bfs::group_read | bfs::others_read, ec /*out*/);
         }
     }
 
