@@ -356,9 +356,9 @@ Context::insertEmployed(const Package::Ptr &pkg) {
     ASSERT_not_null(pkg);
     ASSERT_always_require2(pkg->isInstalled(), pkg->toString());
     if (!isEmployed(pkg)) {
-        envStack_.back().variables.prepend(asInstalled(pkg)->environmentSearchPaths());
+        envStack_.back().variables.prependUnique(asInstalled(pkg)->environmentSearchPaths());
         envStack_.back().packages.push_back(pkg);
-        envStack_.back().variables.append("SPOCK_EMPLOYED", pkg->hash());
+        envStack_.back().variables.appendUnique("SPOCK_EMPLOYED", pkg->hash());
     }
 }
 

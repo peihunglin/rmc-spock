@@ -387,20 +387,17 @@ read_config_file() {
     # Shell prompt adjustments
     export PS1_STACK="$PS1_STACK RMC:${RG_BLD##*/}"
 
-    # If ROSE is being installed, then make sure its lib dir is searched.
-    case "$RMC_INSTALLED" in
-        yes|ambivalent|"")
-            export ROSE_INSTALLED="$RG_BLD/installed"
-            export LD_RUN_PATH="$LD_LIBRARY_PATH:$ROSE_INSTALLED/lib"
-            ;;
-        no)
-            export ROSE_INSTALLED="/NO_ROSE_INSTALLATION_PREFIX"
-            ;;
-        *)
-            export ROSE_INSTALLED="$RMC_INSTALLED"
-            export LD_RUN_PATH="$LD_LIBRARY_PATH:$ROSE_INSTALLED/lib"
-            ;;
-    esac
+    # Library search paths. We try not to use LD_LIBRARY_PATH because it's broken by design, but if the user already has
+    # LD_LIBRARY_PATH set to something, we need to keep it. Additionally, any LD_LIBRARY_PATH should be added to
+    # LD_RUN_PATH so that those directories get added to the rpaths of any shared libraries and executables we're about
+    # to install.
+    if [ -n "$LD_LIBRARY_PATH" ]; then
+	if [ -n "$LD_RUN_PATH" ]; then
+	    LD_RUN_PATH="$LD_RUN_PATH:$LD_LIBRARY_PATH"
+	else
+	    LD_RUN_PATH="$LD_LIBRARY_PATH"
+	fi
+    fi
 }
 
 # Returns true if $1 is a valid RMC compiler spec of the form, VENDOR-VERSION[-LANG].
@@ -563,6 +560,32 @@ preinstall() {
         IGNORE_FAILURES=no \
         $SPOCK_BINDIR/spock-shell --with "$cxx_codegen" \
         $SPOCK_SCRIPTS/rose-install-all-deps
+}
+
+# Adjust environment for ROSE itself now that it's already been adjusted for the ROSE prerequisites and all those
+# prerequisites have been installed.
+adjust_rose_variables() {
+    case "$RMC_INSTALLED" in
+        yes|ambivalent|"")
+            export ROSE_INSTALLED="$RG_BLD/installed"
+	    ;;
+        no)
+            export ROSE_INSTALLED=
+            ;;
+        *)
+            export ROSE_INSTALLED="$RMC_INSTALLED"
+	    ;;
+    esac
+
+    if [ -n "$ROSE_INSTALLED" ]; then
+	if [ -n "$LD_RUN_PATH" ]; then
+	    export LD_RUN_PATH="$LD_RUN_PATH:$ROSE_INSTALLED/lib"
+	else
+	    export LD_RUN_PATH="$ROSE_INSTALLED/lib"
+	fi
+    else
+        export ROSE_INSTALLED="/NO_ROSE_INSTALLATION_PREFIX"
+    fi
 }
 
 ########################################################################################################################
@@ -961,14 +984,17 @@ elif [ "$command" = "" ]; then
     exec bash
 
 elif [ -x "$SPOCK_SCRIPTS/rmc-commands/$command" ]; then
+    adjust_rose_variables
     exec "$SPOCK_SCRIPTS/rmc-commands/$command" "$@"
 
 else
+    adjust_rose_variables
     exec "$command" "$@"
 fi
 
 # Figure out what command to run (same as the last few "if" statements above, but use spock-shell to enter an environment
 export RMC_HASH
+adjust_rose_variables
 if [ "$command" = "" ]; then
     exec "$SPOCK_BINDIR/spock-shell" --log='none,>=warn' --with-file "$blddir/.spock" --welcome
 elif [ -x "$SPOCK_SCRIPTS/rmc-commands/$command" ]; then
