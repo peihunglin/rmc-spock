@@ -178,7 +178,7 @@ project_none() {
         rmc_debug)         echo yes                   ;;
         rmc_optimize)      echo ambivalent            ;;
         rmc_warnings)      echo yes                   ;;
-        rmc_assertions)    echo "enabled abort"       ;;
+        rmc_assertions)    echo "disabled abort"      ;;
         rmc_languages)     echo all                   ;;
         rmc_binwalk)       echo none                  ;;
         rmc_bison)         echo 3                     ;;
