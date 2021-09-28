@@ -704,7 +704,7 @@ rmc_assertions() {
     local word;
     for word in "$@"; do
 	case "$word" in
-	    abort|throw|exit)
+	    abort|throw|exit|ambivalent)
 		RMC_ASSERTION_BEHAVIOR="$word"
 		;;
 	    enabled)
