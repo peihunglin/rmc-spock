@@ -327,7 +327,8 @@ read_config_file() {
     export RMC_DEBUG=ambivalent
     export RMC_OPTIMIZE=ambivalent
     export RMC_WARNINGS=ambivalent
-    export RMC_ASSERTIONS=ambivalent
+    export RMC_ASSERTION_BEHAVIOR=ambivalent
+    export RMC_ASSERTIONS_ENABLED=yes
     export RMC_CODEGEN=default
 
     export RMC_BINWALK=none
@@ -697,9 +698,26 @@ rmc_warnings() {
 }
 
 rmc_assertions() {
-    check_one_arg rmc_assertions "$@"
-    check_arg_in rmc_assertions "$1" abort exit throw ambivalent
-    RMC_ASSERTIONS="$1"
+    # One or two arguments, any order. One argument is in the set {abort, throw, exit, ambivalent} and controls how
+    # failed assertions behave by default in ROSE (the behavior can be overridden at run time). The other argument is in
+    # the set {enabled, disabled} and determines whether optional assertions are compiled into the library.
+    local word;
+    for word in "$@"; do
+	case "$word" in
+	    abort|throw|exit)
+		RMC_ASSERTION_BEHAVIOR="$word"
+		;;
+	    enabled)
+		RMC_ASSERTIONS_ENABLED=yes
+		;;
+	    disabled)
+		RMC_ASSERTIONS_ENABLED=
+		;;
+	    *)
+		die "rmc_assertions: unrecognized argument: $word"
+		;;
+	esac
+    done
 }
 
 rmc_binwalk() {

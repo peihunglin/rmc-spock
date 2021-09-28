@@ -208,18 +208,26 @@ code_coverage_flags() {
 autoconf_optimize_flags() {
     local switch="$1"
     case "$RMC_OPTIMIZE" in
-        yes) echo -n " $switch='-O3 -DNDEBUG'" ;;
-        no)  echo -n " $switch='-O0'" ;;
+        yes) echo -n " $switch='-O3" ;;
+        no)  echo -n " $switch='-O0" ;;
         ambivalent) : nothing ;;
     esac
+
+    if [ -n "$RMC_ASSERTIONS_ENABLED" ]; then
+	echo -n "'"
+    else
+	echo -n " -DNDEBUG'"
+    fi
 }
 
 cmake_optimize_flags() {
     case "$RMC_OPTIMIZE" in
-        yes) echo -n "-O3 -DNDEBUG" ;;
+        yes) echo -n "-O3" ;;
         no)  echo -n "-O0" ;;
         ambivalent) : nothing ;;
     esac
+
+    [ -n "$RMC_ASSERTIONS_ENABLED" ] || echo -n " -DNDEBUG"
 }
 
 # Flags for controlling warnings
@@ -424,7 +432,7 @@ autoconf_command() {
     autoconf_debug_flags --with-CXX_DEBUG
     echo -n " --disable-boost-version-check"
     echo -n " --disable-gcc-version-check"
-    autoconf_optional_enable assertion-behavior "$RMC_ASSERTIONS"
+    autoconf_optional_enable assertion-behavior "$RMC_ASSERTION_BEHAVIOR"
     autoconf_optional_enable edg-version "$RMC_EDG"
     case "$RMC_EDG_COMPILE" in
         yes)
@@ -483,7 +491,7 @@ cmake_command() {
 
     cmake_frontend_languages
 
-    cmake_optional ASSERTION_BEHAVIOR "$RMC_ASSERTIONS"
+    cmake_optional ASSERTION_BEHAVIOR "$RMC_ASSERTION_BEHAVIOR"
     cmake_optional EDG_VERSION "$RMC_EDG"
     cmake_optional enable-yices "$RMC_YICES" "$YICES_ROOT"
 
