@@ -13,6 +13,12 @@ download:
       mv bzip2-$PACKAGE_VERSION download
       tar cf - download |gzip -9 >download.tar.gz
 
+  - version: "=1.0.6"
+    shell: |
+      wget -O - https://sourceforge.net/projects/bzip2/files/bzip2-1.0.6.tar.gz/download |tar xzf -
+      mv bzip2-$PACKAGE_VERSION download
+      tar cf - download |gzip -9 >download.tar.gz
+
 install:
   - version: ">=1"
     shell: |
