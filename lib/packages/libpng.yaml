@@ -11,10 +11,6 @@ dependencies:
 variables:
   - version: '>=1.2'
 
-    # Set this if you're tired of simplesystems.org constantly removing versions from their
-    # download site.
-    use_hoosierfocus: yes
-    
 download:
   - version: ">=1.2"
     shell: |
@@ -23,15 +19,15 @@ download:
       majmin="${major_version}${minor_version}"
 
       simplesystems_url="ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng${majmin}/libpng-$PACKAGE_VERSION.tar.xz"
-      hoosierfocus_url="https://hoosierfocus.com/libpng/libpng-$PACKAGE_VERSION.tar.gz"
+      emergency_url="http://rmc-spock.s3-website-us-west-2.amazonaws.com/libpng-$PACKAGE_VERSION.tar.gz"
 
       if wget -O libpng.tar.xz "$simplesystems_url"; then
           xz -d libpng.tar.xz
           tar xf libpng.tar
           mv libpng-$PACKAGE_VERSION download
           tar cf - download |gzip -9 >download.tar.gz
-      elif [ "$use_hoosierfocus" != "" ]; then
-          wget -O download.tar.gz "$hoosierfocus_url"
+      elif [ "$emergency_url" != "" ]; then
+          wget -O download.tar.gz "$emergency_url"
       else
           echo "simplesystems.org frequently removes versions from their download site."
           exit 1
