@@ -207,17 +207,18 @@ code_coverage_flags() {
 # Flags for compiler optimization
 autoconf_optimize_flags() {
     local switch="$1"
+    local value=
     case "$RMC_OPTIMIZE" in
-        yes) echo -n " $switch='-O3" ;;
-        no)  echo -n " $switch='-O0" ;;
-        ambivalent) : nothing ;;
+	yes) value="-O3" ;;
+	no)  value="-O0" ;;
+	ambivalent) : nothing ;;
     esac
 
-    if [ -n "$RMC_ASSERTIONS_ENABLED" ]; then
-	echo -n "'"
-    else
-	echo -n " -DNDEBUG'"
+    if [ "$RMC_ASSERTIONS_ENABLED" = "" ]; then
+	value="$value -DNDEBUG"
     fi
+
+    [ -n "$value" ] && echo -n " $switch='$value'";
 }
 
 cmake_optimize_flags() {
