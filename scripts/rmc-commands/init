@@ -234,7 +234,7 @@ project_matrix() {
     case "$rmc_command" in
         rmc_languages)     echo none                  ;;
         rmc_pqxx)          echo 5                     ;;
-        rmc_wt)            echo 3.3.7                 ;;
+        #rmc_wt)            echo 3.3.7                 ;;
         rmc_yaml)          echo 0.6.2                 ;;
     esac
 }
