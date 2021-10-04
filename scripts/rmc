@@ -701,8 +701,11 @@ rmc_assertions() {
     # One or two arguments, any order. One argument is in the set {abort, throw, exit, ambivalent} and controls how
     # failed assertions behave by default in ROSE (the behavior can be overridden at run time). The other argument is in
     # the set {enabled, disabled} and determines whether optional assertions are compiled into the library.
+    #
+    # For the sake of the portability testing matrix, this can also take one argument which is the quoted version of
+    # both arguments, as in: rmc_assertions 'enabled abort'
     local word;
-    for word in "$@"; do
+    for word in $*; do
 	case "$word" in
 	    abort|throw|exit|ambivalent)
 		RMC_ASSERTION_BEHAVIOR="$word"
