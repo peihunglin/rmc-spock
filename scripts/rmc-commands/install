@@ -33,7 +33,7 @@ show_help_and_exit() {
 
 run_tests=yes
 dry_run=
-prefix=
+prefix="$ROSE_INSTALLED"
 while [ "$#" -gt 0 ]; do
     case "$1" in
 	--) shift; break ;;

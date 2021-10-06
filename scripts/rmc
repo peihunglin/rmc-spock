@@ -567,26 +567,40 @@ preinstall() {
 # prerequisites have been installed.
 adjust_rose_variables() {
     case "$RMC_INSTALLED" in
-        yes|ambivalent|"")
-            export ROSE_INSTALLED="$RG_BLD/installed"
+	yes|ambivalent|"")
+	    case "$RMC_BUILD" in
+		autoconf|cmake)
+		    export ROSE_INSTALLED="$RG_BLD/installed"
+		    ;;
+		*)
+		    export ROSE_INSTALLED="$HOME/rose-installed"
+		    ;;
+	    esac
 	    ;;
-        no)
-            export ROSE_INSTALLED=
-            ;;
-        *)
-            export ROSE_INSTALLED="$RMC_INSTALLED"
+	no)
+	    export ROSE_INSTALLED=
+	    ;;
+	*)
+	    export ROSE_INSTALLED="$RMC_INSTALLED"
 	    ;;
     esac
 
-    if [ -n "$ROSE_INSTALLED" ]; then
-	if [ -n "$LD_RUN_PATH" ]; then
-	    export LD_RUN_PATH="$LD_RUN_PATH:$ROSE_INSTALLED/lib"
-	else
-	    export LD_RUN_PATH="$ROSE_INSTALLED/lib"
-	fi
-    else
-        export ROSE_INSTALLED="/NO_ROSE_INSTALLATION_PREFIX"
-    fi
+    case "$RMC_BUILD" in
+	autoconf|cmake)
+	    if [ -n "$ROSE_INSTALLED" ]; then
+		if [ -n "$LD_RUN_PATH" ]; then
+		    export LD_RUN_PATH="$LD_RUN_PATH:$ROSE_INSTALLED/lib"
+		else
+		    export LD_RUN_PATH="$ROSE_INSTALLED/lib"
+		fi
+	    else
+		export ROSE_INSTALLED="/NO_ROSE_INSTALLATION_PREFIX"
+	    fi
+	    ;;
+	*)
+	    : no adjustment needed
+	    ;;
+    esac
 }
 
 ########################################################################################################################
