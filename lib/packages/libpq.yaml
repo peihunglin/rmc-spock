@@ -1,0 +1,49 @@
+package: libpq
+
+versions:
+  - 9.6.9    # 2018-05-07
+  - 10.18    # 2021-08-19
+  - 11.13    # 2021-08-09
+  - 12.8     # 2021-08-09
+  - 13.4     # 2021-08-09
+
+dependencies:
+  - version: ">=9"
+    aliases: []
+    install: [ c-compiler, readline ]
+    build: []
+
+download:
+  - version: ">=9"
+    shell: |
+      set -o pipefail
+      tag="REL$(echo "$PACKAGE_VERSION" | tr . _)"
+      git clone https://git.postgresql.org/git/postgresql.git
+      (cd postgresql && git archive --format=tar --prefix=download/ "$tag") |gzip -9 >download.tar.gz
+
+  - version: ">=10"
+    shell: |
+      set -o pipefail
+      tag="REL_$(echo "$PACKAGE_VERSION" | tr . _)"
+      git clone https://git.postgresql.org/git/postgresql.git
+      (cd postgresql && git archive --format=tar --prefix=download/ "$tag") |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=9"
+    shell: |
+      cc --spock-triplet
+      cd download
+
+      # Postgresql's "configure" script doesn't understand --with-readline=DIR (only --with-readline), so we have
+      # do accomplish this another way. Furthermore, it doesn't get the rpaths right, so we have to kludge them
+      # with LD_LIBRARY_PATH while the configure script runs.
+      CPPFLAGS=-I$READLINE_INCDIRS LDFLAGS=-L$READLINE_LIBDIRS LD_LIBRARY_PATH="$READLINE_LIBDIRS:$LD_LIBRARY_PATH" \
+          ./configure --prefix="$PACKAGE_ROOT"
+
+      # The library is in src/interfaces/libpq, but in order to develop with that library
+      # we need to install some header files as well. These steps are from an answer at
+      # https://stackoverflow.com/questions/29803847/how-to-download-compile-install-only-the-libpq-source-on-a-server-that-does-n
+      make -C src/interfaces/libpq -j$PARALLELISM install
+      make -C src/bin/pg_config    -j$PARALLELISM install
+      make -C src/backend          -j$PARALLELISM generated-headers
+      make -C src/include          -j$PARALLELISM install
