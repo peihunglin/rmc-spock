@@ -233,9 +233,10 @@ project_matrix() {
     local rmc_command="$1"
     case "$rmc_command" in
         rmc_languages)     echo none                  ;;
-        rmc_pqxx)          echo 5                     ;;
+        rmc_pqxx)          echo 7                     ;;
+	rmc_jq)            echo none                  ;;
         #rmc_wt)            echo 3.3.7                 ;;
-        rmc_yaml)          echo 0.6.2                 ;;
+        #rmc_yaml)          echo 0.6.2                 ;;
     esac
 }
 
