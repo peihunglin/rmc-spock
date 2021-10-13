@@ -717,9 +717,12 @@ rmc_assertions() {
     # the set {enabled, disabled} and determines whether optional assertions are compiled into the library.
     #
     # For the sake of the portability testing matrix, this can also take one argument which is the quoted version of
-    # both arguments, as in: rmc_assertions 'enabled abort'
+    # both arguments, as in: rmc_assertions 'enabled abort'.
+    #
+    # For the sake of portability testing tools that can handle only single-word arguments, the arguments can be combined
+    # as a single word separated from one another by a hyphen.
     local word;
-    for word in $*; do
+    for word in $(echo $* |tr - ' '); do
 	case "$word" in
 	    abort|throw|exit|ambivalent)
 		RMC_ASSERTION_BEHAVIOR="$word"
