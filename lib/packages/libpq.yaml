@@ -34,11 +34,15 @@ install:
       cc --spock-triplet
       cd download
 
-      # Postgresql's "configure" script doesn't understand --with-readline=DIR (only --with-readline), so we have
-      # do accomplish this another way. Furthermore, it doesn't get the rpaths right, so we have to kludge them
-      # with LD_LIBRARY_PATH while the configure script runs.
-      CPPFLAGS=-I$READLINE_INCDIRS LDFLAGS=-L$READLINE_LIBDIRS LD_LIBRARY_PATH="$READLINE_LIBDIRS:$LD_LIBRARY_PATH" \
-          ./configure --prefix="$PACKAGE_ROOT"
+      # libreadline is required in order to configure postgresql, but not to build libpq. But postgresql's "configure"
+      # script doesn't understand --with-readline=DIR (only --with-readline), so we have do accomplish this another way.
+      # Furthermore, it doesn't get the rpaths right during testing. Although libpq.so doesn't have any references to
+      # libreadline.so, we'll add libreadline's lib directory to libpq.so's rpath instead of using the dangerously
+      # broken LD_LIBRARY_PATH.
+      CC=cc \
+      CPPFLAGS="-I$READLINE_INCDIRS" \
+      LDFLAGS="-L$READLINE_LIBDIRS -Wl,-rpath,$READLINE_LIBDIRS" \
+          ./configure --prefix="$PACKAGE_ROOT" || cp config.log /tmp/libpq-config.log
 
       # The library is in src/interfaces/libpq, but in order to develop with that library
       # we need to install some header files as well. These steps are from an answer at

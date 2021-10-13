@@ -78,8 +78,8 @@ install:
       env \
         CC=cc \
         CXX=c++ \
-        CPPFLAGS="$(spock-compiler-incdirs)" \
-        LDFLAGS="$(spock-compiler-libdirs) -lpq" \
+        CPPFLAGS="$(spock-compiler-incdirs) -I$LIBPQ_INCDIRS" \
+        LDFLAGS="$(spock-compiler-libdirs) -L$LIBPQ_LIBDIRS -Wl,-rpath,$LIBPQ_LIBDIRS -lpq" \
         ./configure \
         --prefix="$PACKAGE_ROOT" \
         --enable-shared \
