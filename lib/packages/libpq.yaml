@@ -10,7 +10,7 @@ versions:
 dependencies:
   - version: ">=9"
     aliases: []
-    install: [ c-compiler, readline ]
+    install: [ c-compiler, readline, zlib ]
     build: []
 
 download:
@@ -38,10 +38,10 @@ install:
       # script doesn't understand --with-readline=DIR (only --with-readline), so we have do accomplish this another way.
       # Furthermore, it doesn't get the rpaths right during testing. Although libpq.so doesn't have any references to
       # libreadline.so, we'll add libreadline's lib directory to libpq.so's rpath instead of using the dangerously
-      # broken LD_LIBRARY_PATH.
+      # broken LD_LIBRARY_PATH. Same story for zlib.
       CC=cc \
-      CPPFLAGS="-I$READLINE_INCDIRS" \
-      LDFLAGS="-L$READLINE_LIBDIRS -Wl,-rpath,$READLINE_LIBDIRS" \
+      CPPFLAGS="-I$READLINE_INCDIRS -I$ZLIB_INCDIRS" \
+      LDFLAGS="-L$READLINE_LIBDIRS -Wl,-rpath,$READLINE_LIBDIRS -L$ZLIB_LIBDIRS -Wl,-rpath,$ZLIB_LIBDIRS" \
           ./configure --prefix="$PACKAGE_ROOT" || cp config.log /tmp/libpq-config.log
 
       # The library is in src/interfaces/libpq, but in order to develop with that library
