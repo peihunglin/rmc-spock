@@ -12,11 +12,15 @@ static const char *description =
 #include <Spock/Spock.C>
 
 #include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/foreach.hpp>
+#include <boost/format.hpp>
 #include <sys/wait.h>
 #include <yaml-cpp/yaml.h>
+#include <ctype.h>
 
 using namespace Spock;
 using namespace Sawyer::Message::Common;
@@ -24,7 +28,7 @@ using namespace Sawyer::Message::Common;
 namespace {
 
 Sawyer::Message::Facility mlog;
-bool showTriplet = false, showBaseExe = false;
+bool showTriplet = false, showBaseExe = false, showBaseExeAndArgs = false;
 boost::filesystem::path configFileOverride;
 
 std::vector<std::string>
@@ -61,7 +65,13 @@ parseCommandLine(int argc, char *argv[]) {
 
     sp.insert(Switch("spock-exe")
               .intrinsicValue(true, showBaseExe)
-              .doc("Echo the full path of the real compiler, then exit."));
+              .doc("Echo the full path of the real compiler without any switches, then exit. The output is printed in its "
+                   "raw form without adding any shell quotes or backslashes."));
+
+    sp.insert(Switch("spock-exe-full")
+              .intrinsicValue(true, showBaseExeAndArgs)
+              .doc("Echo the full path of the real compiler including switches, then exit. The output is escaped using "
+                   "shell quotes and/or backslashes if necessary per component."));
 
     sp.insert(Switch("spock-config")
               .argument("filename", anyParser(configFileOverride))
@@ -118,6 +128,35 @@ validateExecutable(YAML::Node config) {
     }
 }
 
+// Allocate an argv array consisting of the executable name and arguments from the YAML file plus the extra arguments specified
+// as the second argument to this function.
+char**
+buildArgv(YAML::Node config, const std::vector<std::string> &args) {
+    size_t nargs = 1 /*path*/ + config["flags"].size() + args.size() + 1 /*nullptr*/;
+    char **argv = new char*[nargs];
+    int argc = 0;
+    argv[argc++] = strdup(config["executable"].as<std::string>().c_str());
+    for (size_t i=0; i<config["flags"].size(); ++i)
+        argv[argc++] = strdup(config["flags"][i].as<std::string>().c_str());
+    for (size_t i=0; i<args.size(); ++i)
+        argv[argc++] = strdup(args[i].c_str());
+    argv[argc] = NULL;
+    return argv;
+}
+
+// Free resources used by an argv and return nullptr.
+char**
+deleteArgv(char **argv) {
+    if (argv) {
+        for (size_t i = 0; argv[i]; ++i) {
+            if (argv[i])
+                free(argv[i]);
+        }
+        free(argv);
+    }
+    return NULL;
+}
+
 // Runs the compiler with "--version" and checks that output against output that was generated previously and placed in the
 // config file.
 void
@@ -126,6 +165,12 @@ validateVersion(YAML::Node config) {
     std::string compilerName = exe.filename().string();
     std::string childOutput;
     std::string oldOutput = config["version-output"].as<std::string>();
+    char **argv = buildArgv(config, std::vector<std::string>(1, "--version"));
+    if (mlog[DEBUG]) {
+        mlog[DEBUG] <<"launching " <<argv[0] <<" with this argv:\n";
+        for (int i=0; argv[i]; ++i)
+            mlog[DEBUG] <<"  \"" <<argv[i] <<"\"\n";
+    }
 
     int childToParent[2];
     pipe(childToParent);
@@ -135,6 +180,7 @@ validateVersion(YAML::Node config) {
         exit(1);
     } else if (child) {
         // This is the parent
+        argv = deleteArgv(argv);
         close(childToParent[1]);
         while (1) {
             char buf[4096];
@@ -159,10 +205,6 @@ validateVersion(YAML::Node config) {
         // This is the child
         close(childToParent[0]);
         dup2(childToParent[1], 1);
-        char *argv[3];
-        argv[0] = strdup(exe.string().c_str());
-        argv[1] = strdup("--version");
-        argv[2] = NULL;
         execv(exe.string().c_str(), argv);
         std::cerr <<"compiler " <<compilerName <<" failed to exec: " <<strerror(errno) <<"\n";
         exit(1);
@@ -201,29 +243,101 @@ validateVersion(YAML::Node config) {
 
 void
 execCompiler(YAML::Node config, std::vector<std::string> &args) {
-    boost::filesystem::path exe = config["executable"].as<std::string>();
-    size_t nargs = 1 + config["flags"].size() + args.size() + 1;
-    char **argv = new char*[nargs];
-    int argc = 0;
-    argv[argc++] = strdup(exe.string().c_str());
-    for (size_t i=0; i<config["flags"].size(); ++i)
-        argv[argc++] = strdup(config["flags"][i].as<std::string>().c_str());
-    for (size_t i=0; i<args.size(); ++i)
-        argv[argc++] = strdup(args[i].c_str());
-    argv[argc] = NULL;
+    char **argv = buildArgv(config, args);
 
     if (mlog[DEBUG]) {
-        mlog[DEBUG] <<"launching " <<exe <<" with this argv:\n";
-        for (int i=0; i<argc; ++i)
+        mlog[DEBUG] <<"launching " <<argv[0] <<" with this argv:\n";
+        for (int i=0; argv[i]; ++i)
             mlog[DEBUG] <<"  \"" <<argv[i] <<"\"\n";
     }
 
-    execv(exe.string().c_str(), argv);
-    mlog[ERROR] <<"failed to launch compiler: " <<exe <<"\n";
+    execv(argv[0], argv);
+    mlog[ERROR] <<"failed to launch compiler: " <<argv[0] <<"\n";
     exit(1);
 }
 
-    
+std::string
+cEscape(char ch, char context) {
+    std::string result;
+    switch (ch) {
+        case '\a':
+            result += "\\a";
+            break;
+        case '\b':
+            result += "\\b";
+            break;
+        case '\t':
+            result += "\\t";
+            break;
+        case '\n':
+            result += "\\n";
+            break;
+        case '\v':
+            result += "\\v";
+            break;
+        case '\f':
+            result += "\\f";
+            break;
+        case '\r':
+            result += "\\r";
+            break;
+        case '\"':
+            if ('"' == context) {
+                result += "\\\"";
+            } else {
+                result += ch;
+            }
+            break;
+        case '\'':
+            if ('\'' == context) {
+                result += "\\'";
+            } else {
+                result += ch;
+            }
+            break;
+        case '\\':
+            result += "\\\\";
+            break;
+        default:
+            if (isprint(ch)) {
+                result += ch;
+            } else {
+                result += (boost::format("\\%03o") % (unsigned)(unsigned char)ch).str();
+            }
+            break;
+    }
+    return result;
+}
+
+std::string
+cEscape(const std::string &s, char context) {
+    std::string result;
+    BOOST_FOREACH (char ch, s)
+        result += cEscape(ch, context);
+    return result;
+}
+
+std::string
+bourneEscape(const std::string &s) {
+    if (s.empty())
+        return "''";
+
+    // The presence of non-printing characters or single quotes trumps all others and requires C-style quoting
+    BOOST_FOREACH (char ch, s) {
+        if (!::isprint(ch) || '\'' == ch)
+            return "$'" + cEscape(s, '\'') + "'";
+    }
+
+    // If the string contains any shell meta characters or white space that must be quoted then single-quote the entire string
+    // and escape backslashes.
+    BOOST_FOREACH (char ch, s) {
+        if (!::isalnum(ch) && !strchr("_-+./", ch))
+            return "'" + boost::replace_all_copy(s, "\\", "\\\\") + "'";
+    }
+
+    // No quoting or escaping necessary
+    return s;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 } // namespace
@@ -238,8 +352,16 @@ main(int argc, char *argv[]) {
         std::cout <<config["vendor"].as<std::string>() <<":"
                   <<config["language"].as<std::string>() <<":"
                   <<config["version"].as<std::string>() <<"\n";
+    } else if (showBaseExeAndArgs) {
+        char **childArgs = buildArgv(config, std::vector<std::string>());
+        for (size_t i = 0; childArgs[i]; ++i)
+            std::cout <<(i?" ":"") <<bourneEscape(childArgs[i]);
+        std::cout <<"\n";
+        deleteArgv(childArgs);
+        exit(0);
     } else if (showBaseExe) {
         std::cout <<config["executable"].as<std::string>() <<"\n";
+        exit(0);
     }
 
     validateExecutable(config);
