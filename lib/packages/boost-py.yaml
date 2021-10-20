@@ -5,7 +5,7 @@ versions:       [ 1.50.0, 1.51.0, 1.52.0, 1.53.0, 1.54.0, 1.55.0,
                   1.56.0, 1.57.0, 1.58.0, 1.59.0, 1.60.0, 1.61.0,
                   1.62.0, 1.63.0, 1.64.0, 1.65.1, 1.66.0, 1.67.0,
                   1.68.0, 1.69.0, 1.70.0, 1.71.0, 1.72.0, 1.73.0,
-                  1.74.0, 1.75.0, 1.76.0 ]
+                  1.74.0, 1.75.0, 1.76.0, 1.77.0 ]
 
 # Dependencies for building and installation.
 #
@@ -63,6 +63,10 @@ variables:
     libraries: chrono date_time filesystem iostreams program_options python random regex serialization signals system thread wave
     distributor: sourceforge
 
+  - version: ">=1.53"
+    # libboost_atomic was added in 1.53
+    libraries: atomic chrono date_time filesystem iostreams program_options python random regex serialization signals system thread wave
+
   - version: ">=1.54"
     iostream_flags: "-sNO_BZIP2=1"
 
@@ -72,7 +76,7 @@ variables:
     distributor: jfrog
 
   - version: ">=1.69"
-    libraries: chrono date_time filesystem iostreams program_options python random regex serialization system thread wave
+    libraries: atomic chrono date_time filesystem iostreams program_options python random regex serialization system thread wave
 
 # Instructions for how to obtain the package.  Spock will use
 # the last section which matches the version beging installed.
