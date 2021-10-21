@@ -214,9 +214,7 @@ autoconf_optimize_flags() {
 	ambivalent) : nothing ;;
     esac
 
-    if [ "$RMC_ASSERTIONS_ENABLED" = "" ]; then
-	value="$value -DNDEBUG"
-    fi
+    [ "$RMC_OPTIONAL_ASSERTIONS" = disabled ] && value="$value -DNDEBUG"
 
     [ -n "$value" ] && echo -n " $switch='$value'";
 }
@@ -228,7 +226,7 @@ cmake_optimize_flags() {
         ambivalent) : nothing ;;
     esac
 
-    [ -n "$RMC_ASSERTIONS_ENABLED" ] || echo -n " -DNDEBUG"
+    [ "$RMC_OPTIONAL_ASSERTIONS" = disabled ] && echo -n " -DNDEBUG"
 }
 
 # Flags for controlling warnings

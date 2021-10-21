@@ -291,10 +291,23 @@ configuration system decide on a value.
   can generate 32-bit or 64-bit executables. The valid arguments are
   "m32" and "default". The default is obviously "default".
   
-* **rmc_assertions** specifies how ROSE should handle failed
-  assertions. Valid values are the same as for the
-  "--enable-assertion-behavior" switch of ROSE' "configure"
-  script. The default is "ambivalent".
+* **rmc_optional_assertions** specifies whether optional assertions
+  are "enabled" or "disabled". Required assertions are always enabled.
+  The default is "enabled".
+
+* **rmc_assertion_behavior** specifies what action ROSE takes when an
+  assertion fails and the user hasn't overriden the action at
+  runtime. The choices are "abort", "throw", "exit", or "ambivalent".
+  The default is "ambivalent".
+
+* **rmc_assertions** is present only for backward compatibility with
+  portability testing. Its argument is the hyphenated value of the
+  **rmc_optional_assertions** and **rmc_assertion_behavior**
+  arguments. Either part is optional, in which case the hyphen is also
+  omitted. Example "rmc_assertions enabled" is the same as
+  "rmc_optional_assertions enabled", and "rmc_assertions
+  enabled-abort" is the same as "rmc_optional_assertions enabled" and
+  "rmc_assertion_behavior abort".
   
 * **rmc_languages** specifies the languages to be supported by
   ROSE. Accepted values are the word "ambivalent" (the default),

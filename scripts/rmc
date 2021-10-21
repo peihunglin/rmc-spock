@@ -328,7 +328,7 @@ read_config_file() {
     export RMC_OPTIMIZE=ambivalent
     export RMC_WARNINGS=ambivalent
     export RMC_ASSERTION_BEHAVIOR=ambivalent
-    export RMC_ASSERTIONS_ENABLED=yes
+    export RMC_OPTIONAL_ASSERTIONS=enabled
     export RMC_CODEGEN=default
 
     export RMC_BINWALK=none
@@ -711,6 +711,7 @@ rmc_warnings() {
     RMC_WARNINGS="$1"
 }
 
+# This is used by portability testing, but users should use rmc_optional_assertions and rmc_assertion_behavior.
 rmc_assertions() {
     # One or two arguments, any order. One argument is in the set {abort, throw, exit, ambivalent} and controls how
     # failed assertions behave by default in ROSE (the behavior can be overridden at run time). The other argument is in
@@ -727,17 +728,26 @@ rmc_assertions() {
 	    abort|throw|exit|ambivalent)
 		RMC_ASSERTION_BEHAVIOR="$word"
 		;;
-	    enabled)
-		RMC_ASSERTIONS_ENABLED=yes
-		;;
-	    disabled)
-		RMC_ASSERTIONS_ENABLED=
+	    enabled|disabled)
+		RMC_OPTIONAL_ASSERTIONS="$word"
 		;;
 	    *)
 		die "rmc_assertions: unrecognized argument: $word"
 		;;
 	esac
     done
+}
+
+rmc_optional_assertions() {
+    check_one_arg rmc_optional_assertions "$@"
+    check_arg_in rmc_optional_assertions "$1" enabled disabled
+    RMC_OPTIONAL_ASSERTIONS="$1"
+}
+
+rmc_assertion_behavior() {
+    check_one_arg rmc_assertion_behavior "$@"
+    check_arg_in rmc_assertion_behavior "$1" abort throw exit ambivalent
+    RMC_ASSERTION_BEHAVIOR="$1"
 }
 
 rmc_binwalk() {
