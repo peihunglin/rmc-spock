@@ -54,7 +54,8 @@ cxx_flags() {
             fi
 
             # See [https://access.redhat.com/blogs/766093/posts/3606481].
-            echo -n " -D_FORTIFY_SOURCE=2"
+	    # Fortify source only works when optimization is enabled
+	    [ "$RMC_OPTIMIZE" != no ] && echo -n " -D_FORTIFY_SOURCE=2"
             echo -n " -Wp,-D_GLIBCXX_ASSERTIONS"
 
             if [ "$cxx_major" -eq 4 -a "$cxx_minor" -ge 9 ] || [ "$cxx_major" -ge 5 ]; then
@@ -83,7 +84,7 @@ cxx_flags() {
             echo -n " -ftemplate-backtrace-limit=0"
 
             # See [https://access.redhat.com/blogs/766093/posts/3606481].
-            echo -n " -D_FORTIFY_SOURCE=2"
+            [ "$RMC_OPTIMIZE" != no ] && echo -n " -D_FORTIFY_SOURCE=2"
             echo -n " -Wp,-D_GLIBCXX_ASSERTIONS"
             ;;
     esac
