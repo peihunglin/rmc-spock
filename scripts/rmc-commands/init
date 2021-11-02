@@ -246,13 +246,14 @@ project_binaries() {
     local rmc_command="$1"
     case "$rmc_command" in
         rmc_capstone)      echo 4.0.2                 ;;
-        rmc_languages)     echo binaries              ;;
         rmc_binwalk)       echo 2                     ;;
         rmc_dlib)          echo 18.17                 ;;
         rmc_jq)            echo 1.5                   ;;
+        rmc_languages)     echo binaries              ;;
+	rmc_optimize)      echo yes                   ;;
         rmc_pqxx)          echo 5                     ;;
         rmc_sqlite)        echo 3                     ;;
-        rmc_yaml)          echo 0.6.2                 ;;
+        rmc_yaml)          echo 0.6.3                 ;;
         rmc_z3)            echo 4.8.12                ;;
     esac
 }
