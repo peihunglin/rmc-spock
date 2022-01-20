@@ -8,7 +8,7 @@ source "$dir0/basic-support.sh"
 if [ "$#" = 0 ]; then
     compiler_exe=c++
 elif [ "$#" = 1 ]; then
-    compiler_exe="$(which "$1")"
+    compiler_exe="$(type -p "$1")"
     [ -n "$compiler_exe" ] || compiler_exe=false
 else
     echo "usage: $arg0 [C++_COMPILER]" >&2

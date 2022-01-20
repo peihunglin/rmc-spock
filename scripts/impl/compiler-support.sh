@@ -333,7 +333,7 @@ spock-compiler-conditional-install-codegen() {
 # specification with a hash number, with the first representing compilers that Spock downloaded and installed, and the
 # second representing compilers that are already installed on this operating system.
 spock-compiler-install-program() {
-    local collection="$1" compiler_baselang="$2" exe=$(which "$3")
+    local collection="$1" compiler_baselang="$2" exe=$(type -p "$3")
     [ "$exe" = "" ] && return 1
 
     # Avoid running ccache wrappers

@@ -36,7 +36,7 @@ input_cuda="$(tempfile).c"
 # Compiler and default switches
 #------------------------------------------------------------------------------------------------------------------------
 
-compiler_exe=$(which "$1"); shift
+compiler_exe=$(type -p "$1"); shift
 [ "$compiler_exe" = "" ] && die "not an executable: $1"
 
 compiler_flags="$@"

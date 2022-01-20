@@ -460,7 +460,7 @@ autoconf_command() {
     autoconf_optional_with magic "$RMC_MAGIC" "$LIBMAGIC_ROOT"
     echo -n " --with-pch=no"
     autoconf_optional_with pqxx "$RMC_PQXX" "$LIBPQXX_ROOT"
-    autoconf_optional_with python "$RMC_PYTHON" "$(which python)"
+    autoconf_optional_with python "$RMC_PYTHON" "$(type -p python)"
     autoconf_optional_with qt "$RMC_QT" "$QT_ROOT"
     autoconf_optional_with sqlite3 "$RMC_SQLITE" "$SQLITE_ROOT"
     autoconf_optional_with wt "$RMC_WT" "$WT_ROOT"

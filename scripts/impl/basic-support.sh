@@ -8,11 +8,11 @@ die() {
 # The 'tempfile' command is not always available, so reimplement it here if necessary.
 # Now 'tempfile' is deprecated, so use mktemp if available.
 tempfile() {
-    local real_mktemp="$(which mktemp 2>/dev/null)"
+    local real_mktemp="$(type -p mktemp 2>/dev/null)"
     if [ -n "$real_mktemp" ]; then
 	"$real_mktemp"
     else
-	local real_tempfile="$(which tempfile 2>/dev/null)"
+	local real_tempfile="$(type -p tempfile 2>/dev/null)"
 	if [ -n "$real_tempfile" ]; then
 	    "$real_tempfile"
 	else

@@ -159,15 +159,15 @@ fi
 # Figure out what compiler to use.
 cxx_quad=
 cxx_exe=
-if [ "$(which g++)" != "" ]; then
-    cxx_exe="$(which g++)"
+if [ "$(type -p g++)" != "" ]; then
+    cxx_exe="$(type -p g++)"
     cxx_quad=$(./scripts/impl/detect-compiler-characteristics --quad "$cxx_exe")
-    c_exe="$(which gcc)"
+    c_exe="$(type -p gcc)"
     c_quad=$(./scripts/impl/detect-compiler-characteristics --quad "$c_exe")
-elif [ "$(which clang++)" != "" ]; then
+elif [ "$(type -p clang++)" != "" ]; then
     echo "$arg0: LLVM compilers not yet tested" >&2
     exit 1
-elif [ "$(which icpc)" != "" ]; then
+elif [ "$(type -p icpc)" != "" ]; then
     echo "$arg0: Intel compilers not yet tested" >&2
     exit 1
 fi

@@ -17,11 +17,11 @@ fi
 # that the default "g++" found in $PATH is sufficient. To override this, set the GXX_ROOT variable described in the
 # Intel documentation while this script is running (it will remember the value and store it in the generated scripts).
 # [Robb Matzke, 2017-03-14]
-if [ "$(which g++)" = "" ] || ! g++ --version >/dev/null 2>&1; then
+if [ "$(type -p g++)" = "" ] || ! g++ --version >/dev/null 2>&1; then
     echo "Intel C++ compilers need to have a valid GNU 'g++' compiler in \$PATH" >&2
     exit 1
 fi
-GXX_BINDIR="$(which g++)"; GXX_BINDIR="${GXX_BINDIR%/*}"
+GXX_BINDIR="$(type -p g++)"; GXX_BINDIR="${GXX_BINDIR%/*}"
 
 if [ "$GXX_ROOT" = "" ]; then
     GXX_ROOT="$(g++ --print-search-dirs |sed -n '/^install:/ s/^install: *//p')"

@@ -62,7 +62,7 @@ while [ "$#" -gt 1 ]; do
 done
 
 # The first positional arg is the executable for the compiler. The rest are compiler's command-line switches
-executable=$(which "$1")
+executable=$(type -p "$1")
 [ "$executable" = "" ] && die "not a compiler executable: $1"
 shift
 
