@@ -1,5 +1,5 @@
 package: zlib
-versions: [ 1.2.3, 1.2.11 ]
+versions: [ 1.2.3, 1.2.11, 1.2.12 ]
 
 dependencies:
   - version: '>=1.2.3'
@@ -72,6 +72,25 @@ install:
         CC=cc \
         LDFLAGS="$(spock-compiler-libdirs)" \
         CPPFLAGS="$(spock-compiler-incdirs)" \
+        ./configure \
+        --prefix=$PACKAGE_ROOT
+
+      make -j$PARALLELISM
+      make test
+      make install
+
+  - version: ">=1.2.12"
+    shell: |
+      cc --spock-triplet
+
+      cd download
+
+      # Shared and static libraries
+      env \
+        CC=cc \
+        LDFLAGS="$(spock-compiler-libdirs)" \
+        CPPFLAGS="$(spock-compiler-incdirs)" \
+        CFLAGS=-fPIC \
         ./configure \
         --prefix=$PACKAGE_ROOT
 
