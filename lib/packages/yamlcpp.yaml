@@ -15,6 +15,10 @@ dependencies:
     install: [ boost, c++-compiler ]
     build: [ c-compiler ]
 
+  - version: ">=0.6.0"
+    install: [ c++-compiler ] # c++11 or later
+    build: [ c++-compiler ]
+
 download:
   - version: ">=0.5.1"
     shell: |
