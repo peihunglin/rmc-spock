@@ -1,0 +1,35 @@
+package:        qemu
+
+versions:
+  - 6.2.0         # 2021-12-14
+  - 7.0.0-rc2     # 2022-03-29
+
+dependencies:
+  - version: ">=6.2.0"
+    install: [ c-compiler, c++-compiler ]
+    build: []
+
+download:
+  - version: ">=6.2.0"
+    shell: |
+      git clone git://git.qemu-project.org/qemu.git download
+      (
+          cd download
+          git reset --hard "v$PACKAGE_VERSION"
+          git submodule init
+          git submodule update
+          rm -rf .git
+      )
+      tar cvf - download |gzip -9 >download.tar.gz
+
+install:
+  - version: ">=6.2.0"
+    shell: |
+        cc --spock-triplet
+        c++ --spock-triplet
+
+        mkdir download/_build
+        cd download/_build
+        ../configure --prefix="$PACKAGE_ROOT" --cc=cc --cxx=c++
+        make -j$PARALLELISM
+        make install
