@@ -1,0 +1,42 @@
+package: mini-yaml
+
+versions:
+  # Mini-Yaml doesn't have any official version numbers, so we just
+  # use dates of particular commits.
+  - 2019.07.22
+
+dependencies:
+  - version: ">=2019.07.22"
+    install: [ c++-compiler ]
+    build: [ c++-compiler ]
+
+download:
+  - version: "=2019.07.22"
+    shell: |
+      git clone https://github.com/jimmiebergmann/mini-yaml download
+      cd download
+      git reset --hard 22d3dcf
+      git clean -dfxq
+      git archive --format=tar --prefix=download/ HEAD |gzip -9 >../download.tar.gz
+
+install:
+  - version: ">=2019.07.22"
+    shell: |
+      # Mini-Yaml doesn't have any official build system
+      c++ --spock-triplet
+      cd download
+
+      # Shared library
+      c++ -shared -O3 -fPIC -Wall -o libmini-yaml.so yaml/Yaml.cpp
+
+      # Static library
+      c++ -static -O3 -fPIC -Wall -c -o Yaml.o yaml/Yaml.cpp
+      ar rcs libmini-yaml.a Yaml.o
+
+      # Install
+      mkdir -p $PACKAGE_ROOT/lib $PACKAGE_ROOT/include/mini-yaml
+      cp libmini-yaml.so libmini-yaml.a $PACKAGE_ROOT/lib/.
+      chmod 755 $PACKAGE_ROOT/lib/libmini-yaml.so
+      chmod 644 $PACKAGE_ROOT/lib/libmini-yaml.a
+      cp yaml/Yaml.hpp $PACKAGE_ROOT/include/mini-yaml/.
+      chmod 644 $PACKAGE_ROOT/include/mini-yaml/Yaml.hpp
